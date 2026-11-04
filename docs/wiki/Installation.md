@@ -1,6 +1,6 @@
 # Installation
 
-Download Restless from [GitHub Releases](https://github.com/outmanos/restless/releases/latest).
+Download restless from [GitHub Releases](https://github.com/outmanos/restless/releases/latest).
 
 | Platform | File |
 |---|---|

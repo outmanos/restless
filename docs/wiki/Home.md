@@ -1,10 +1,10 @@
-# Restless
+# restless
 
-Restless is an offline-first API client for REST, GraphQL, gRPC, WebSockets, Server-Sent Events and Socket.IO. It needs no account, sends no telemetry, and keeps your data on your machine.
+restless is an offline-first API client for REST, GraphQL, gRPC, WebSockets, Server-Sent Events and Socket.IO. It needs no account, sends no telemetry, and keeps your data on your machine.
 
-Restless started as a fork of Kong's Insomnia. It is independent and not affiliated with Kong.
+restless started as a fork of Kong's Insomnia. It is independent and not affiliated with Kong.
 
-![Restless sending a request](images/request.png)
+![restless sending a request](images/request.png)
 
 ## Start here
 
@@ -13,7 +13,7 @@ Restless started as a fork of Kong's Insomnia. It is independent and not affilia
 - [Features](Features)
 - [Migrating from Insomnia](Migration)
 
-## Using Restless
+## Using restless
 
 - [Storage and Git](Storage-and-Git)
 - [Authentication](Authentication)
@@ -22,7 +22,7 @@ Restless started as a fork of Kong's Insomnia. It is independent and not affilia
 - [Plugins and Themes](Plugins-and-Themes)
 - [Privacy](Privacy)
 
-## Building Restless
+## Building restless
 
 - [Architecture](Architecture)
 - [Development](Development)

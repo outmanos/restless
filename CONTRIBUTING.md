@@ -1,4 +1,4 @@
-# Contributing to Restless
+# Contributing to restless
 
 Contributions are welcome. They should target this fork, not [Kong/insomnia](https://github.com/Kong/insomnia).
 Please follow the [Kind Communication Guidelines](CODE_OF_CONDUCT.md).
@@ -16,7 +16,7 @@ Check that the bug still happens on the latest `develop` branch, then include:
 
 - Steps to reproduce it
 - What you expected and what happened
-- Your Restless version and operating system
+- Your restless version and operating system
 
 ## Feature requests
 
@@ -33,7 +33,7 @@ Requests must fit the project's rules:
 
 Open an issue first for anything large. Keep each pull request to one change.
 
-Before submitting, follow [Develop Restless](README.md#develop-restless) to set up, then run:
+Before submitting, follow [Develop restless](README.md#develop-restless) to set up, then run:
 
 ```bash
 npm run lint

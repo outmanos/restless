@@ -11,7 +11,7 @@ These decide what gets built.
 
 ## Licensing
 
-- Restless is Apache-2.0.
+- restless is Apache-2.0.
 - Insomnia code is Apache-2.0. Keep notices, and check the license of each commit taken.
 - Bruno is MIT. Keep its copyright notice on anything ported.
 - Don't use Kong's or Bruno's names or logos as branding.

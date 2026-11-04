@@ -1,16 +1,16 @@
-# Restless
+# restless
 
 [![license](https://img.shields.io/github/license/outmanos/restless.svg)](LICENSE)
 
-Restless is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
+restless is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
 for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It requires **no account** and has **zero telemetry**.
 
-![Restless sending a request](docs/wiki/images/request.png)
+![restless sending a request](docs/wiki/images/request.png)
 
 This fork was inspired by the original Insomnium, which was unfortunately nuked. You can read
 [its backstory here](docs/insomnium/README.md).
 
-With Restless you can:
+With restless you can:
 
 - **Work offline** with every core feature and no login.
 - **Keep your data in plain files** with `File > Open Folder…`, which stores collections as YAML in a Git repository.
@@ -30,7 +30,7 @@ Everything that needs an outside service is off until you enable it:
 
 The goal is to be feature complete with both Insomnia and Bruno. Guides are in the [wiki](https://github.com/outmanos/restless/wiki), and progress is tracked in the [roadmap](ROADMAP.md).
 
-Restless is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
+restless is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
 
 ## Install
 
@@ -58,9 +58,9 @@ Have a bug or a feature request? First, read the
 
 Please read through our [contributing guidelines](CONTRIBUTING.md) and [Kind Communication Guidelines](CODE_OF_CONDUCT.md). Included are directions for opening issues, coding standards, and notes on development.
 
-## Develop Restless
+## Develop restless
 
-Development on Restless can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
+Development on restless can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 
 <details>
 <summary>Initial Dev Setup</summary>
@@ -155,7 +155,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 ## Plugins
 
-Restless loads Insomnia plugins. Install one by its npm package name in `Preferences > Plugins`.
+restless loads Insomnia plugins. Install one by its npm package name in `Preferences > Plugins`.
 
 ## License
 

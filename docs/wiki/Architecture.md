@@ -1,6 +1,6 @@
 # Architecture
 
-Restless is an Electron app, written in TypeScript with React and React Router.
+restless is an Electron app, written in TypeScript with React and React Router.
 
 ## Packages
 

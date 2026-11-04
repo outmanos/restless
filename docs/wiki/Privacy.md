@@ -1,8 +1,8 @@
 # Privacy
 
-Restless has no accounts and no telemetry.
+restless has no accounts and no telemetry.
 
-## When Restless uses the network
+## When restless uses the network
 
 | Action | Goes to |
 |---|---|
@@ -12,7 +12,7 @@ Restless has no accounts and no telemetry.
 | Installing a plugin | npm |
 | Sign-in, AI and secret managers | The provider you set up, only after you turn them on |
 
-Unless you allow automatic updates, starting Restless makes no requests.
+Unless you allow automatic updates, starting restless makes no requests.
 
 ## What stays local
 
