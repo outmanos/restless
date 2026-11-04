@@ -12,7 +12,7 @@ runs:
 
     - if: runner.os == 'macOS'
       shell: bash
-      run: brew install autoconf automake cmake coreutils libtool pkg-config
+      run: brew install autoconf automake cmake coreutils groff libtool pkg-config
 
     - uses: actions/setup-python@v5
       with:
