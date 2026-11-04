@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restless: the offline-first API client</title>
+<meta name="description" content="An offline-first API client for REST, GraphQL, gRPC, WebSockets, SSE and Socket.IO. No account. No telemetry. Open source.">
+<meta property="og:title" content="Restless">
+<meta property="og:description" content="The offline-first API client. No account. No telemetry.">
+<meta property="og:image" content="request.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #111214; --panel: #191a1d; --line: #2a2b30; --text: #ececee; --muted: #9a9ba3;
+    --accent: #7c6cf0; --on-accent: #fff; --code: #16171a;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #fbfbfc; --panel: #f2f2f5; --line: #e0e0e6; --text: #17171b; --muted: #62636c; --accent: #5340b6; --code: #f2f2f5; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; text-decoration: none; }
+  .brand img { width: 26px; height: 26px; }
+  .links { display: flex; gap: 22px; font-size: 15px; }
+  .links a { color: var(--muted); text-decoration: none; }
+  .links a:hover { color: var(--text); }
+  header { padding: 72px 0 48px; text-align: center; }
+  h1 { margin: 0 auto 18px; max-width: 14em; font-size: clamp(38px, 7vw, 64px); line-height: 1.06; letter-spacing: -0.03em; font-weight: 700; }
+  .lede { margin: 0 auto 32px; max-width: 34em; color: var(--muted); font-size: 19px; }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+  .btn { display: inline-block; padding: 11px 20px; border: 1px solid var(--line); border-radius: 9px; font-weight: 600; text-decoration: none; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .btn.primary:hover { filter: brightness(1.1); }
+  .note { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+  .shot { display: block; width: 100%; height: auto; margin: 0 auto; }
+  section { padding: 64px 0; }
+  h2 { margin: 0 0 8px; font-size: 26px; letter-spacing: -0.02em; }
+  .sub { margin: 0 0 32px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .cell { padding: 22px; background: var(--bg); }
+  .cell h3 { margin: 0 0 6px; font-size: 16px; }
+  .cell p { margin: 0; color: var(--muted); font-size: 15px; }
+  .protocols { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0; padding: 0; list-style: none; }
+  .protocols li { padding: 4px 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 14px; }
+  .downloads { width: 100%; border-collapse: collapse; }
+  .downloads th, .downloads td { padding: 13px 0; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; vertical-align: top; }
+  .downloads th { width: 34%; font-weight: 600; }
+  .downloads td a { margin-right: 16px; }
+  pre { margin: 20px 0 0; padding: 16px 18px; overflow-x: auto; background: var(--code); border: 1px solid var(--line); border-radius: 10px; font: 14px/1.6 var(--mono); }
+  .prompt { color: var(--muted); user-select: none; }
+  footer { padding: 36px 0 56px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer p { margin: 0 0 6px; }
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+    header { padding-top: 44px; }
+    .links a.optional { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><img src="icon.svg" alt="" width="26" height="26">Restless</a>
+    <div class="links">
+      <a class="optional" href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/outmanos/restless/wiki">Docs</a>
+      <a href="https://github.com/outmanos/restless">GitHub</a>
+    </div>
+  </nav>
+
+  <header>
+    <h1>The API client that stays out of your way.</h1>
+    <p class="lede">Restless is offline-first and open source. No account, no telemetry, and your data stays on your machine.</p>
+    <div class="cta">
+      <a class="btn primary" id="primary" href="https://github.com/outmanos/restless/releases/latest">Download</a>
+      <a class="btn" href="https://github.com/outmanos/restless">View on GitHub</a>
+    </div>
+    <p class="note" id="version">Free. Apache-2.0. Windows, macOS and Linux.</p>
+  </header>
+
+  <img class="shot" src="request.png" width="1600" height="929" alt="Restless showing a weather API request and its JSON response">
+
+  <section id="features">
+    <h2>Everything local. Nothing to sign in to.</h2>
+    <p class="sub">Every core feature works with no network and no account.</p>
+    <div class="grid">
+      <div class="cell"><h3>Offline first</h3><p>The only network calls are the ones you ask for, plus an update check you can turn off.</p></div>
+      <div class="cell"><h3>Plain files</h3><p>Open any folder and keep collections as YAML, with commits, branches and history. No remote needed.</p></div>
+      <div class="cell"><h3>Debug</h3><p>Environments, request chaining, scripts, cookies, and OAuth, AWS IAM, NTLM and more.</p></div>
+      <div class="cell"><h3>Design</h3><p>An OpenAPI editor with live preview and Spectral linting.</p></div>
+      <div class="cell"><h3>Test</h3><p>Scripts, test suites and a collection runner, in the app or in CI with <code>rl</code>.</p></div>
+      <div class="cell"><h3>Mock</h3><p>Create mock routes and serve them from a mock server you host.</p></div>
+      <div class="cell"><h3>Bring your own</h3><p>Optional AI, MCP, secret managers and Git sign-in stay off until you enable them, using your own keys.</p></div>
+      <div class="cell"><h3>Yours to change</h3><p>Themes, accent colors, shortcuts and Insomnia plugins.</p></div>
+      <div class="cell"><h3>Easy to move to</h3><p>Imports Insomnia, Postman, OpenAPI, HAR and cURL. Your Insomnia YAML works as it is.</p></div>
+    </div>
+    <ul class="protocols">
+      <li>REST</li><li>GraphQL</li><li>gRPC</li><li>WebSockets</li><li>Server-Sent Events</li><li>Socket.IO</li><li>SOAP</li>
+    </ul>
+  </section>
+
+  <section id="download">
+    <h2>Download</h2>
+    <p class="sub">Windows and macOS builds aren't signed yet, so you may see a warning on first launch.</p>
+    <table class="downloads">
+      <tbody>
+        <tr><th scope="row">Windows</th><td><a data-asset="-nsis-.*\.exe$" href="https://github.com/outmanos/restless/releases/latest">Installer (.exe)</a></td></tr>
+        <tr><th scope="row">macOS, Apple Silicon</th><td><a data-asset="\.dmg$" href="https://github.com/outmanos/restless/releases/latest">Disk image (.dmg)</a></td></tr>
+        <tr><th scope="row">Linux</th><td>
+          <a data-asset="\.AppImage$" href="https://github.com/outmanos/restless/releases/latest">AppImage</a>
+          <a data-asset="\.deb$" href="https://github.com/outmanos/restless/releases/latest">.deb</a>
+          <a data-asset="\.rpm$" href="https://github.com/outmanos/restless/releases/latest">.rpm</a>
+          <a data-asset="\.tar\.gz$" href="https://github.com/outmanos/restless/releases/latest">.tar.gz</a>
+        </td></tr>
+      </tbody>
+    </table>
+    <pre><span class="prompt"># Run your collections in CI with the rl command</span>
+rl run collection -w ./api.yaml --ci -e staging</pre>
+  </section>
+
+  <footer>
+    <p>Restless is an independent fork of Insomnia and is not affiliated with Kong.</p>
+    <p><a href="https://github.com/outmanos/restless/wiki">Wiki</a> · <a href="https://github.com/outmanos/restless/wiki/Roadmap">Roadmap</a> · <a href="https://github.com/outmanos/restless/issues">Issues</a> · <a href="https://github.com/outmanos/restless/blob/develop/LICENSE">Apache-2.0</a></p>
+  </footer>
+</div>
+
+<script>
+  // Point the download links at the newest release. Without this they open the releases page.
+  (async () => {
+    const platform = /Win/.test(navigator.platform) ? 'Windows'
+      : /Mac/.test(navigator.platform) ? 'macOS'
+      : /Linux/.test(navigator.platform) ? 'Linux' : null;
+    const primaryAsset = { Windows: '-nsis-.*\\.exe$', macOS: '\\.dmg$', Linux: '\\.AppImage$' }[platform];
+    const primary = document.getElementById('primary');
+    if (platform) primary.textContent = `Download for ${platform}`;
+
+    try {
+      const response = await fetch('https://api.github.com/repos/outmanos/restless/releases/latest');
+      if (!response.ok) return;
+      const release = await response.json();
+      const find = pattern => release.assets.find(asset => new RegExp(pattern).test(asset.name))?.browser_download_url;
+
+      document.querySelectorAll('[data-asset]').forEach(link => {
+        const url = find(link.dataset.asset);
+        if (url) link.href = url;
+      });
+      const url = primaryAsset && find(primaryAsset);
+      if (url) primary.href = url;
+      document.getElementById('version').textContent = `Version ${release.tag_name.replace(/^v/, '')}. Free. Apache-2.0. Windows, macOS and Linux.`;
+    } catch {}
+  })();
+</script>
+</body>
+</html>

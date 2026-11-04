@@ -5,6 +5,8 @@
 Restless is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
 for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It requires **no account** and has **zero telemetry**.
 
+![Restless sending a request](docs/wiki/images/request.png)
+
 This fork was inspired by the original Insomnium, which was unfortunately nuked. You can read
 [its backstory here](docs/insomnium/README.md).
 
