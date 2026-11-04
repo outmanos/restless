@@ -1,10 +1,13 @@
 !include nsDialogs.nsh
 
-!ifndef BUILD_UNINSTALLER
+!macro customPageAfterChangeDir
   Var AllowAutomaticUpdates
   Var AllowAutomaticUpdatesCheckbox
 
   Function automaticUpdatesPageCreate
+    ${If} ${isUpdated}
+      Abort
+    ${EndIf}
     !insertmacro MUI_HEADER_TEXT "Updates" "Choose how Restless stays up to date."
     nsDialogs::Create 1018
     Pop $0
@@ -18,9 +21,7 @@
   Function automaticUpdatesPageLeave
     ${NSD_GetState} $AllowAutomaticUpdatesCheckbox $AllowAutomaticUpdates
   FunctionEnd
-!endif
 
-!macro customPageAfterChangeDir
   Page custom automaticUpdatesPageCreate automaticUpdatesPageLeave
 !macroend
 
