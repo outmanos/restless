@@ -9,7 +9,6 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
@@ -26,7 +25,6 @@ export const baseWorkspaceSchema = z.object({
   description: z.string().default(''),
   certificates: z.any().optional(), // deprecated
   scope: z.enum(Object.values(WorkspaceScopeKeys)),
-  konnectServiceId: z.string().optional().nullable(),
 });
 export type BaseWorkspace = z.infer<typeof baseWorkspaceSchema>;
 
@@ -48,7 +46,7 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
 
 export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
 
-export const optionalKeys: (keyof BaseWorkspace)[] = ['konnectServiceId'];
+export const optionalKeys: (keyof BaseWorkspace)[] = [];
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
@@ -56,8 +54,8 @@ export const init = (): BaseWorkspace => ({
   scope: WorkspaceScopeKeys.collection,
 });
 
-export function isScratchpad(workspace?: Workspace) {
-  return workspace?._id === SCRATCHPAD_WORKSPACE_ID;
+export function isScratchpad(_workspace?: Workspace) {
+  return false;
 }
 
 export const scopeToActivity = (scope: WorkspaceScope) => {

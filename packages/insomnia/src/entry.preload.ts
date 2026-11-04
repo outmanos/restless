@@ -15,10 +15,8 @@ import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
-import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
-import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
@@ -150,59 +148,9 @@ const electronStorage: electronStorageBridgeAPI = {
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
 };
 
-const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
-  try {
-    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
-  } catch (error) {
-    if (isUserAbortResolveMergeConflictError(error)) {
-      throw new UserAbortResolveMergeConflictError(
-        'message' in error && typeof error.message === 'string' ? error.message : undefined,
-      );
-    }
-
-    throw error;
-  }
-};
-
-const invokeGlobalSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
-  return (await invokeWithNormalizedError('sync.invokeGlobal', methodName, ...args)) as T;
-};
-
-const sync: SyncBridgeAPI = {
-  archiveProject: workspaceId => invokeSyncMethod(workspaceId, 'archiveProject'),
-  checkout: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'checkout', ...args),
-  compareRemoteBranch: workspaceId => invokeSyncMethod(workspaceId, 'compareRemoteBranch'),
-  fork: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'fork', ...args),
-  getActiveBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'getActiveBackendProject'),
-  getBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getBranchNames'),
-  getCurrentBranchName: workspaceId => invokeSyncMethod(workspaceId, 'getCurrentBranchName'),
-  getHistory: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'getHistory', ...args),
-  getHistoryCount: workspaceId => invokeSyncMethod(workspaceId, 'getHistoryCount'),
-  getRemoteBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getRemoteBranchNames'),
-  getVersion: workspaceId => invokeSyncMethod(workspaceId, 'getVersion'),
-  hasBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'hasBackendProject'),
-  localBackendProjects: () => invokeGlobalSyncMethod('localBackendProjects'),
-  merge: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'merge', ...args),
-  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
-  pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
-  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
-  remoteBackendProjects: (...args) => invokeGlobalSyncMethod('remoteBackendProjects', ...args),
-  remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
-  hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
-  archiveBackendProject: (...args) => invokeGlobalSyncMethod('archiveBackendProject', ...args),
-  removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
-  removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
-  rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),
-  rollbackToLatest: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollbackToLatest', ...args),
-  resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
-  cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
-  stage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'stage', ...args),
-  status: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'status', ...args),
-  switchAndCreateBackendProjectIfNotExist: (workspaceId, ...args) =>
-    invokeSyncMethod(workspaceId, 'switchAndCreateBackendProjectIfNotExist', ...args),
-  takeSnapshot: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'takeSnapshot', ...args),
-  unstage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'unstage', ...args),
+const sync = {
+  resolveConflict: (options: unknown) => ipcRenderer.send('sync.resolveConflict', options),
+  cancelConflict: (options: unknown) => ipcRenderer.send('sync.cancelConflict', options),
 };
 
 const git: GitServiceAPI = {
@@ -289,6 +237,9 @@ const main: Window['main'] = {
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   applyUpdateAndRestart: () => ipcRenderer.send('applyUpdateAndRestart'),
   getUpdateStatus: () => ipcRenderer.sendSync('getUpdateStatus'),
+  getAppMenu: () => ipcRenderer.invoke('getAppMenu'),
+  clickAppMenuItem: path => ipcRenderer.send('clickAppMenuItem', path),
+  setTitleBarColors: options => ipcRenderer.send('setTitleBarColors', options),
   backup: () => invokeWithNormalizedError('backup'),
   restoreBackup: options => invokeWithNormalizedError('restoreBackup', options),
   authorizeUserInWindow: options => invokeWithNormalizedError('authorizeUserInWindow', options),
@@ -296,12 +247,10 @@ const main: Window['main'] = {
   onDefaultBrowserOAuthRedirect: options => invokeWithNormalizedError('onDefaultBrowserOAuthRedirect', options),
   cancelAuthorizationInDefaultBrowser: options =>
     invokeWithNormalizedError('cancelAuthorizationInDefaultBrowser', options),
-  setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
   createPlugin: options => invokeWithNormalizedError('createPlugin', options),
-  initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
   runTests: src => invokeWithNormalizedError('run-tests', src),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
@@ -348,9 +297,6 @@ const main: Window['main'] = {
   secretStorage,
   electronStorage,
   sync,
-  trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
-  trackPageView: options => ipcRenderer.send('trackPageView', options),
-  setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
@@ -406,7 +352,6 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
-  syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
   getLocalStorageDataFromFileOrigin: () => invokeWithNormalizedError('getLocalStorageDataFromFileOrigin'),
   generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,
@@ -502,9 +447,9 @@ const shell: Window['shell'] = {
   openPath: options => invokeWithNormalizedError('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
-  readText: () => ipcRenderer.sendSync('readText'),
-  writeText: options => ipcRenderer.send('writeText', options),
-  clear: () => ipcRenderer.send('clear'),
+  readText: () => ipcRenderer.invoke('readText'),
+  writeText: options => ipcRenderer.invoke('writeText', options),
+  clear: () => ipcRenderer.invoke('clear'),
 };
 const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
@@ -522,13 +467,9 @@ const env: Window['env'] = {
   PLAYWRIGHT_TEST: process.env.PLAYWRIGHT_TEST,
   // E2E fixtures: pre-seed auth state so tests bypass login/key-derivation UI
   INSOMNIA_SKIP_ONBOARDING: process.env.INSOMNIA_SKIP_ONBOARDING,
-  INSOMNIA_SESSION: process.env.INSOMNIA_SESSION,
-  INSOMNIA_SECRET_KEY: process.env.INSOMNIA_SECRET_KEY,
-  INSOMNIA_PUBLIC_KEY: process.env.INSOMNIA_PUBLIC_KEY,
   // E2E vault fixtures: pre-seed deterministic salt/key/SRP secret
   INSOMNIA_VAULT_SALT: process.env.INSOMNIA_VAULT_SALT,
   INSOMNIA_VAULT_KEY: process.env.INSOMNIA_VAULT_KEY,
-  INSOMNIA_VAULT_SRP_SECRET: process.env.INSOMNIA_VAULT_SRP_SECRET,
   // App environment: gates dev features and selects analytics keys
   INSOMNIA_ENV: process.env.INSOMNIA_ENV,
   // Injected at build time; shown in the About screen
@@ -539,14 +480,7 @@ const env: Window['env'] = {
   ALLOW_UPDATES_IN_DEV: process.env.ALLOW_UPDATES_IN_DEV,
   // OAuth flow URL overrides for dev/staging environments
   OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
-  OAUTH_RELAY_URL: process.env.OAUTH_RELAY_URL,
   // Service URL overrides: allow dev/CI to target local or staging backends
-  INSOMNIA_API_URL: process.env.INSOMNIA_API_URL,
-  INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
-  INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
-  KONNECT_API_URL: process.env.KONNECT_API_URL,
-  KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
-  INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
   // GitHub API URL overrides for GitHub Enterprise targets
   INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
   INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,

@@ -1,18 +1,15 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
-import { arch, release } from 'node:os';
 import path from 'node:path';
 
-import electron, { app, BrowserWindow, net, session } from 'electron';
+import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import { configureFetch } from 'insomnia-api';
 import type { Stats } from 'insomnia-data';
 import { initDatabase, initServices, models, services } from 'insomnia-data';
 import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
-import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -23,12 +20,8 @@ import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
-import { configureV3ClientDefaults } from './common/configure-v3-client';
-import { getAppVersion, getProductName, isDevelopment } from './common/constants';
-import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
+import { getAppVersion, isDevelopment } from './common/constants';
 import { registerInsomniaProtocols } from './main/api.protocol';
-import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
@@ -42,7 +35,6 @@ import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
-import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
@@ -59,20 +51,12 @@ app.setPath('userData', dataPath);
 initializeLogging();
 initElectronStorage(dataPath);
 
-initializeSentry();
 
 registerInsomniaProtocols();
 
 let openDeepLinkUrl = async (url: string) => {
   console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
 };
-configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
-configureV3ClientDefaults();
-// net.fetch picks up the proxy + OS certs like the renderer; node fetch does neither.
-// only works post-ready, which is fine — nothing calls this earlier. 'omit' = no cookies, same as before.
-setFetchImplementation((input, init) =>
-  net.fetch(input, { ...init, credentials: 'omit', bypassCustomProtocolHandlers: true }),
-);
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -109,7 +93,6 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
-  registerSyncHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -145,11 +128,19 @@ app.on('ready', async () => {
   initServices(servicesNodeImpl);
   initRuntime(nodeRuntime);
   await _createModelInstances();
+
+  // Lets Insomnia's plugin, theme and import web links open here
+  if (!isDevelopment() && !process.env.PLAYWRIGHT) {
+    const { handleInsomniaLinks } = await services.settings.get();
+    if (handleInsomniaLinks) {
+      app.setAsDefaultProtocolClient('insomnia');
+    } else {
+      app.removeAsDefaultProtocolClient('insomnia');
+    }
+  }
   // proxy has to be set up before backup's net.fetch below
   await watchProxySettings();
   // backup needs the channel from settings which needs the database
-  await backupIfNewerVersionAvailable();
-  sentryWatchAnalyticsEnabled();
 
   await runGitCredentialsMigration();
   // Must run — and finish — before the window/renderer exists: it's the only
@@ -168,7 +159,7 @@ app.on('ready', async () => {
 });
 
 // Set as default protocol
-const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const defaultProtocol = `restless${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
 let defaultProtocolSuccessful: boolean;
 if (isDevelopment()) {
@@ -249,7 +240,7 @@ const toOpenFolderDeepLink = async (rawPath: string): Promise<string | null> => 
     if (!stats.isDirectory()) {
       return null;
     }
-    return `insomnia://app/open-folder?path=${encodeURIComponent(rawPath)}`;
+    return `restless://app/open-folder?path=${encodeURIComponent(rawPath)}`;
   } catch {
     return null;
   }
@@ -261,7 +252,7 @@ const _launchApp = async () => {
   // Handle URLs sent via command line args
   ipcMainOnce('halfSecondAfterAppStart', async () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
-    const args = process.argv.slice(1).filter(a => a !== '.');
+    const args = process.argv.slice(1).filter(a => a !== '.' && !a.startsWith('--'));
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
@@ -349,55 +340,23 @@ async function _createModelInstances() {
   await services.settings.getOrCreate();
 
   try {
-    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
-    if (!scratchpadProject) {
-      console.log('[main] Initializing Scratch Pad Project');
-      await services.project.create({
-        _id: models.project.SCRATCHPAD_PROJECT_ID,
-        name: getProductName(),
+    const projects = await services.project.listByOrganizationIds(models.organization.LOCAL_ORGANIZATION_ID);
+    if (!projects.length) {
+      const project = await services.project.create({
+        name: 'My Project',
         remoteId: null,
-        parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+        parentId: models.organization.LOCAL_ORGANIZATION_ID,
       });
-    }
-
-    if (!scratchPad) {
-      console.log('[main] Initializing Scratch Pad');
-      await services.workspace.create({
-        _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
-        name: 'Scratch Pad',
-        parentId: models.project.SCRATCHPAD_PROJECT_ID,
-        scope: 'collection',
-      });
+      if (!process.env.PLAYWRIGHT) {
+        await services.workspace.create({
+          name: 'My Collection',
+          parentId: project._id,
+          scope: 'collection',
+        });
+      }
     }
   } catch (err) {
-    console.warn('[main] Failed to create default project. It probably already exists', err);
-  }
-}
-
-function getOperatingSystem(): string {
-  switch (process.platform) {
-    case 'darwin': {
-      return 'macOS';
-    }
-    case 'win32': {
-      return 'Windows';
-    }
-    case 'linux': {
-      return 'Linux';
-    }
-    case 'freebsd': {
-      return 'FreeBSD';
-    }
-    case 'openbsd': {
-      return 'OpenBSD';
-    }
-    case 'aix': {
-      return 'AIX';
-    }
-    default: {
-      return process.platform;
-    }
+    console.warn('[main] Failed to create default project', err);
   }
 }
 
@@ -410,31 +369,6 @@ async function _trackStats() {
     currentVersion: getAppVersion(),
     lastVersion: oldStats.currentVersion,
     launches: oldStats.launches + 1,
-  });
-
-  const localProjects = await services.project.count({
-    remoteId: null,
-    parentId: { $ne: null },
-    _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
-  });
-
-  const remoteProjects = await services.project.count({
-    remoteId: { $ne: null },
-    parentId: { $ne: null },
-  });
-
-  const settings = await services.settings.get();
-
-  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
-    localProjects,
-    remoteProjects,
-    createdRequests: stats.createdRequests,
-    deletedRequests: stats.deletedRequests,
-    executedRequests: stats.executedRequests,
-    themeName: settings.theme,
-    operatingSystem: getOperatingSystem(),
-    osVersion: release(),
-    architecture: arch(),
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {
@@ -455,7 +389,7 @@ async function _trackStats() {
             status: 'info',
             link: {
               label: "See What's New",
-              url: 'https://insomnia.rest/changelog',
+              url: 'https://github.com/outmanos/restless/releases',
               external: true,
             },
           },

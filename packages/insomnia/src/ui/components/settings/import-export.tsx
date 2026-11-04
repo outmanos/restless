@@ -1,26 +1,25 @@
 import { format } from 'date-fns';
-import {
-  convertApiSpecSyntax,
-  detectApiSpecSyntax,
-} from 'insomnia/src/common/api-specs';
-import { getProductName } from 'insomnia/src/common/constants';
-import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
-import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
-import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
-import { Icon } from 'insomnia/src/ui/components/icon';
-import { showError, showModal } from 'insomnia/src/ui/components/modals';
-import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
-import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
-import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
-import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
-import type { Organization } from 'insomnia-api';
+import type { Organization } from 'insomnia-data';
 import type { BaseModel, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
+import {
+  convertApiSpecSyntax,
+  detectApiSpecSyntax,
+} from 'restless/src/common/api-specs';
+import { getProductName } from 'restless/src/common/constants';
+import { getWorkspaceLabel } from 'restless/src/common/get-workspace-label';
+import { getInsomniaV5DataExport } from 'restless/src/common/insomnia-v5';
+import { isNotNullOrUndefined } from 'restless/src/common/misc';
+import { Icon } from 'restless/src/ui/components/icon';
+import { showError, showModal } from 'restless/src/ui/components/modals';
+import { AskModal } from 'restless/src/ui/components/modals/ask-modal';
+import { ExportRequestsModal } from 'restless/src/ui/components/modals/export-requests-modal';
+import { ImportModal } from 'restless/src/ui/components/modals/import-modal/import-modal';
+import { SelectModal } from 'restless/src/ui/components/modals/select-modal';
 
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
@@ -29,10 +28,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { usePlanData } from '~/ui/hooks/use-plan';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const VALUE_YAML = 'yaml';
 const VALUE_JSON = 'json';
@@ -102,7 +98,7 @@ const showSaveExportedFileDialog = async ({
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
   const options = {
-    title: 'Export Insomnia Data',
+    title: 'Export Restless Data',
     buttonLabel: 'Export',
     defaultPath: `${window.path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
@@ -114,7 +110,7 @@ const showSaveExportedFolderDialog = async () => {
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
   const options = {
-    title: 'Export Insomnia Data',
+    title: 'Export Restless Data',
     buttonLabel: 'Export',
     properties: ['openDirectory'],
     defaultPath: dir,
@@ -216,7 +212,6 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.exportCompleted });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -244,10 +239,6 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mock-server' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -284,10 +275,6 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: shouldExportPrivateEnvironments,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'environment' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -317,7 +304,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
         shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       }
       const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: 'Insomnia',
+        exportedFileNamePrefix: 'Restless',
         selectedFormat,
       });
 
@@ -351,7 +338,6 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           }
         }
         await writeExportedFileToFileSystem(fileName, stringifiedExport);
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -421,10 +407,6 @@ export const exportSpecificationToFile = async (workspace: Workspace) => {
 
       try {
         await writeExportedFileToFileSystem(fileName, specification);
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.dataExport,
-          properties: { type: selectedFormat, scope: workspace.scope },
-        });
       } catch {
         showError({
           title: 'Export Failed',
@@ -450,10 +432,6 @@ export const exportMcpClientToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mcp' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -709,11 +687,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     projectId: string;
     workspaceId?: string;
   };
-  const organizations = useOrganizations();
+  const organizations = [models.organization.LOCAL_ORGANIZATION];
 
   const { features } = useOrganizationPermissions();
-  const { isEnterprisePlan } = usePlanData();
-
+  
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
 
   useEffect(() => {
@@ -728,7 +705,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { userSession } = useRootLoaderData()!;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [workspaceCount, setWorkspaceCount] = useState(0);
 
@@ -742,7 +718,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
       isIdleAndUninitialized &&
       organizationId &&
       projectId &&
-      !models.organization.isScratchpadOrganizationId(organizationId)
+      true
     ) {
       workspacesFetcher.load({
         organizationId,
@@ -770,57 +746,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-  const isLoggedIn = userSession.id || organizationId || activeProject;
-  const isScratchPadWorkspace = models.workspace.isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
-    !isScratchPadWorkspace && (activeProject || features.bulkImport?.enabled || isEnterprisePlan);
-  if (!isScratchPadWorkspace && !isLoggedIn) {
-    return (
-      <Button
-        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        onPress={async () => {
-          const { filePaths, canceled } = await window.dialog.showOpenDialog({
-            properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-            buttonLabel: 'Select',
-            title: 'Export All Insomnia Data',
-          });
-
-          if (canceled) {
-            return;
-          }
-
-          const [dirPath] = filePaths;
-
-          try {
-            dirPath &&
-              (await exportAllData({
-                dirPath,
-              }));
-          } catch (e) {
-            showModal(AlertModal, {
-              title: 'Export Failed',
-              message: 'An error occurred while exporting data. Please try again.',
-            });
-            console.error(e);
-          }
-
-          showModal(AlertModal, {
-            title: 'Export Complete',
-            message: 'All your data have been successfully exported',
-          });
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportAllCollections,
-          });
-        }}
-        aria-label="Export all data"
-      >
-        <Icon icon="file-export" />
-        <span>Export all data {`(${workspaceCount} files)`}</span>
-      </Button>
-    );
-  }
+    (activeProject || features.bulkImport?.enabled);
 
   return (
     <Fragment>
@@ -853,7 +782,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 const { filePaths, canceled } = await window.dialog.showOpenDialog({
                   properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
                   buttonLabel: 'Select',
-                  title: 'Export All Insomnia Data',
+                  title: 'Export All Restless Data',
                 });
 
                 if (canceled) {
@@ -879,23 +808,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.exportAllCollections,
-                });
               }}
               aria-label="Export all data"
             >
               <Icon icon="file-export" />
               <span>Export all data {`(${workspaceCount} files)`}</span>
-            </Button>
-
-            <Button
-              className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              isDisabled={!userSession.id}
-              onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
-            >
-              <i className="fa fa-file-import" />
-              Create Run Button
             </Button>
           </div>
         </div>
@@ -909,7 +826,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={
-                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                    false
                   }
                   onPress={() => setIsImportModalOpen(true)}
                 >
@@ -921,22 +838,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={
-                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                    false
                   }
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
                   <Icon icon="file-import" />
                   {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
                 </Button>
-              ) : isEnterprisePlan ? (
-                <p className="text-sm">
-                  Need to import many projects at once? Reach out to{' '}
-                  <a className="text-(--color-surprise)" href="mailto:support@insomnia.rest">
-                    support@insomnia.rest
-                  </a>{' '}
-                  to have multi-project import enabled.
-                </p>
-              ) : null}
+              ): null}
             </div>
           </div>
         )}
@@ -1022,16 +931,7 @@ const ExportSection = ({
   setIsExportModalOpen: (value: boolean) => void;
   handleExportProjectToFile: () => void;
 }) => {
-  if (models.workspace.isScratchpad(workspace)) {
-    return (
-      <Button
-        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        onPress={() => setIsExportModalOpen(true)}
-      >
-        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
-      </Button>
-    );
-  }
+  
 
   return (
     <>

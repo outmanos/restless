@@ -1,6 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { WorkspaceScope } from 'insomnia-data';
-import { models } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -19,24 +18,16 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetchers, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import {
-  DASHBOARD_SORT_ORDERS,
-  type DashboardSortOrder,
-  dashboardSortOrderName,
-  getAppWebsiteBaseURL,
-} from '~/common/constants';
+import { DASHBOARD_SORT_ORDERS, type DashboardSortOrder, dashboardSortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { getAllLocalFiles } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
-import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
-import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
-import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
-import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { FirstRequestCreation } from '~/ui/components/first-request-creation';
@@ -50,15 +41,10 @@ import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
-import { UnsyncedFileDeleteButton } from '~/ui/components/unsynced-file-delete-button';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
@@ -79,36 +65,23 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { localFiles } = loaderData;
   const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
-  const { isKonnectOrganization } = useProjectRouteContext();
+  const { settings } = useRootLoaderData()!;
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
   const { projects } = useOrganizationData(organizationId);
 
-  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId, localFiles);
+  const allFiles = localFiles;
 
-  const allFiles = useMemo(() => [...localFiles, ...remoteFiles], [localFiles, remoteFiles]);
-
-  const { userSession } = useRootLoaderData()!;
-  const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
-  const loadingBackendProjects = useFetchers()
-    .filter(
-      fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-    )
-    .map(f => f.formData?.get('backendProjectId'));
-
-  const organizations = useOrganizations();
-  const { presence } = useInsomniaEventStreamContext();
   const { issuesByWorkspaceId } = useGitFileIssues();
   const storageRules = useOrganizationStorageRule(organizationId);
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
-  const { billing } = useOrganizationPermissions();
 
   const projectFileIssues = Object.values(issuesByWorkspaceId);
   const hasProjectFileIssues = projectFileIssues.length > 0;
   const projectFileIssuesMessage =
-    'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
+    'There are issues with one or more Restless files in this project. Use the git CLI and your local file system to resolve them and continue.';
 
   const [workspaceListFilter, setWorkspaceListFilter] = reactUse.useLocalStorage(
     `${projectId}:workspace-list-filter`,
@@ -121,8 +94,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = Boolean(organization?.is_owner);
   const collectionItems = useMemo(
     () =>
       localFiles
@@ -171,43 +142,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles
-    .map(file => {
-      const workspacePresence = presence
-        .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
-        .filter(p => p.acct !== userSession.accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        });
-      return {
-        ...file,
-        fileIssue: file.workspace ? issuesByWorkspaceId[file.workspace._id] : undefined,
-        loading:
-          loadingBackendProjects.includes(file.remoteId) ||
-          (pullFileFetcher.formData?.get('backendProjectId') &&
-            pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
-        presence: workspacePresence,
-      };
-    })
     .map(file => ({
       ...file,
+      fileIssue: file.workspace ? issuesByWorkspaceId[file.workspace._id] : undefined,
+      loading: false,
       action: (withTab?: boolean) => {
-        // hack to workaround gridlist not have access to workspace scope
-        if (file.scope === 'unsynced') {
-          if (activeProject?.remoteId && file.remoteId) {
-            return pullFileFetcher.submit({
-              backendProjectId: file.remoteId,
-              remoteId: activeProject.remoteId,
-              organizationId,
-            });
-          }
-
-          return;
-        }
-
         if (!activeProject || !file.workspace) {
           showResourceNotFoundToast('Workspace not found');
           return;
@@ -287,13 +226,17 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         action: () => createNewCollection('navbar'),
         scope: 'collection',
       },
-      {
-        id: 'new-mcp-client',
-        name: 'MCP Client',
-        scope: 'mcp',
-        icon: ['fac', 'mcp'] as unknown as IconProp,
-        action: () => createNewMcpClient('navbar'),
-      },
+      ...(settings.aiFeatures
+        ? [
+            {
+              id: 'new-mcp-client',
+              name: 'MCP Client',
+              scope: 'mcp' as WorkspaceScope,
+              icon: ['fac', 'mcp'] as unknown as IconProp,
+              action: () => createNewMcpClient('navbar'),
+            },
+          ]
+        : []),
       ...(canCreateMockServer
         ? [
             {
@@ -313,27 +256,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         scope: 'environment',
       },
     ],
-    [canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
+    [settings.aiFeatures, canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
   );
 
-  const isRemoteProjectInconsistent =
-    activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent =
-    activeProject &&
-    !models.project.isRemoteProject(activeProject) &&
-    !models.project.isGitProject(activeProject) &&
-    !storageRules.enableLocalVault;
-  const isGitSyncProjectInconsistent =
-    activeProject && models.project.isGitProject(activeProject) && !storageRules.enableGitSync;
-  const isProjectInconsistent =
-    isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
   return (
     <ErrorBoundary>
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
         <div className="px-4 pt-4">
-          {!isKonnectOrganization && (
+          {(
             <FirstRequestCreation
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}
@@ -352,46 +284,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         </div>
         {activeProject ? (
           <div className="flex w-full flex-col overflow-hidden">
-            {billing.isActive ? null : (
-              <div className="p-(--padding-md) pb-0">
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
-                  <p className="text-base">
-                    <Icon icon="exclamation-triangle" className="mr-2" />
-                    {isUserOwner
-                      ? 'Your space has unpaid past invoices. Please enter a new payment method to continue using Insomnia.'
-                      : 'This space has unpaid past invoices. Please ask the space owner to enter a new payment method to continue using Insomnia.'}
-                  </p>
-                  {isUserOwner && (
-                    <a
-                      href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
-                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-font) px-4 py-1 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-(--hl-md)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                    >
-                      Update payment method
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-            {billing?.expirationErrorMessage || billing?.expirationWarningMessage ? (
-              <div className="p-(--padding-md) pb-0">
-                <div
-                  className={`flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) p-(--padding-sm) text-(--color-font-warning) ${billing?.expirationWarningMessage ? 'bg-(--color-warning)/50' : 'bg-(--color-danger)/50'}`}
-                >
-                  <p className="text-base">
-                    <Icon icon="exclamation-triangle" className="mr-2" />
-                    {billing?.expirationErrorMessage || billing?.expirationWarningMessage}
-                  </p>
-                  {isUserOwner && (
-                    <a
-                      href="https://insomnia.rest/pricing/contact"
-                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-font) px-4 py-1 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-(--color-font)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                    >
-                      Contact sales
-                    </a>
-                  )}
-                </div>
-              </div>
-            ) : null}
             {hasProjectFileIssues ? (
               <div className="p-(--padding-md) pb-0">
                 <div
@@ -404,23 +296,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 </div>
               </div>
             ) : null}
-            {isProjectInconsistent && (
-              <div className="p-(--padding-md) pb-0">
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
-                  <p className="text-base">
-                    <Icon icon="exclamation-triangle" className="mr-2" />
-                    The organization owner mandates that projects must be created and stored using{' '}
-                    {models.project.getProjectStorageTypeLabel(storageRules)}.
-                  </p>
-                  <Button
-                    onPress={() => setIsUpdateProjectModalOpen(true)}
-                    className="flex items-center justify-center rounded-xs border border-solid border-white px-2 py-1"
-                  >
-                    Update
-                  </Button>
-                </div>
-              </div>
-            )}
             {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
             {(filesWithPresence.length > 0 || workspaceListFilter) && (
               <div className="flex w-full max-w-xl justify-between gap-2 p-(--padding-md)">
@@ -430,9 +305,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   value={workspaceListFilter}
                   onChange={filter => {
                     setWorkspaceListFilter(filter);
-                    if (filter.trim() !== '') {
-                      trackOnceDaily(AnalyticsEvent.homepageFiltered);
-                    }
                   }}
                 >
                   <Input
@@ -529,12 +401,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
                 <Button
                   onPress={() => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.importStarted,
-                      properties: {
-                        source: 'project',
-                      },
-                    });
                     setImportModalType('file');
                   }}
                   aria-label="Import"
@@ -613,21 +479,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           <span>{item.label}</span>
                         </div>
                         <span className="flex-1" />
-                        {item.presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={item.presence} />}
-                        {activeProject && item.scope !== 'unsynced' && item.workspace && (
+                        {activeProject && item.workspace && (
                           <WorkspaceCardDropdown
                             workspace={item.workspace}
                             mockServer={item.mockServer}
                             gitFilePath={item.gitFilePath || undefined}
                             apiSpec={item.apiSpec}
                             project={activeProject}
-                          />
-                        )}
-                        {item.scope === 'unsynced' && item.remoteId && (
-                          <UnsyncedFileDeleteButton
-                            organizationId={organizationId}
-                            backendProjectId={item.remoteId}
-                            name={item.name}
                           />
                         )}
                       </div>
@@ -727,9 +585,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 newWorkspaceModalState.source === 'first-request-pane'
               ) {
                 setSelectedCollectionId(workspaceId);
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.firstRequestPaneCollectionChanged,
-                });
               }
             }}
             redirectAfterCreate={newWorkspaceModalState.redirect}

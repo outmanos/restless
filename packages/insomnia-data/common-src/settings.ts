@@ -91,7 +91,7 @@ export enum UpdateChannel {
 // How far the configured HTTP/HTTPS proxy reaches.
 export const ProxyScopes = {
   // Only requests sent from collections use the proxy (default, matches pre-13.1 behavior).
-  // Insomnia's own traffic (login, git, Konnect, auto-updates, analytics, etc.) always goes direct.
+  // Insomnia's own traffic (git, auto-updates, etc.) always goes direct.
   requests: 'requests',
   // Every outbound call Insomnia makes, including its own traffic above, uses the proxy.
   all: 'all',
@@ -116,6 +116,7 @@ export interface PluginConfig {
 export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
+  accentColor: string;
   autoDetectColorScheme: boolean;
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
@@ -139,7 +140,6 @@ export interface Settings {
   editorLineWrapping: boolean;
 
   /** If true, Insomnia will send anonymous data about features and plugins used. */
-  enableAnalytics: boolean;
   filterResponsesByEnv: boolean;
   followRedirects: boolean;
   fontInterface: string | null;
@@ -147,9 +147,12 @@ export interface Settings {
   fontSize: number;
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
-  hasKonnectPat: boolean;
+  aiFeatures: boolean;
+  handleInsomniaLinks: boolean;
+  gitProviderSignIn: boolean;
+  gitHubClientId: string;
+  gitLabClientId: string;
   hideSecretValuesInPreviewAndConsole: boolean;
-  konnectOrganizationId: string | null;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;

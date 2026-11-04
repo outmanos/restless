@@ -2,6 +2,7 @@ import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import { pathToFileURL } from 'node:url';
 import zlib from 'node:zlib';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
@@ -23,7 +24,7 @@ import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import * as crypt from '~/common/account/crypt';
-import { AI_PLUGIN_NAME, type UpdateStatus } from '~/common/constants';
+import type { UpdateStatus } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
@@ -35,8 +36,6 @@ import type {
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
-import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
-import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
   exportHarCurrentRequest,
   exportHarRequest,
@@ -53,13 +52,12 @@ import {
   invalidateCompiledRulesetCache,
   writeCompiledRuleset,
 } from '~/main/spectral-ruleset-cache';
+import type { AppMenuItem } from '~/main/title-bar';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils/sealedbox';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import { getRuntime } from '../../runtimes';
-import type { AnalyticsEvent } from '../analytics';
-import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -103,6 +101,8 @@ export const openInBrowser = (href: string) => {
     shell.openExternal(href);
   }
 };
+
+const getAiProviderUrl = () => pathToFileURL(path.join(__dirname, 'main/ai-provider.mjs')).href;
 
 const sanitizeModelConfigForRequest = (modelConfig: ModelConfig | null | undefined): ModelConfig | null => {
   if (!modelConfig) {
@@ -231,9 +231,7 @@ export interface RendererToMainBridgeAPI {
   authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
   onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
-  setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
-  initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Uint8Array | null; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Uint8Array }) => Promise<string>;
@@ -273,10 +271,10 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  sync: SyncBridgeAPI;
-  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
-  trackPageView: (options: { name: string }) => void;
-  setCurrentOrganizationId: (organizationId: string | undefined) => void;
+  getAppMenu: () => Promise<AppMenuItem[]>;
+  clickAppMenuItem: (path: number[]) => void;
+  setTitleBarColors: (options: { color: string; symbolColor: string; themeSource: 'system' | 'light' | 'dark' }) => void;
+  sync: { resolveConflict: (options: unknown) => void; cancelConflict: (options: unknown) => void };
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
@@ -344,7 +342,6 @@ export interface RendererToMainBridgeAPI {
     | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
     | { response: undefined; error: string }
   >;
-  syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   templatingDb: {
     getAuthToken: () => Promise<string>;
@@ -451,12 +448,6 @@ export function registerMainHandlers() {
   ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
     return convert(...args);
   });
-  ipcMainHandle(
-    'initializeWorkspaceBackendProject',
-    async (_, options: Parameters<typeof initializeWorkspaceBackendProject>[0]) => {
-      return initializeWorkspaceBackendProject(options);
-    },
-  );
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Uint8Array }) => {
     try {
       const dir = path.dirname(options.path);
@@ -656,18 +647,6 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn(
-    'trackAnalyticsEvent',
-    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
-      trackAnalyticsEvent(options.event, options.properties);
-    },
-  );
-  ipcMainOn('trackPageView', (_, options: { name: string }): void => {
-    trackPageView(options.name);
-  });
-  ipcMainOn('analytics.setOrganizationId', (_, organizationId: string | undefined): void => {
-    setCurrentOrganizationId(organizationId);
-  });
 
   ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
     return installPlugin(lookupName, allowScopedPackageNames);
@@ -683,9 +662,6 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
-  ipcMainHandle('syncNewWorkspaceIfNeeded', async (_, options: Parameters<typeof syncNewWorkspaceIfNeeded>[0]) => {
-    return syncNewWorkspaceIfNeeded(options);
-  });
 
   ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {
     const tmpDir = app.getPath('userData');
@@ -794,7 +770,7 @@ export function registerMainHandlers() {
           modelConfig: sanitizeModelConfigForRequest(modelConfig as ModelConfig),
           useDynamicMockResponses,
           mockServerAdditionalFiles,
-          aiPluginName: AI_PLUGIN_NAME,
+          aiPluginName: getAiProviderUrl(),
         });
       });
     },
@@ -844,7 +820,7 @@ export function registerMainHandlers() {
       process.postMessage({
         input,
         modelConfig: sanitizeModelConfigForRequest(modelConfig),
-        aiPluginName: AI_PLUGIN_NAME,
+        aiPluginName: getAiProviderUrl(),
       });
     });
   });
@@ -906,7 +882,7 @@ export function registerMainHandlers() {
         messages,
         systemPrompt,
         modelConfig: sanitizeModelConfigForRequest(mergedModelConfig as ModelConfig),
-        aiPluginName: AI_PLUGIN_NAME,
+        aiPluginName: getAiProviderUrl(),
       });
     });
   });

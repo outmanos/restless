@@ -1,23 +1,22 @@
 {
-  "name": "insomnia",
-  "version": "13.3.1",
-  "productName": "Insomnia",
+  "name": "restless",
+  "version": "0.1.0",
+  "productName": "Restless",
   "private": true,
   "description": "The Collaborative API Design Tool",
-  "homepage": "https://konghq.com",
+  "homepage": "https://github.com/outmanos/restless",
   "bugs": {
-    "url": "https://github.com/Kong/insomnia/issues"
+    "url": "https://github.com/outmanos/restless/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/restless.git",
     "directory": "packages/insomnia"
   },
   "license": "Apache-2.0",
-  "author": "Kong <office@konghq.com>",
+  "author": "Outman",
   "main": "src/entry.main.min.js",
   "scripts": {
-    "verify-bundle-plugins": "esr --cache ./scripts/verify-bundle-plugins.ts",
     "install-x64-native-dependencies": "esr --cache ./scripts/install-x64-native-dependencies.ts",
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:react-router": "react-router build",
@@ -54,13 +53,14 @@
     "@bufbuild/protobuf": "^2.16.0",
     "@connectrpc/connect": "^2.2.0",
     "@connectrpc/connect-node": "^2.2.0",
-    "@customerio/cdp-analytics-browser": "^0.5.9",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "restless-plugin-secret-managers": "*",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^3.0.2",
-    "@getinsomnia/node-libcurl": "3.3.0",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.13",
@@ -70,7 +70,6 @@
     "@rjsf/core": "6.8.0",
     "@rjsf/utils": "6.8.0",
     "@rjsf/validator-ajv8": "6.8.0",
-    "@sentry/electron": "^7.17.0",
     "@stoplight/spectral-core": "^1.22.0",
     "@stoplight/spectral-formats": "^1.8.2",
     "@stoplight/spectral-ref-resolver": "^1.0.5",
@@ -110,7 +109,7 @@
     "fflate": "^0.8.2",
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",
-    "grpc-reflection-js": "Kong/grpc-reflection-js#master",
+    "grpc-reflection-js": "^0.3.0",
     "gsap": "^3.12.7",
     "hawk": "9.0.2",
     "highlight.js": "^11.11.1",
@@ -136,6 +135,7 @@
     "mocha": "^11.7.5",
     "monaco-editor": "^0.52.2",
     "multiparty": "^4.2.3",
+    "node-libcurl": "5.1.2",
     "oauth-1.0a": "^2.2.6",
     "objectpath": "^2.0.0",
     "papaparse": "^5.5.2",
@@ -201,7 +201,7 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "5.1.2",
     "cross-env": "^10.1.0",
-    "electron": "43.2.0",
+    "electron": "45.2.2",
     "electron-builder": "26.15.7",
     "electron-builder-squirrel-windows": "26.15.7",
     "electron-devtools-installer": "^3.2.1",
@@ -217,14 +217,10 @@
     "typescript": "^5.8.3",
     "vite": "^7.1.3"
   },
-  "optionalDependencies": {
-    "@kong/insomnia-plugin-ai": "^1.0.12",
-    "@kong/insomnia-plugin-external-vault": "0.1.5"
-  },
   "dev": {
     "dev-server-port": 3334
   },
   "bin": {
-    "insomnia": "bin/yarn-standalone.js"
+    "restless": "bin/yarn-standalone.js"
   }
 }

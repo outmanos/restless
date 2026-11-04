@@ -1,4 +1,3 @@
-import { fetchMockbinLogs, type MockbinLogOutput } from 'insomnia-api';
 import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, type PreviewMode } from 'insomnia-data/common';
@@ -6,6 +5,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { fetchMockbinLogs, type MockbinLogOutput } from '~/common/mock-api';
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -13,7 +13,6 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 
-import { getMockServiceURL } from '../../../common/constants';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -159,13 +158,12 @@ const HistoryViewWrapperComponentFactory = ({
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;
-    const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+    const mockbinUrl = mockServer.url;
     try {
       const res = await fetchMockbinLogs({
         mockbinUrl,
         compoundId,
         method: mockRoute.method,
-        sessionId: userSession.id,
       });
       if (res?.log) {
         setLogs(res);
@@ -181,7 +179,6 @@ const HistoryViewWrapperComponentFactory = ({
     mockRoute.name,
     mockRoute.parentId,
     mockServer.url,
-    mockServer.useInsomniaCloud,
     userSession.id,
   ]);
   // refetches logs whenever the path changes, or a response is received, or tenseconds elapses or history tab is click

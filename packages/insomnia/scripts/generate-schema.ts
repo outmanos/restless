@@ -7,7 +7,7 @@
  * standard JSON Schema via Zod's `z.toJSONSchema()` so that humans and AI
  * agents can validate Insomnia files against a published, stable URL.
  *
- * Run with: `npm run generate:schema -w insomnia`
+ * Run with: `npm run generate:schema -w restless`
  *
  * The output is written to the repo-root `schemas/` directory as a versioned,
  * immutable file for the current `INSOMNIA_SCHEMA_VERSION`
@@ -73,7 +73,7 @@ const normalizeSchema = (node: unknown): void => {
 };
 
 // Public, stable URL the schemas are published at (raw files on the default branch).
-const SCHEMA_BASE_URL = 'https://raw.githubusercontent.com/Kong/insomnia/develop/schemas';
+const SCHEMA_BASE_URL = 'https://raw.githubusercontent.com/outmanos/restless/main/schemas';
 
 const SRC_DIR = path.resolve(__dirname, '../src');
 const PARSER_ENTRY = path.join(SRC_DIR, 'common/import-v5-parser.ts');

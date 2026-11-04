@@ -5,7 +5,6 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
-  href,
   isRouteErrorResponse,
   Link as RouterLink,
   Links,
@@ -22,10 +21,7 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
-import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
-import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
-import { useLogoutFetcher } from '~/routes/auth.logout';
+import { convertInsomniaDeepLink, parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
@@ -33,9 +29,7 @@ import {
 } from '~/routes/git-credentials.complete-sign-in';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { isLoggedIn } from '~/ui/account/session';
-import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
-import { getLoginUrl } from '~/ui/auth-session-provider.client';
+import { AppLogo } from '~/ui/components/app-logo';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
 import { Icon } from '~/ui/components/icon';
@@ -53,7 +47,7 @@ import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-impor
 import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
-import { setTheme } from '~/ui/plugins/misc';
+import { dimTitleBarWithDialogs, setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 
@@ -92,32 +86,6 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHisto
 
 const parseDeepLinkUrl = (url: string) => parseImportDeepLinkUrl(url, isDevelopment());
 
-// Handles the auth/logout deep-link (insomnia://app/auth/login) independently
-// of the Root component so that it continues to work even when Root is replaced
-// by ErrorBoundary. Without this, an invalid session that causes an error before
-// Root mounts would leave the IPC listener unregistered, blocking the API-
-// triggered redirect to the logout page.
-// Root calls this hook too, but skips the auth/login case in its own handler
-// (see the early return below) to avoid double-handling.
-const useAuthDeepLinkHandler = () => {
-  const { submit: logoutSubmit } = useLogoutFetcher();
-  useEffect(() => {
-    return window.main.on('shell:open', async (_, url: string) => {
-      const parsed = parseDeepLinkUrl(url);
-      if (!parsed) return;
-      const { urlWithoutParams, params } = parsed;
-
-      if (urlWithoutParams === 'insomnia://app/auth/login') {
-        if (params.message) {
-          window.localStorage.setItem('logoutMessage', params.message);
-        }
-
-        return logoutSubmit();
-      }
-    });
-  }, [logoutSubmit]);
-};
-
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
@@ -134,8 +102,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   };
 
   const errorMessage = getErrorMessage(error);
-  const logoutFetcher = useLogoutFetcher();
-  useAuthDeepLinkHandler();
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
@@ -146,7 +112,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         Failed to render. Please report to{' '}
         <button
           className="font-bold underline"
-          onClick={() => window.main.openInBrowser('https://github.com/Kong/insomnia/issues')}
+          onClick={() => window.main.openInBrowser('https://github.com/outmanos/restless/issues')}
         >
           our Github Issues
         </button>
@@ -164,13 +130,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         >
           Try to reload the app
         </RouterLink>
-        <Button
-          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => logoutFetcher.submit()}
-        >
-          Logout{' '}
-          <span>{logoutFetcher.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
       </div>
       <div className="overflow-y-auto p-6 text-(--color-font)">
         <code className="p-2 break-all">{getErrorStack(error)}</code>
@@ -207,25 +166,24 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       connect-src
             'self'
             data:
-            insomnia-event-source:
             insomnia-templating-worker-database:
             https:
             http:
       ;
       default-src
             *
-            insomnia://*
+            restless://*
       ;
       img-src
             blob:
             data:
             *
-            insomnia://*
+            restless://*
       ;
       frame-src
             blob:
             *
-            insomnia://*
+            restless://*
       ;
       script-src
             'self'
@@ -241,7 +199,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             data:
             mediastream:
             *
-            insomnia://*
+            restless://*
       ;
       "
         />
@@ -262,72 +220,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 export const HydrateFallback = () => {
   return (
     <div id="app-loading-indicator" className="fixed top-0 left-0 flex h-full w-full items-center justify-center">
-      <div className="relative">
-        <svg viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd" width="100">
-          <circle
-            cx="36"
-            cy="36"
-            r="36"
-            fill="none"
-            stroke="var(--hl, rgb(130, 130, 130))"
-            strokeOpacity="0.1"
-            strokeWidth="4px"
-            transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"
-          />
-          <circle
-            cx="36"
-            cy="36"
-            r="36"
-            fill="none"
-            stroke="var(--hl, rgb(130, 130, 130))"
-            strokeOpacity="0.8"
-            strokeWidth="4px"
-            strokeDasharray="56,172,0,0"
-            transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"
-          >
-            <animateTransform
-              attributeName="transform"
-              type="rotate"
-              from="0 36 36"
-              to="360 36 36"
-              dur="0.8s"
-              repeatCount="indefinite"
-              additive="sum"
-            />
-          </circle>
-          <path
-            d="M19 37.033c9.96 0 18.033-8.073 18.033-18.033S28.96.967 19 .967.967 9.04.967 19 9.04 37.033 19 37.033z"
-            fill="#fff"
-            fillRule="nonzero"
-            transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"
-          />
-          <path
-            d="M19 0C8.506 0 0 8.506 0 19s8.506 19 19 19 19-8.506 19-19S29.494 0 19 0zm0 1.932c9.426 0 17.068 7.642 17.068 17.068 0 9.426-7.642 17.068-17.068 17.068-9.426 0-17.068-7.642-17.068-17.068C1.932 9.574 9.574 1.932 19 1.932z"
-            fill="#4000bf"
-            fillRule="nonzero"
-            transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"
-          />
-          <path
-            d="M19.214 5.474c7.47 0 13.525 6.057 13.525 13.526 0 7.469-6.055 13.526-13.525 13.526-7.47 0-13.526-6.057-13.526-13.526 0-1.825.362-3.567 1.019-5.156a5.266 5.266 0 004.243 2.15c2.885 0 5.26-2.375 5.26-5.261a5.263 5.263 0 00-2.15-4.242 13.5 13.5 0 015.154-1.017z"
-            fill="url(#_Linear1)"
-            transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"
-          />
-          <defs>
-            <linearGradient
-              id="_Linear1"
-              x1="0"
-              y1="0"
-              x2="1"
-              y2="0"
-              gradientUnits="userSpaceOnUse"
-              gradientTransform="rotate(-90 25.87 6.655) scale(27.0508)"
-            >
-              <stop offset="0" stopColor="#7400e1" />
-              <stop offset="1" stopColor="#4000bf" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+      <AppLogo width={72} height={72} className="animate-pulse" />
     </div>
   );
 };
@@ -356,7 +249,7 @@ const Root = () => {
     // out of it so a paste cannot create extra collections there.
     if (
       !organizationId ||
-      (projectId && models.project.isScratchpadProject({ _id: projectId }))
+      false
     ) {
       return;
     }
@@ -379,13 +272,10 @@ const Root = () => {
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
-  const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
-  const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
     key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   });
   const navigate = useNavigate();
-  useAuthDeepLinkHandler();
 
   const { revalidate } = useRevalidator();
   // Used to adopt a folder opened from the OS — going through the project-creation
@@ -397,16 +287,6 @@ const Root = () => {
   const latestInSubmission = useLatest(ifInSubmission);
 
   useEffect(() => {
-    const unsubLoggedIn = window.main.on('loggedIn', (_, isLoggedIn: boolean) => {
-      if (!latestInSubmission.current) {
-        if (!isLoggedIn) {
-          // If the user just logged out, navigate to the login page
-          navigate(href('/auth/login'));
-        } else {
-          navigate(href('/organization'));
-        }
-      }
-    });
     const unsubGitDbSynced = window.main.on('git.db-synced', () => {
       if (!latestInSubmission.current) {
         revalidate();
@@ -438,24 +318,38 @@ const Root = () => {
       });
     });
     return () => {
-      unsubLoggedIn();
       unsubGitDbSynced();
       unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
 
+  useEffect(() => dimTitleBarWithDialogs(), []);
+
   useEffect(() => {
-    return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
+    return window.main.on('git-device-code', (_: IpcRendererEvent, code: string) => {
+      showModal(AlertModal, {
+        title: 'Authorize on GitHub',
+        message: `Enter code ${code} in the browser. It has been copied to your clipboard.`,
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    return window.main.on('shell:open', async (_: IpcRendererEvent, link: string) => {
+      let url: string | null = link;
+      if (url.startsWith('insomnia://')) {
+        const { handleInsomniaLinks } = await services.settings.get();
+        url = handleInsomniaLinks ? convertInsomniaDeepLink(url) : null;
+      }
+      if (!url) {
+        return;
+      }
       const parsed = parseDeepLinkUrl(url);
       if (!parsed) {
         return;
       }
       const { urlWithoutParams, params } = parsed;
-      // Handled by useAuthDeepLinkHandler (registered in both Root and ErrorBoundary)
-      if (urlWithoutParams === 'insomnia://app/auth/login') {
-        return;
-      }
-      if (urlWithoutParams === 'insomnia://app/alert') {
+      if (urlWithoutParams === 'restless://app/alert') {
         return showModal(AlertModal, {
           title: params.title,
           message: params.message,
@@ -464,26 +358,12 @@ const Root = () => {
       // Open a local folder as a Git project (from the OS: Finder "Open With",
       // `insomnia /path/to/folder`, or this deep link). The main process has
       // already verified the path is an existing directory
-      if (urlWithoutParams === 'insomnia://app/open-folder') {
+      if (urlWithoutParams === 'restless://app/open-folder') {
         const folderPath = params.path;
         if (!folderPath) {
           return;
         }
-        const userSession = await services.userSession.get();
-        if (!userSession.id) {
-          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
-          window.localStorage.setItem('logoutMessage', 'Please log in to open a folder in Insomnia.');
-          return navigate(href('/auth/login'));
-        }
-        // Create the project in the currently active org, falling back to the
-        // last-visited org (the running app always has one).
-        const targetOrg =
-          organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID
-            ? organizationId
-            : window.localStorage.getItem('lastVisitedOrganizationId') || '';
-        if (!targetOrg) {
-          return navigate(href('/organization'));
-        }
+        const targetOrg = models.organization.LOCAL_ORGANIZATION_ID;
         // Opening a folder from the OS adopts whatever it contains — confirm trust first.
         if (!(await confirmOpenFolderTrust(folderPath))) {
           return;
@@ -501,28 +381,10 @@ const Root = () => {
         });
       }
       // Supports params: uri, mcp, curl, clipboard, file, origin, endpoint, operationId
-      if (urlWithoutParams === 'insomnia://app/import') {
+      if (urlWithoutParams === 'restless://app/import') {
         // Clean up the flag set during deep-link replay so it never leaks
         // into later modal evaluations within the same session.
         window.sessionStorage.removeItem('suppressWelcomeModals');
-
-        const importSource = params.source?.trim() || undefined;
-        const importSourceUrl = params.sourceUrl?.trim() || undefined;
-        const hasAttribution = !!(importSource || importSourceUrl);
-        if (hasAttribution) {
-          window.sessionStorage.setItem(
-            PENDING_IMPORT_ATTRIBUTION_KEY,
-            JSON.stringify({ importSource, importSourceUrl }),
-          );
-        }
-        const userSession = await services.userSession.get();
-        if (!userSession.id) {
-          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
-          window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
-          trackImportEvent(AnalyticsEvent.importLoginRequired);
-          return navigate(href('/auth/login'));
-        }
-        trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
         const resource = resolveImportDeepLink(params);
         if (!resource) {
@@ -543,7 +405,7 @@ const Root = () => {
           },
         });
       }
-      if (urlWithoutParams === 'insomnia://plugins/install') {
+      if (urlWithoutParams === 'restless://plugins/install') {
         if (!params.name || params.name.trim() === '') {
           return showError({
             title: 'Plugin Install',
@@ -577,7 +439,7 @@ const Root = () => {
           },
         });
       }
-      if (urlWithoutParams === 'insomnia://plugins/theme') {
+      if (urlWithoutParams === 'restless://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
         showModal(AskModal, {
           title: 'Install Theme',
@@ -604,8 +466,8 @@ const Root = () => {
         });
       }
       if (
-        urlWithoutParams === 'insomnia://oauth/github/authenticate' ||
-        urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
+        urlWithoutParams === 'restless://oauth/github/authenticate' ||
+        urlWithoutParams === 'restless://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
         return gitProviderCompleteSignInSubmit({
@@ -614,7 +476,7 @@ const Root = () => {
           provider: 'github',
         });
       }
-      if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
+      if (urlWithoutParams === 'restless://oauth/gitlab/authenticate') {
         const { code, state } = params;
         return gitProviderCompleteSignInSubmit({
           code,
@@ -622,39 +484,7 @@ const Root = () => {
           provider: 'gitlab',
         });
       }
-      if (urlWithoutParams === 'insomnia://app/auth/finish') {
-        return authorizeSubmit({
-          code: params.box,
-        });
-      }
-      if (urlWithoutParams === 'insomnia://app/open/organization') {
-        // if user is logged out, navigate to authorize instead
-        // gracefully handle open org in app from browser
-        const userSession = await services.userSession.get();
-        if (!userSession.id || userSession.id === '') {
-          const url = new URL(getLoginUrl());
-          window.main.openInBrowser(url.toString());
-          window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
-          return navigate(href('/auth/authorize'));
-        }
-        return navigate(`/organization/${params.organizationId}`);
-      }
-      if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
-        const { url: redirectUrl, encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
-        if (redirectUrl) {
-          return redirectToDefaultBrowserSubmit({
-            redirectUrl,
-          });
-        } else if (encryptedRedirectUrl && encryptedKey && iv) {
-          return redirectToDefaultBrowserSubmit({
-            encryptedRedirectUrl,
-            encryptedKey,
-            iv,
-          });
-        }
-        return;
-      }
-      if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
+      if (urlWithoutParams === 'restless://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
           const authResult = (await plugins.executePluginMainAction({
@@ -734,15 +564,13 @@ const Root = () => {
       console.log(`Unknown deep link: ${url}`);
     });
   }, [
-    authorizeSubmit,
     createCloudCredentials,
     gitProviderCompleteSignInSubmit,
     navigate,
     openFolderSubmit,
     organizationId,
     projectId,
-    redirectToDefaultBrowserSubmit,
-  ]);
+    ]);
 
   // Surface failures from adopting an OS-opened folder (e.g. unreadable folder or
   // a collision with an existing project).
@@ -752,28 +580,12 @@ const Root = () => {
     }
   }, [openFolderFetcher.data, openFolderFetcher.state]);
 
-  // Replay a deep link that was queued before login (e.g. insomnia://app/import
-  // clicked while signed out).  We wait for organizationId so that the full
-  // redirect chain (org → project) has settled and the import modal can read
-  // route params.  For users with no projects yet the "-- New Project --"
-  // default in the import dialog is the correct behaviour.
-  useEffect(() => {
-    const pendingDeepLink = window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize');
-    if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
-      window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
-      window.sessionStorage.setItem('suppressWelcomeModals', 'true');
-      trackImportEvent(AnalyticsEvent.importResumedAfterLogin);
-      window.main.openDeepLink(pendingDeepLink);
-    }
-  }, [organizationId]);
-
   useEffect(() => {
     const STORAGE_KEY = 'plugin-system-changes-toast-shown';
     if (localStorage.getItem(STORAGE_KEY)) {
       return;
     }
-    isLoggedIn().then(loggedIn => {
-      if (!loggedIn) return;
+    Promise.resolve().then(() => {
       plugins.getPlugins().then(allPlugins => {
         const userPlugins = allPlugins.filter(p => p.directory !== '');
         if (userPlugins.length > 0) {
@@ -784,7 +596,7 @@ const Root = () => {
                 <>
                   You are running at least one plug-in that may be impacted.{' '}
                   <Button
-                    onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
+                    onClick={() => window.main.openInBrowser('https://github.com/outmanos/restless/releases')}
                     className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
                   >
                     Learn more
@@ -810,7 +622,7 @@ const Root = () => {
       <Modals />
       <VariableSourceTooltipHost />
       <AppHooks />
-      {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
+      {/* triggered by restless://app/import and pasting a cURL with no focus */}
       {importTrigger && (
         <ImportModal
           key={importTrigger.source.startedAt}

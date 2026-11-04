@@ -1,5 +1,4 @@
 import type * as Har from 'har-format';
-import { isApiError, upsertMockbin } from 'insomnia-api';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
@@ -15,14 +14,13 @@ import {
   CONTENT_TYPE_YAML,
   contentTypesMap,
   getMockServiceBinURL,
-  getMockServiceURL,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
+import { upsertMockbin } from '~/common/mock-api';
 import { invariant } from '~/common/utils/invariant';
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -33,7 +31,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
@@ -148,9 +145,8 @@ export function useMockRouteLoaderData() {
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
 
-  const { userSession } = useRootLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
-  const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+  const mockbinUrl = mockServer.url;
 
   const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -164,8 +160,6 @@ export const MockRouteRoute = () => {
       const res = await upsertMockbin({
         mockbinUrl,
         compoundId,
-        organizationId,
-        sessionId: userSession.id,
         method: mockRoute.method,
         data: await mockRouteToHar({
           statusCode: mockRoute.statusCode,
@@ -189,10 +183,6 @@ export const MockRouteRoute = () => {
       }
       return 'Unexpected response, see console for details';
     } catch (e) {
-      if (isApiError(e)) {
-        console.error('error response', e);
-        return `Mock API ${e.name}:\n${e.message}`;
-      }
       const errorMessage = e instanceof Error ? e.message : String(e);
       return `Unhandled contacting Mock API at ${mockbinUrl}\n${errorMessage}`;
     }
@@ -302,13 +292,6 @@ export const MockRouteRoute = () => {
                 mode={mockRoute.mimeType}
                 placeholder="..."
                 noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
-                updateFilter={filter => {
-                  if (filter) {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.filterCreatedResponseBody,
-                    });
-                  }
-                }}
               />
             ) : (
               <EmptyStatePane

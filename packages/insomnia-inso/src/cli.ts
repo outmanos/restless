@@ -8,13 +8,6 @@ import { cosmiconfig } from 'cosmiconfig';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
-import { configureV3ClientDefaults } from 'insomnia/src/common/configure-v3-client';
-import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
-import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
-import { getSendRequestCallbackMemDb } from 'insomnia/src/network/send-request.node';
-import { initRuntime } from 'insomnia/src/runtimes';
-import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
-import { configureFetch } from 'insomnia-api';
 import type {
   Environment,
   Request,
@@ -30,11 +23,14 @@ import { generate } from 'insomnia-testing/src/generate/generate';
 import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
 import Papa from 'papaparse';
+import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'restless/src/common/constants';
+import { getSendRequestCallbackMemDb } from 'restless/src/network/send-request.node';
+import { initRuntime } from 'restless/src/runtimes';
+import { nodeRuntime } from 'restless/src/runtimes/runtime.node';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
 import packageJson from '../package.json';
-import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
 import { RunCollectionResultReport } from './commands/run-collection/result-report';
@@ -69,8 +65,6 @@ if (!isDevelopment()) {
   process.removeAllListeners('warning');
 }
 
-configureFetch(options => insomniaFetch({ ...options }));
-configureV3ClientDefaults();
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
@@ -323,22 +317,23 @@ export const go = (args?: string[]) => {
   // export can remove annotations and output to a file
 
   program
+    .name('rl')
     .version(version, '-v, --version')
     .description(
-      `A CLI for Insomnia!
-  With this tool you can test, lint, and export your Insomnia data.
-  Inso will try to detect your locally installed Insomnia data.
-  You can also point it at a git repository folder, or an Insomnia export file.
+      `A CLI for Restless!
+  With this tool you can test, lint, and export your Restless data.
+  Restless CLI will try to detect your locally installed Restless data.
+  You can also point it at a git repository folder, or an Restless export file.
 
   Examples:
-  $ inso run collection
-  $ inso run test
-  $ inso lint spec
-  $ inso export spec
+  $ rl run collection
+  $ rl run test
+  $ rl lint spec
+  $ rl export spec
 
 
-  Inso also supports configuration files, by default it will look for .insorc in the current/provided working directory.
-  $ inso export spec --config /some/path/.insorc
+  Restless CLI also supports configuration files, by default it will look for .insorc in the current/provided working directory.
+  $ rl export spec --config /some/path/.insorc
 `,
     )
     .option('-w, --workingDir <dir>', 'set working directory/file: .insomnia folder, *.db.json, export.yaml', '')
@@ -476,13 +471,8 @@ export const go = (args?: string[]) => {
           // TODO: is this necessary?
           const success = options.verbose ? await runTestPromise : await noConsoleLog(() => runTestPromise);
 
-          await trackInsoEvent(InsoEvent.runTest, { success });
-          await flushAnalytics();
-
           return process.exit(success ? 0 : 1);
         } catch (error) {
-          await trackInsoEvent(InsoEvent.runTest, { success: false });
-          await flushAnalytics();
 
           logErrorAndExit(error);
         }
@@ -629,7 +619,7 @@ export const go = (args?: string[]) => {
   TIP: If you're running "inso" inside a Git project, specify the path to the Insomnia YAML file containing the global environment using the "--globals" option.
   
   Example:
-    $ inso run collection --globals /path/to/global-environment.yaml
+    $ rl run collection --globals /path/to/global-environment.yaml
                 `,
               );
               return process.exit(1);
@@ -871,16 +861,10 @@ export const go = (args?: string[]) => {
 
           await report.saveReport();
 
-          await trackInsoEvent(InsoEvent.runCollection, { success });
-          await flushAnalytics();
-
           return process.exit(success ? 0 : 1);
         } catch (error) {
           report.update({ error: (error instanceof Error ? error.message : String(error)) || 'Unknown error' });
           await report.saveReport();
-
-          await trackInsoEvent(InsoEvent.runCollection, { success: false });
-          await flushAnalytics();
 
           logErrorAndExit(error);
         }
@@ -943,13 +927,8 @@ export const go = (args?: string[]) => {
       try {
         const { isValid } = await lintSpecification({ specContent, rulesetFileName });
 
-        await trackInsoEvent(InsoEvent.lintSpec, { success: isValid });
-        await flushAnalytics();
-
         return process.exit(isValid ? 0 : 1);
       } catch (error) {
-        await trackInsoEvent(InsoEvent.lintSpec, { success: false });
-        await flushAnalytics();
 
         logErrorAndExit(error);
       }
@@ -982,21 +961,13 @@ export const go = (args?: string[]) => {
         if (!outputPath) {
           logger.log(toExport);
 
-          await trackInsoEvent(InsoEvent.exportSpec, { success: true });
-          await flushAnalytics();
-
           return process.exit(0);
         }
         const filePath = await writeFileWithCliOptions(outputPath, toExport);
         logger.log(`Specification exported to "${filePath}".`);
 
-        await trackInsoEvent(InsoEvent.exportSpec, { success: true });
-        await flushAnalytics();
-
         return process.exit(0);
       } catch (error) {
-        await trackInsoEvent(InsoEvent.exportSpec, { success: false });
-        await flushAnalytics();
 
         logErrorAndExit(error);
       }
@@ -1033,7 +1004,6 @@ export const go = (args?: string[]) => {
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
       // Track script invocation - the underlying command will track its own success/failure
-      await trackInsoEvent(InsoEvent.script);
 
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
     });

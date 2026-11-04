@@ -1,9 +1,9 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import type { StorageRules } from 'insomnia-api';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Label, Radio, RadioGroup } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import type { ProjectType } from '~/ui/components/project/utils';
 
 interface ProjectTypeItem {
@@ -26,21 +26,14 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       type: 'local',
       icon: 'laptop',
       name: 'Local Vault',
-      description: 'For working alone with data stored on your machine.',
+      description: 'Stored in the app on this machine.',
       isDisabled: !storageRules.enableLocalVault,
-    },
-    {
-      type: 'remote',
-      icon: 'globe',
-      name: 'Cloud Sync',
-      description: 'Out of the box collaboration with data stored securely to the cloud.',
-      isDisabled: !storageRules.enableCloudSync,
     },
     {
       type: 'git',
       icon: ['fab', 'git-alt'],
       name: 'Git Sync',
-      description: 'Collaborate with others securely using your existing git provider.',
+      description: 'Plain files in a folder you control. Adding a remote is optional.',
       isDisabled: !storageRules.enableGitSync,
     },
   ];

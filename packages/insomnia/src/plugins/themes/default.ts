@@ -1,11 +1,11 @@
 const sidebarBackground = {
-  default: '#2C2C2C',
-  success: '#7ecf2b',
-  notice: '#f0e137',
-  warning: '#ff9a1f',
-  danger: '#ff5631',
-  surprise: '#a896ff',
-  info: '#46c1e6',
+  default: '#131316',
+  success: '#4ade80',
+  notice: '#facc15',
+  warning: '#fb923c',
+  danger: '#f87171',
+  surprise: '#7c6cf0',
+  info: '#38bdf8',
 };
 
 export default {
@@ -14,31 +14,31 @@ export default {
   theme: {
     background: sidebarBackground,
     foreground: {
-      default: '#ddd',
+      default: '#d4d4d8',
     },
     styles: {
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 30, 30, 0.8)',
+          default: 'rgba(0, 0, 0, 0.5)',
         },
         foreground: {
-          default: '#ddd',
+          default: '#d4d4d8',
         },
       },
       dialog: {
         background: {
-          default: '#2a2a2a',
+          default: '#1c1c20',
         },
       },
       appHeader: {
         background: {
-          default: '#2C2C2C',
+          default: '#131316',
         },
       },
       sidebar: {
         background: sidebarBackground,
         foreground: {
-          default: '#e0e0e0',
+          default: '#d4d4d8',
         },
         highlight: {
           default: '#999',
@@ -46,7 +46,7 @@ export default {
       },
       sidebarHeader: {
         background: {
-          default: '#695eb8',
+          default: '#131316',
         },
         foreground: {
           default: '#fff',
@@ -54,25 +54,25 @@ export default {
       },
       paneHeader: {
         foreground: {
-          default: '#ccc',
+          default: '#d4d4d8',
         },
         background: {
-          default: '#212121',
-          success: '#75ba24',
-          notice: '#d8c84d',
-          warning: '#ec8702',
-          danger: '#e15251',
-          surprise: '#8776d5',
-          info: '#20aed9',
+          default: '#18181b',
+          success: '#22c55e',
+          notice: '#eab308',
+          warning: '#f97316',
+          danger: '#ef4444',
+          surprise: '#6d5ae6',
+          info: '#0ea5e9',
         },
       },
       pane: {
         background: {
           ...sidebarBackground,
-          default: '#292929',
+          default: '#18181b',
         },
         foreground: {
-          default: '#e0e0e0',
+          default: '#d4d4d8',
         },
         highlight: {
           default: '#999',

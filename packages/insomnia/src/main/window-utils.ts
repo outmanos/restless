@@ -2,26 +2,13 @@ import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
 
-import {
-  app,
-  BrowserWindow,
-  type BrowserWindow as ElectronBrowserWindow,
-  clipboard,
-  dialog,
-  ipcMain,
-  Menu,
-  type MenuItem,
-  type MenuItemConstructorOptions,
-  MessageChannelMain,
-  screen,
-  shell,
-} from 'electron';
+import { app, BrowserWindow, type BrowserWindow as ElectronBrowserWindow, clipboard, dialog, ipcMain, Menu, type MenuItem, type MenuItemConstructorOptions, MessageChannelMain, nativeTheme, screen, shell } from 'electron';
 import { models, services } from 'insomnia-data';
 import { isLinux, isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
+import appConfig from '../../config/config.json';
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { docsBase } from '../common/documentation';
@@ -29,16 +16,20 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { hasTitleBarOverlay, setAppMenu } from './title-bar';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
+
+// One pixel under the header, so its bottom border runs beneath the window controls
+const TITLE_BAR_HEIGHT = 34;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+const browserWindows = new Map<'Restless' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 export function getMainWindow(): ElectronBrowserWindow | null {
-  return browserWindows.get('Insomnia') ?? null;
+  return browserWindows.get('Restless') ?? null;
 }
 let hiddenWindowIsBusy = false;
 
@@ -95,7 +86,7 @@ const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: Bro
 };
 
 export async function createHiddenBrowserWindow() {
-  const mainWindow = browserWindows.get('Insomnia');
+  const mainWindow = browserWindows.get('Restless');
   invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
   console.log('[main] Registering the hidden window restarting handler');
@@ -205,7 +196,7 @@ export function createWindow(): ElectronBrowserWindow {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
-  const appLogo = 'static/insomnia-core-logo_16x.png';
+  const appLogo = 'static/app-icon.png';
   let isVisibleOnAnyDisplay = true;
 
   for (const d of screen.getAllDisplays()) {
@@ -224,12 +215,24 @@ export function createWindow(): ElectronBrowserWindow {
     }
   }
 
+  // Chromium reads this when it creates the window controls, so it must come first
+  nativeTheme.themeSource = getElectronStorage().getItem('themeSource', 'dark');
+
   const mainBrowserWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
     // Other options
-    backgroundColor: '#2C2C2C',
+    backgroundColor: '#18181b',
+    ...(isMac
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 10, y: 9 } }
+      : {
+          frame: false,
+          titleBarStyle: 'hidden' as const,
+          ...(hasTitleBarOverlay()
+            ? { titleBarOverlay: { color: '#131316', symbolColor: '#d4d4d8', height: TITLE_BAR_HEIGHT } }
+            : {}),
+        }),
     fullscreen: fullscreen,
     fullscreenable: true,
     title: `${getProductName()} ${getAppVersion()}`,
@@ -249,7 +252,10 @@ export function createWindow(): ElectronBrowserWindow {
       ...MAIN_WINDOW_SECURITY,
     },
   });
-  browserWindows.set('Insomnia', mainBrowserWindow);
+  if (!isMac) {
+    mainBrowserWindow.setMenuBarVisibility(false);
+  }
+  browserWindows.set('Restless', mainBrowserWindow);
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
@@ -304,8 +310,8 @@ export function createWindow(): ElectronBrowserWindow {
   mainBrowserWindow.loadURL(appUrl);
   // Emitted when the window is closed.
   mainBrowserWindow.on('closed', () => {
-    if (browserWindows.get('Insomnia')) {
-      browserWindows.delete('Insomnia');
+    if (browserWindows.get('Restless')) {
+      browserWindows.delete('Restless');
     }
   });
 
@@ -317,20 +323,41 @@ export function createWindow(): ElectronBrowserWindow {
     mainBrowserWindow.webContents.send('mainWindowFocusChange', false);
   });
 
+  const openFolderItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Open Folder…`,
+    click: async () => {
+      const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+      const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        title: 'Open Folder',
+        buttonLabel: 'Open',
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (!canceled && filePaths[0]) {
+        window.webContents.send('shell:open', `restless://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
+      }
+    },
+  };
+
+  const preferencesItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Preferences`,
+    click: () => {
+      mainBrowserWindow.webContents?.send('toggle-preferences');
+    },
+  };
+  const changelogItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Changelog`,
+    click: () => shell.openExternal(`https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/releases`),
+  };
+  const quitItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Quit`,
+    accelerator: 'CmdOrCtrl+Q',
+    click: () => app.quit(),
+  };
+
   const applicationMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
-      {
-        label: `${MNEMONIC_SYM}Preferences`,
-        click: () => {
-          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
-          mainBrowserWindow.webContents?.send('toggle-preferences');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Changelog`,
-        click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
-      },
+      preferencesItem,
       {
         type: 'separator',
       },
@@ -344,11 +371,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         type: 'separator',
       },
-      {
-        label: `${MNEMONIC_SYM}Quit`,
-        accelerator: 'CmdOrCtrl+Q',
-        click: () => app.quit(),
-      },
+      quitItem,
     ],
   };
 
@@ -401,6 +424,7 @@ export function createWindow(): ElectronBrowserWindow {
   const viewMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}View`,
     submenu: [
+      ...(isMac ? [] : [{ label: `${MNEMONIC_SYM}Minimize`, role: 'minimize' as const }, { type: 'separator' as const }]),
       {
         label: `Toggle ${MNEMONIC_SYM}Full Screen`,
         role: 'togglefullscreen',
@@ -524,6 +548,7 @@ export function createWindow(): ElectronBrowserWindow {
           }
         },
       },
+      changelogItem,
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
@@ -568,7 +593,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://insomnia.rest/license');
+          shell.openExternal('https://github.com/outmanos/restless/blob/main/LICENSE');
         },
       },
     ],
@@ -714,60 +739,19 @@ export function createWindow(): ElectronBrowserWindow {
           pluginWindow ? destroyPluginWindow() : createPluginWindow();
         },
       },
-      {
-        // Simulates the OS "Open folder in Insomnia" flow without a packaged build
-        // (Finder association / protocol handler only register for an installed app).
-        label: `${MNEMONIC_SYM}Open folder in Insomnia…`,
-        click: async () => {
-          const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
-          if (!window) {
-            return;
-          }
-          const { canceled, filePaths } = await dialog.showOpenDialog(window, {
-            title: 'Open folder in Insomnia',
-            buttonLabel: 'Open',
-            properties: ['openDirectory'],
-          });
-          if (canceled || !filePaths[0]) {
-            return;
-          }
-          window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
-        },
-      },
     ],
   };
-  const toolsMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Tools`,
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}Reload Plugins`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('reload-plugins');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Clear All Response History`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('clear-all-response-history');
-        },
-      },
-    ],
+  const reloadPluginsItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Reload Plugins`,
+    click: () => BrowserWindow.getFocusedWindow()?.webContents.send('reload-plugins'),
+  };
+  const clearResponseHistoryItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Clear All Response History`,
+    click: () => BrowserWindow.getFocusedWindow()?.webContents.send('clear-all-response-history'),
   };
   const template: MenuItemConstructorOptions[] = [];
   template.push(
-    applicationMenu,
+    ...(isMac ? [applicationMenu] : []),
     {
       label: `${MNEMONIC_SYM}File`,
       submenu: [
@@ -777,12 +761,17 @@ export function createWindow(): ElectronBrowserWindow {
             createWindow();
           },
         },
+        openFolderItem,
+        { type: 'separator' },
+        reloadPluginsItem,
+        clearResponseHistoryItem,
+        // macOS keeps these in the application menu
+        ...(isMac ? [] : [{ type: 'separator' } as const, preferencesItem, { type: 'separator' } as const, quitItem]),
       ],
     },
     editMenu,
     viewMenu,
-    windowMenu,
-    toolsMenu,
+    ...(isMac ? [windowMenu] : []),
     helpMenu,
   );
 
@@ -791,6 +780,7 @@ export function createWindow(): ElectronBrowserWindow {
   }
 
   const menu = Menu.buildFromTemplate(template);
+  setAppMenu(menu);
   if (isMac) {
     Menu.setApplicationMenu(menu);
   } else {
@@ -809,7 +799,7 @@ async function showUnresponsiveModal() {
     defaultId: 1,
     cancelId: 0,
     title: 'Unresponsive',
-    message: 'Insomnia has become unresponsive. Do you want to reload?',
+    message: 'Restless has become unresponsive. Do you want to reload?',
   });
 
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
@@ -902,7 +892,7 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 };
 
 export function createWindowsAndReturnMain() {
-  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
+  const mainWindow = browserWindows.get('Restless') ?? createWindow();
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }

@@ -1,5 +1,7 @@
-import React, { type FC } from 'react';
+import Color from 'color';
+import React, { type FC, useState } from 'react';
 import { Button, Checkbox, Label } from 'react-aria-components';
+import * as reactUse from 'react-use';
 
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 
@@ -72,9 +74,80 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   </svg>
 );
 
+const ACCENT_PRESETS = [
+  { name: 'Violet', color: '#7c6cf0' },
+  { name: 'Blue', color: '#2f7ff0' },
+  { name: 'Teal', color: '#14a8a0' },
+  { name: 'Green', color: '#3fa34d' },
+  { name: 'Amber', color: '#e0a100' },
+  { name: 'Orange', color: '#ea6a1f' },
+  { name: 'Red', color: '#e5484d' },
+  { name: 'Pink', color: '#e0489d' },
+];
+
+const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange: (color: string) => void }> = ({
+  accentColor,
+  themeAccent,
+  onChange,
+}) => {
+  const [draft, setDraft] = useState(accentColor);
+
+  // The picker fires on every move, and each change is saved to settings
+  reactUse.useDebounce(
+    () => {
+      if (draft !== accentColor) {
+        onChange(draft);
+      }
+    },
+    100,
+    [draft],
+  );
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span>Accent color</span>
+      {ACCENT_PRESETS.map(({ name, color }) => (
+        <Button
+          key={color}
+          aria-label={name}
+          aria-pressed={draft === color}
+          onPress={() => setDraft(color)}
+          style={{ backgroundColor: color }}
+          className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
+        />
+      ))}
+      <Label className="flex items-center gap-1 p-0! text-sm">
+        <input
+          type="color"
+          value={draft || themeAccent}
+          onChange={event => setDraft(event.target.value)}
+          className="h-5! w-5! cursor-pointer rounded-full bg-transparent"
+        />
+        Custom
+      </Label>
+      {draft && (
+        <Button onPress={() => setDraft('')} className="text-sm underline">
+          Use theme color
+        </Button>
+      )}
+    </div>
+  );
+};
+
 export const ThemePanel: FC = () => {
-  const { themes, activate, changeAutoDetect, isActive, isActiveDark, isActiveLight, autoDetectColorScheme } =
-    useThemes();
+  const {
+    themes,
+    activate,
+    changeAutoDetect,
+    isActive,
+    isActiveDark,
+    isActiveLight,
+    autoDetectColorScheme,
+    accentColor,
+    changeAccentColor,
+  } = useThemes();
+  const activeTheme = themes.find(theme => isActive(theme));
+  const themeAccent = Color(activeTheme?.theme.background?.surprise ?? '#7c6cf0').hex();
 
   return (
     <div className="flex flex-col gap-2">
@@ -85,10 +158,10 @@ export const ThemePanel: FC = () => {
           onChange={isSelected => changeAutoDetect(isSelected)}
           className="group flex h-full items-center p-0"
         >
-          <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+          <div className="flex h-[14px] w-[14px] items-center justify-center rounded-[4px] border border-solid border-(--hl-lg) transition-colors group-data-selected:border-(--color-surprise) group-data-selected:bg-(--color-surprise)">
             <Icon
-              icon={'check'}
-              className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+              icon="check"
+              className="h-[10px] w-[10px] text-(--color-font-surprise) opacity-0 group-data-indeterminate:opacity-100 group-data-selected:opacity-100"
             />
           </div>
         </Checkbox>
@@ -98,6 +171,8 @@ export const ThemePanel: FC = () => {
           hover over a theme and select either light (sun) or dark (moon).
         </HelpTooltip>
       </Label>
+
+      <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />
 
       <ul className="grid grid-flow-row grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
         {themes.map(theme => (

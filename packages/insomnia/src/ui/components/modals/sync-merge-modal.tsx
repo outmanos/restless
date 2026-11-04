@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import type { MergeConflict } from 'insomnia-vcs';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -17,11 +16,11 @@ import { parse, stringify } from 'yaml';
 import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import type { MergeConflict } from '~/sync/git/merge-types';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
-import { AnalyticsEvent } from '../../analytics';
 import { MergeEditor } from '../.client/codemirror/merge-editor';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
@@ -137,10 +136,6 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         onResolveAllRef.current = onResolveAll;
         onCancelUnresolvedRef.current = onCancelUnresolved;
         setIsOpen(true);
-
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.syncConflictResolutionStart,
-        });
       },
     }),
     [reset],
@@ -312,18 +307,6 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                   editorType === 'merge' ? RESOLUTION_SOURCE.MANUAL : RESOLUTION_SOURCE.CHOOSE,
                               })),
                             );
-                            // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
-                            if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
-                              window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.syncConflictResolutionCompleteTheirs,
-                              });
-                            }
-                            // if at least one conflict.choose is mine, track conflict resolution complete as mine
-                            if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
-                              window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.syncConflictResolutionCompleteMine,
-                              });
-                            }
 
                             reset();
                           }}

@@ -31,28 +31,17 @@ export const HAS_SEEN_ONBOARDING_KEY = `hasSeenOnboardingV${ONBOARDING_VERSION}`
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
-export const getInsomniaSession = () => env.INSOMNIA_SESSION;
-export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
-export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
 export const getInsomniaVaultSalt = () => env.INSOMNIA_VAULT_SALT;
 export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
-export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppBundlePlugins = () => appConfig.bundlePlugins;
+export const getAppBundlePlugins = () => appConfig.bundlePlugins as { name: string }[];
 // Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
-export const getSegmentWriteKey = () =>
-  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
-export const getSentryDsn = () => appConfig.sentryDsn;
-export const getCioWriteKey = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
-export const getCioSiteId = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
 // Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
@@ -103,37 +92,15 @@ export enum EditorKeyMap {
 export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
-export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
-export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
+// Fixed so it can be registered with OAuth providers
+export const OAUTH_LOOPBACK_PORT = 53_682;
+export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || `http://127.0.0.1:${OAUTH_LOOPBACK_PORT}/callback`;
 
 // API
-export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
+export const getMockServiceBinURL = (mockServer: MockServer, path: string) =>
+  `${mockServer.url}/bin/${mockServer._id}${path}`;
 
-export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
-  if (!mockServer.useInsomniaCloud) {
-    return `${mockServer.url}/bin/${mockServer._id}${path}`;
-  }
-  const baseUrl = getMockServiceURL();
-  const url = new URL(baseUrl);
-  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
-  return url.origin + path;
-};
 
-export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-// Customer.io CDP (analytics/in-app messaging) — see ui/hooks/use-cio.tsx
-export const getCioCdnUrl = () => 'https://cdp-eu.customer.io';
-export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
-export const getKonnectApiRegions = (): string[] => {
-  const regions = (env.KONNECT_API_REGIONS ?? '')
-    .split(',')
-    .map((r: string) => r.trim())
-    .filter(Boolean);
-  return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
-};
-
-// App website
-export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
 
 // GitHub API
 export const getGitHubRestApiUrl = () => env.INSOMNIA_GITHUB_REST_API_URL || 'https://api.github.com';
@@ -143,7 +110,7 @@ export const getGitHubGraphQLApiURL = () => env.INSOMNIA_GITHUB_API_URL || `${ge
 export const DEFAULT_BRANCH_NAME = 'master';
 
 // PLUGIN
-export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
+export const PLUGIN_HUB_BASE = 'https://www.npmjs.com/search?q=keywords%3Ainsomnia';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuf
@@ -151,7 +118,7 @@ export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
-export const DEFAULT_SIDEBAR_SIZE = 25;
+export const DEFAULT_SIDEBAR_SIZE = 20;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
@@ -349,8 +316,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   'type-asc': 'Requests First',
 };
 
-export const EXTERNAL_VAULT_PLUGIN_NAME = '@kong/insomnia-plugin-external-vault';
-export const AI_PLUGIN_NAME = '@kong/insomnia-plugin-ai';
+export const EXTERNAL_VAULT_PLUGIN_NAME = 'restless-plugin-secret-managers';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 

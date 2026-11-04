@@ -1,10 +1,10 @@
-import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials } from 'insomnia-data';
 import type { FC } from 'react';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Button, Form, Input, Label, TextField } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -13,7 +13,6 @@ import { GitCredentialSelect } from '~/ui/components/git-credentials/git-credent
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
-import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import {
   getLastCloneParentDir,
   type ProjectData,
@@ -266,11 +265,6 @@ export const ProjectCreateForm: FC<Props> = ({
               value={storageType}
               onChange={v => setStorageType(v as ProjectType)}
             />
-            <ProjectTypeWarning
-              isGitSyncEnabled={isGitSyncEnabled}
-              storageType={storageType}
-              storageRules={storageRules}
-            />
           </Form>
           {storageType === 'git' && isGitSyncEnabled && (
             <>
@@ -307,7 +301,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 <div className="flex flex-col gap-2 px-0.5">
                   <Label className="text-sm text-(--color-font)">Folder</Label>
                   <p className="text-xs">
-                    Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
+                    Restless will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
                   </p>
                   <div className="flex items-center gap-2">
@@ -378,8 +372,8 @@ export const ProjectCreateForm: FC<Props> = ({
                 Unknown Fields Detected
               </h3>
               <span>
-                The files listed below contain fields not recognized by this version of Insomnia (i.e. fields added by a
-                newer version of Insomnia, or manual edits).
+                The files listed below contain fields not recognized by this version of Restless (i.e. fields added by a
+                newer version of Restless, or manual edits).
               </span>
               <ul className="flex list-disc flex-col gap-2 pl-5 font-bold">
                 {insomniaFilesContainUnknownFields.map(f => (
@@ -391,7 +385,7 @@ export const ProjectCreateForm: FC<Props> = ({
 
               <span>
                 You can safely open and work with these files, but committing changes to these files from this version
-                of Insomnia may break or remove functionality for your collaborators. We recommend upgrading. Best
+                of Restless may break or remove functionality for your collaborators. We recommend upgrading. Best
                 practice is to collaborate from the same major version.
               </span>
             </div>

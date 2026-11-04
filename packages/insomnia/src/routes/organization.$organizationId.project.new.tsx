@@ -1,11 +1,8 @@
-import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -33,40 +30,7 @@ export interface CreateProjectData {
   openExistingDirectory?: string;
 }
 
-export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
-  // Local-only organizations are not known to the backend, so there is nothing to report.
-  if (models.organization.isLocalOrganizationId(organizationId)) {
-    return;
-  }
-  const projects = await services.project.listByOrganizationIds(organizationId);
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
-  const gitProjectsCount = gitRepositoryIds.length;
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await updateGitProjectCount({
-        organizationId,
-        sessionId,
-        gitProjectsCount,
-      });
-      return;
-    } catch {
-      if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
-      }
-    }
-  }
-
-  console.warn('Report git project count failed');
-};
-
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const user = await services.userSession.get();
-  const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
-  invariant(
-    newProjectData.storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
-    'Only local projects can be created in this organization',
-  );
 
   if (newProjectData.storageType === 'local') {
     const project = await services.project.create({
@@ -84,7 +48,6 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
         parentId: organizationId,
         gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
       });
-      reportGitProjectCount(organizationId, sessionId);
 
       return project._id;
     }
@@ -101,7 +64,6 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       if (errors) {
         throw new Error(errors.join(', '));
       }
-      reportGitProjectCount(organizationId, sessionId);
 
       return projectId;
     }
@@ -120,64 +82,15 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
     if (errors) {
       throw new Error(errors.join(', '));
     }
-    reportGitProjectCount(organizationId, sessionId);
 
     return projectId;
   }
 
-  try {
-    const newCloudProject = await createTeamProject({
-      sessionId,
-      organizationId,
-      name: newProjectData.name,
-    });
-
-    const project = await services.project.create({
-      _id: newCloudProject.id,
-      name: newCloudProject.name,
-      remoteId: newCloudProject.id,
-      parentId: organizationId,
-    });
-
-    return project._id;
-  } catch (error: unknown) {
-    if (isApiError(error)) {
-      let errMessage = 'An unexpected error occurred while creating the project. Please try again.';
-
-      if (error.name === 'FORBIDDEN') {
-        errMessage = 'You do not have permission to create a cloud project in this organization.';
-      } else if (error.name === 'NEEDS_TO_UPGRADE') {
-        errMessage = 'Upgrade your account in order to create new Cloud Projects.';
-      } else if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
-        errMessage = error.message ?? 'The owner of the organization allows only Local Vault project creation.';
-      }
-      throw new Error(errMessage);
-    }
-
-    throw error;
-  }
+  throw new Error('Unsupported project type');
 };
 
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
-
-  let git_provider = 'none';
-
-  if (newProjectData.credentialsId) {
-    const credentials = await services.gitCredentials.getById(newProjectData.credentialsId);
-    if (credentials) {
-      git_provider = credentials.provider;
-    }
-  }
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.projectCreated,
-    properties: {
-      storage: newProjectData.storageType,
-      git_provider,
-      project_id: newProjectId,
-    },
-  });
 
   showToast({
     title: 'Project created',

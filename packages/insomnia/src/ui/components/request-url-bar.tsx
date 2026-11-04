@@ -26,7 +26,6 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '../../ui/analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
@@ -38,7 +37,6 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown
 import { showModal } from './modals';
 import { AlertModal } from './modals/alert-modal';
 import { GenerateCodeModal } from './modals/generate-code-modal';
-import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
@@ -61,7 +59,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
     const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
-    const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
 
@@ -398,9 +395,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="code"
                           label="Generate Client Code"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuGenerateCodeClicked,
-                            });
                             showModal(GenerateCodeModal, { request: activeRequest });
                           }}
                         />
@@ -412,9 +406,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="clock-o"
                           label="Send After Delay"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked,
-                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',
@@ -432,9 +423,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="repeat"
                           label="Repeat on Interval"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuRepeatAfterIntervalClicked,
-                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send on Interval',
@@ -464,9 +452,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                             icon="download"
                             label="Download After Send"
                             onClick={async () => {
-                              window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.requestSendMenuDownloadAfterSendClicked,
-                              });
                               const { canceled, filePaths } = await window.dialog.showOpenDialog({
                                 title: 'Select Download Location',
                                 buttonLabel: 'Select',
@@ -485,9 +470,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="download"
                           label="Send And Download"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuSendAndDownloadClicked,
-                            });
                             sendOrConnect(true);
                           }}
                         />
@@ -534,18 +516,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
             ) && (
               <div className="mt-4">
-                <p>
-                  These are secret environment variables. However, the required vault key has not been provided yet.
-                </p>
-                <Button
-                  className="cursor- py-1 text-(--color-info) underline ring-1 ring-transparent focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  onPress={() => {
-                    setShowInputVaultKeyModal(true);
-                    setShowEnvVariableMissingModal(false);
-                  }}
-                >
-                  Click to input vault key
-                </Button>
+                <p>These are secret environment variables. Generate a vault key in Preferences to use them.</p>
                 <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {undefinedEnvironmentVariableList
                     ?.filter(variableName =>
@@ -565,7 +536,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               </div>
             )}
         </VariableMissingErrorModal>
-        {showInputVaultKeyModal && <InputVaultKeyModal onClose={() => setShowInputVaultKeyModal(false)} />}
       </div>
     );
   },

@@ -1,4 +1,4 @@
-const BINARY_PREFIX = 'Insomnia.Core';
+const BINARY_PREFIX = 'Restless';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
@@ -8,12 +8,12 @@ const BINARY_PREFIX = 'Insomnia.Core';
  */
 const config = {
   npmRebuild: false,
-  appId: 'com.insomnia.app',
+  appId: 'com.restless.app',
   protocols: [
     {
-      name: 'Insomnia',
+      name: 'Restless',
       role: 'Viewer',
-      schemes: ['insomnia'],
+      schemes: ['restless'],
     },
   ],
   files: [
@@ -24,7 +24,7 @@ const config = {
     },
     './package.json',
   ],
-  publish: null,
+  publish: { provider: 'github', owner: 'outmanos', repo: 'restless' },
   extraResources: [
     {
       from: './bin',
@@ -37,10 +37,7 @@ const config = {
   },
   fileAssociations: [],
   mac: {
-    hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
-    entitlements: './build/static/entitlements.mac.inherit.plist',
-    entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     x64ArchFiles: '*',
     target: [
@@ -57,8 +54,8 @@ const config = {
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
       NSLocalNetworkUsageDescription:
-        'Insomnia needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
-      // Allow Finder "Open With → Insomnia" on folders so they can be opened as Git projects.
+        'Restless needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
+      // Allow Finder "Open With → Restless" on folders so they can be opened as Git projects.
       CFBundleDocumentTypes: [
         {
           CFBundleTypeName: 'Folder',
@@ -68,10 +65,9 @@ const config = {
         },
       ],
     },
-    // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
-    notarize: true,
+    notarize: false,
     asarUnpack: [
-      'node_modules/@getinsomnia/node-libcurl',
+      'node_modules/node-libcurl',
       'node_modules/@node-llama-cpp/mac-arm64-metal',
       'node_modules/@node-llama-cpp/mac-x64',
       'node_modules/@node-llama-cpp/linux-arm64',
@@ -119,18 +115,8 @@ const config = {
         target: 'nsis',
         arch: ['x64'],
       },
-      {
-        target: 'squirrel',
-      },
     ],
-    signtoolOptions: {
-      sign: './customSign.js',
-      signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
-    },
-    publish: {
-      provider: 'generic',
-      url: 'https://updates.insomnia.rest/updates/win/',
-    },
+    publish: { provider: 'github', owner: 'outmanos', repo: 'restless' },
     generateUpdatesFilesForAllChannels: true,
   },
   nsis: {
@@ -145,12 +131,8 @@ const config = {
     uninstallerIcon: './build/icon.ico',
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: 'Insomnia',
+    shortcutName: 'Restless',
     deleteAppDataOnUninstall: false,
-  },
-  squirrelWindows: {
-    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
@@ -158,13 +140,13 @@ const config = {
   linux: {
     // artifactName: `${BINARY_PREFIX}-\${version}-\${arch}.\${ext}`, // TODO-ARM64 - Re-enable when we have ARM64 build from insomnia-ee
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    executableName: 'insomnia',
-    synopsis: 'The Collaborative API Client and Design Tool',
+    executableName: 'restless',
+    synopsis: 'The local-first API client',
     category: 'Development',
     desktop: {
       entry: {
-        Name: 'Insomnia',
-        Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
+        Name: 'Restless',
+        Comment: 'The local-first API client',
         Categories: 'Development',
         Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
       },

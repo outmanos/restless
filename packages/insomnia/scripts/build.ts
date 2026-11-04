@@ -20,8 +20,8 @@ export const start = async () => {
 
   console.log(`[build] node: ${process.version}`.trim());
 
-  if (process.version.indexOf('v24.') !== 0) {
-    console.log('[build] Node 24.x.x is required to build');
+  if (process.version.indexOf('v26.') !== 0) {
+    console.log('[build] Node 26.x.x is required to build');
     process.exit(1);
   }
 
@@ -44,6 +44,7 @@ export const start = async () => {
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
+  await copyFiles('../src/main/ai-provider.mjs', path.join(buildFolder, 'main/ai-provider.mjs'));
   // copy utility process scripts
   await copyFiles(
     '../src/main/mock-generation-process.mjs',

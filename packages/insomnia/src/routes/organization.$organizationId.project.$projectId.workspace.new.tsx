@@ -1,18 +1,14 @@
-import { upsertMockbin } from 'insomnia-api';
 import type { MockRoute, MockServer, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { getMockServiceURL, METHOD_GET } from '~/common/constants';
+import { METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { upsertMockbin } from '~/common/mock-api';
 import type { MockRouteData } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { trackCioEvent } from '~/ui/hooks/use-cio';
-import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
-import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -23,7 +19,7 @@ interface NewWorkspaceData {
   scope: WorkspaceScope;
   mcpServerUrl?: string;
   folderPath?: string;
-  mockServerType?: 'self-hosted' | 'cloud';
+  mockServerType?: 'self-hosted';
   mockServerUrl?: string;
   mockServerCreationType?: 'ai' | 'manual';
   mockServerOASFilePath?: string;
@@ -63,14 +59,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     if (scope === 'mock-server') {
       const mockServerType = workspaceData.mockServerType;
-      invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+      invariant(mockServerType === 'self-hosted', 'Mock Server type is required');
 
       const modelConfig = await window.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
         const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
         invariant(
           isFeatureEnabled,
-          'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.',
+          'Enable generating mock servers with AI in Preferences → AI to use this feature.',
         );
 
         const validationError = validateMockServerSpec(workspaceData);
@@ -126,7 +122,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         organizationId,
         projectId,
         name,
-        workspaceData.source,
       );
 
       if (mockServerError) {
@@ -150,55 +145,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         headers: [],
         description: '',
       });
-
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.mcpClientAdded,
-      });
     }
 
     // Create default env, cookie jar, and meta
     await services.environment.getOrCreateForParentId(workspace._id);
     await services.cookieJar.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
 
-    const { id } = await services.userSession.get();
-    if (
-      id &&
-      !workspaceMeta.gitRepositoryId &&
-      !models.project.isGitProject(project) &&
-      !models.project.isLocalProject(project)
-    ) {
-      await window.main.initializeWorkspaceBackendProject({
-        workspaceId: workspace._id,
-      });
-    }
-
-    let event = AnalyticsEvent.documentCreate;
-    let environmentType: string | undefined;
-
-    if (models.workspace.isCollection(workspace)) {
-      event = AnalyticsEvent.collectionCreate;
-    } else if (models.workspace.isEnvironment(workspace)) {
-      event = AnalyticsEvent.environmentCreate;
-      const environment = await services.environment.getById(workspace._id);
-      environmentType = environment?.isPrivate ? 'private' : 'global';
-    } else if (scope === 'mcp') {
-      event = AnalyticsEvent.mcpClientWorkspaceCreate;
-    }
-
-    window.main.trackAnalyticsEvent({
-      event: event,
-      properties: {
-        ...(environmentType && { type: environmentType }),
-        ...(workspaceData.source && { source: workspaceData.source }),
-      },
-    });
-
-    if (event === AnalyticsEvent.documentCreate) {
-      recordAction('document_created');
-    }
 
     if (workspaceData.withRequest) {
       const activeRequestId = (
@@ -211,25 +166,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       )._id;
 
       services.stats.incrementCreatedRequests();
-      // Keep graduation in sync with requests created via this path too (fire-and-forget,
-      // idempotent — see maybeLatchRequestThreshold).
-      services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
-
-      const requestCreatedProperties = {
-        requestType: 'HTTP',
-        request_url_length: 0,
-        ...(workspaceData.source && { source: workspaceData.source }),
-      };
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.requestCreated,
-        properties: requestCreatedProperties,
-      });
 
       // Send to Customer.io directly so the event is tied to the identified
       // user's email-bearing profile (only fires when logged in). See INS-2678.
-      trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
-
-      recordAction('request_created');
 
       if (!redirectAfterCreate) {
         return {
@@ -306,23 +245,16 @@ async function createMockServer(
   organizationId: string,
   projectId: string,
   name: string,
-  source?: string,
 ): Promise<string | undefined> {
   try {
-    const mockServerType = workspaceData.mockServerType!;
     const mockServerPatch: Partial<MockServer> = {
       name,
+      useInsomniaCloud: false,
+      url: workspaceData.mockServerUrl!.trim().replace(/\/+$/, ''),
     };
 
-    if (mockServerType === 'cloud') {
-      mockServerPatch.useInsomniaCloud = true;
-    } else {
-      mockServerPatch.useInsomniaCloud = false;
-      mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
-    }
-
     await services.environment.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.workspaceMeta.getOrCreateByParentId(workspace._id);
     const mockServer = await services.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
 
     const mockServerUrl = `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
@@ -332,8 +264,6 @@ async function createMockServer(
     })}/mock-server`;
 
     const modelConfig = await window.main.llm.getCurrentConfig();
-
-    const generationStartTime = Date.now();
 
     if (workspaceData.mockServerCreationType === 'ai') {
       let openapiSpec: string | undefined;
@@ -377,34 +307,10 @@ async function createMockServer(
         return result.error;
       }
 
-      const { id: sessionId } = await services.userSession.get();
-      await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
+      await createMockRoutes(result.routes, mockServer);
     }
 
     await database.flushChanges(flushId);
-
-    const generationDurationMs = Date.now() - generationStartTime;
-
-    const { id } = await services.userSession.get();
-    if (id && !workspaceMeta.gitRepositoryId) {
-      await window.main.initializeWorkspaceBackendProject({
-        workspaceId: workspace._id,
-      });
-    }
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockCreate,
-      properties: {
-        provider: (modelConfig && modelConfig.backend) || '',
-        model: (modelConfig && modelConfig.model) || '',
-        hosting: workspaceData.mockServerType || '',
-        generation: workspaceData.mockServerCreationType || '',
-        generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
-        dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
-        generation_duration_seconds: generationDurationMs / 1000,
-        ...(source && { source }),
-      },
-    });
 
     showToast(
       {
@@ -459,12 +365,7 @@ function validateMockServerSpec(workspaceData: NewWorkspaceData) {
   return null;
 }
 
-async function createMockRoutes(
-  routes: MockRouteData[],
-  mockServer: MockServer,
-  sessionId: string,
-  organizationId: string,
-) {
+async function createMockRoutes(routes: MockRouteData[], mockServer: MockServer) {
   for (const route of routes) {
     const mockRouteCreateData: Partial<MockRoute> = {
       parentId: mockServer._id,
@@ -483,14 +384,12 @@ async function createMockRoutes(
 
     try {
       const compoundId = mockRoute.parentId + mockRoute.name;
-      const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+      const mockbinUrl = mockServer.url;
 
-      if (mockbinUrl && sessionId) {
+      if (mockbinUrl) {
         await upsertMockbin({
           mockbinUrl,
           compoundId,
-          organizationId,
-          sessionId,
           method: route.method,
           data: await mockRouteToHar({
             statusCode: mockRoute.statusCode,

@@ -1,4 +1,3 @@
-import type { StorageRules } from 'insomnia-api';
 import type { Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { RefObject } from 'react';
@@ -6,9 +5,11 @@ import { useState } from 'react';
 import { Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -38,6 +39,7 @@ export const SidebarShortcutActionsDropdown = ({
   triggerRef,
   onWorkspaceCreated,
 }: Props) => {
+  const { settings } = useRootLoaderData()!;
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: 'collection' | 'design' | 'mock-server' | 'environment' | 'mcp';
     isOpen: boolean;
@@ -111,6 +113,7 @@ export const SidebarShortcutActionsDropdown = ({
           setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
           onOpenChange(false);
         },
+        canCreateMcpClient: settings.aiFeatures,
         canCreateMockServer: Boolean(target.kind === 'workspace' ? target.project?._id : target.doc?._id),
       })
     : allowCreateRequest

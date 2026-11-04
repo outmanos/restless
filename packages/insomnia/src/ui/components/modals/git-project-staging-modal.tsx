@@ -55,7 +55,6 @@ import {
 import type { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
 import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
@@ -65,6 +64,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { DiffEditor } from '../diff-view-editor';
@@ -580,14 +580,6 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     committingActionRef.current = push ? 'commit-push' : 'commit';
 
     const commits = getCommitsToSubmit();
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.recommendCommitsSaved,
-      properties: {
-        group_count: commits.length,
-        file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
-      },
-    });
     commitsFetcher.submit({
       projectId,
       commits: commits.map(commit => ({
@@ -1051,7 +1043,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               Commit
             </Button>
 
-            {isNonOriginBranch ? (
+            {!gitRepository?.uri ? null : isNonOriginBranch ? (
               <TooltipTrigger>
                 <Button
                   name="push"
@@ -1375,7 +1367,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               <Dialog className="outline-none">
                 You can now browse Git Sync project files on your local file system and manage changes using your normal
                 Git workflows.{' '}
-                <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                <a href="https://github.com/outmanos/restless#readme" className="underline">
                   Learn more ↗
                 </a>
               </Dialog>
@@ -1567,6 +1559,7 @@ const OriginalGitProjectStagingModal: FC<
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
   const diffChangesFetcherLoad = diffChangesFetcher.load;
 
+  const { settings } = useRootLoaderData()!;
   const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
 
   const [fileToDiff, setFileToDiff] = useState<{ path: string; staged: boolean } | null>(null);
@@ -1660,12 +1653,9 @@ const OriginalGitProjectStagingModal: FC<
 
   const handleGenerateCommits = React.useCallback(() => {
     if (commitGenerationCompleted) {
-      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.recommendCommitsCancelled });
       setCommitGenerationKey(commitGenerationKey + 1);
       return;
     }
-
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.recommendCommitsClicked });
     generateCommitsFetcher.submit({
       projectId,
     });
@@ -1814,7 +1804,7 @@ const OriginalGitProjectStagingModal: FC<
                         </Button>
                       </div>
                     )}
-                    {!isGenerateCommitMessagesWithAIEnabled && (
+                    {settings.aiFeatures && !isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
                           <Badge icon="sparkles" color="surprise" label="AI" />
@@ -1923,8 +1913,8 @@ const OriginalGitProjectStagingModal: FC<
                       </Heading>
                       {hasUnknownFields && (
                         <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
-                          The remote version of this file has fields not recognized by this version of Insomnia.
-                          Committing changes to this file from this version of Insomnia may break or remove
+                          The remote version of this file has fields not recognized by this version of Restless.
+                          Committing changes to this file from this version of Restless may break or remove
                           functionality for your collaborators. We recommend upgrading.
                         </WarningBanner>
                       )}
@@ -1933,8 +1923,8 @@ const OriginalGitProjectStagingModal: FC<
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
-                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">
-                          Insomnia metadata
+                        <LearnMoreLink href="https://github.com/outmanos/restless#readme">
+                          Restless metadata
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
@@ -2041,8 +2031,8 @@ const OriginalGitProjectStagingModal: FC<
 
 const UndiscardableChangeWarning = () => (
   <WarningBanner icon="exclamation-triangle">
-    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
-    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
+    This change is only Restless internally reformatting the file (often because of manual edits, or changes made in
+    other versions of Restless). It can&apos;t be discarded - Commit this file once to resolve it.
   </WarningBanner>
 );
 

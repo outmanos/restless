@@ -1,4 +1,9 @@
-import type { StorageRules } from 'insomnia-api';
+export interface StorageRules {
+  enableLocalVault: boolean;
+  enableGitSync: boolean;
+  isOverridden: boolean;
+}
+
 import { generateId } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
@@ -9,7 +14,6 @@ export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
 // This is used to identify Git Projects that are not connected to a remote yet
 export const EMPTY_GIT_PROJECT_ID = 'empty';
@@ -77,7 +81,7 @@ export function isConnectedGitProject(project: Project): project is GitProject {
   return isGitProject(project) && getEffectiveRepoId(project) !== null;
 }
 
-export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
+export const isScratchpadProject = (_project: Pick<Project, '_id'>) => false;
 export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject =>
   project.remoteId === null;
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
@@ -86,15 +90,10 @@ export const isGitProject = (project: Project): project is GitProject =>
   'gitRepositoryId' in project && (project.gitRepositoryId !== null || isEmptyGitProject(project));
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
-export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group' | 'k8sIngressController';
 
 interface CommonProject {
   name: string;
   mcpStdioAccess?: boolean;
-  konnectControlPlaneId?: string | null;
-  konnectClusterType?: string | null;
-  konnectDeploymentType?: KonnectDeploymentType | null;
-  konnectRegion?: string | null;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {
@@ -118,7 +117,7 @@ export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => m
 
 export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
-export const optionalKeys = ['konnectControlPlaneId', 'konnectClusterType', 'konnectDeploymentType', 'konnectRegion'];
+export const optionalKeys = [];
 
 export function init(): Partial<Project> {
   return {
@@ -160,22 +159,8 @@ export function getDefaultProjectStorageType(
       return 'remote';
     }
 
-    if (isRemoteProject(project)) {
-      if (storageRules.enableCloudSync) {
-        return 'remote';
-      }
-      if (storageRules.enableLocalVault) {
-        return 'local';
-      }
-      return 'git';
-    }
-
     if (storageRules.enableLocalVault) {
       return 'local';
-    }
-
-    if (storageRules.enableCloudSync) {
-      return 'remote';
     }
 
     return 'git';
@@ -184,10 +169,6 @@ export function getDefaultProjectStorageType(
   // When the project doesn't exist. That means the user create a new project
   if (storageRules.enableLocalVault) {
     return 'local';
-  }
-
-  if (storageRules.enableCloudSync) {
-    return 'remote';
   }
 
   if (storageRules.enableGitSync) {
@@ -199,7 +180,6 @@ export function getDefaultProjectStorageType(
 
 export function getProjectStorageTypeLabel(storageRules: StorageRules): string {
   const storageTypes = {
-    'Cloud Sync': storageRules.enableCloudSync,
     'Local Vault': storageRules.enableLocalVault,
     'Git Sync': storageRules.enableGitSync,
   };

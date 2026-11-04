@@ -4,7 +4,6 @@ import * as reactUse from 'react-use';
 
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 import { type ColorScheme } from '~/common/plugins/types';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { applyColorScheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -13,7 +12,7 @@ import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
   const { settings } = useRootLoaderData()!;
-  const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
+  const { accentColor, lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
@@ -41,6 +40,7 @@ export const useThemes = () => {
   const apply = useCallback(
     async (patch: Partial<ThemeSettings>) => {
       applyColorScheme({
+        accentColor,
         theme,
         autoDetectColorScheme,
         darkTheme,
@@ -49,18 +49,16 @@ export const useThemes = () => {
       });
       patchSettings(patch);
     },
-    [autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme],
+    [accentColor, autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme],
   );
+
+  const changeAccentColor = useCallback((accentColor: string) => apply({ accentColor }), [apply]);
 
   const changeAutoDetect = useCallback((autoDetectColorScheme: boolean) => apply({ autoDetectColorScheme }), [apply]);
 
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.themeChanged,
-        properties: { themeName, colorScheme },
-      });
 
       switch (colorScheme) {
         case 'light': {
@@ -94,6 +92,8 @@ export const useThemes = () => {
     activate,
     changeAutoDetect,
     autoDetectColorScheme,
+    accentColor,
+    changeAccentColor,
   };
 };
 

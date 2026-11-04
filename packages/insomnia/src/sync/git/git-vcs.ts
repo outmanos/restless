@@ -3,17 +3,18 @@ import path from 'node:path';
 import type { Change } from 'diff';
 import { diffLines } from 'diff';
 import type { GitAuthor, GitRemoteConfig } from 'insomnia-data';
-import { type AutoResolvedConflict, type MergeConflict } from 'insomnia-vcs';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import type { BlockedWrite } from '~/sync/git/fs-client';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import { type AutoResolvedConflict, type MergeConflict } from '~/sync/git/merge-types';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
+import { getDefaultGitAuthor } from './default-git-author';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
@@ -1184,7 +1185,13 @@ export class GitVCS {
 
   async commit(message: string) {
     console.log(`[git] Commit "${message}"`);
-    return git.commit({ ...this._baseOpts, message });
+    return git.commit({ ...this._baseOpts, message, author: await this.getFallbackAuthor() });
+  }
+
+  // Without a sign-in or repo config there is no author, and committing must still work offline
+  private async getFallbackAuthor() {
+    const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
+    return name ? undefined : getDefaultGitAuthor();
   }
 
   /**
@@ -1416,6 +1423,7 @@ export class GitVCS {
         });
 
         await git.merge({
+          author: await this.getFallbackAuthor(),
           ...this._baseOpts,
           ours: oursBranch,
           theirs: theirsBranch,
@@ -1924,6 +1932,7 @@ export class GitVCS {
     await git.add({ ...this._baseOpts, filepath: '.' });
 
     await git.commit({
+      author: await this.getFallbackAuthor(),
       ...this._baseOpts,
       message: commitMessage,
       parent: commitParent,

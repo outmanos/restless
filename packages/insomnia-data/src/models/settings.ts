@@ -18,7 +18,7 @@ export const prefix = 'set';
 export const canDuplicate = false;
 export const canSync = false;
 
-export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
+export type ThemeSettings = Pick<Settings, 'accentColor' | 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
 
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => model.type === type;
 
@@ -27,6 +27,7 @@ const forceVerticalLayout = process.env.PLAYWRIGHT_TEST ? true : false;
 
 export function init(): BaseSettings {
   return {
+    accentColor: '',
     autoDetectColorScheme: false,
     autoHideMenuBar: false,
     autocompleteDelay: 1200,
@@ -43,7 +44,6 @@ export function init(): BaseSettings {
     editorKeyMap: 'default',
     enableKeyMapForInlineTextEditors: false,
     editorLineWrapping: true,
-    enableAnalytics: true,
     showVariableSourceAndValue: false,
     filterResponsesByEnv: false,
     followRedirects: true,
@@ -52,9 +52,12 @@ export function init(): BaseSettings {
     fontSize: 13,
     fontVariantLigatures: false,
     forceVerticalLayout,
-    hasKonnectPat: false,
+    aiFeatures: false,
+    handleInsomniaLinks: true,
+    gitProviderSignIn: false,
+    gitHubClientId: '',
+    gitLabClientId: '',
     hideSecretValuesInPreviewAndConsole: true,
-    konnectOrganizationId: null,
     hotKeyRegistry: newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

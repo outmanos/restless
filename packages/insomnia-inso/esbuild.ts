@@ -48,13 +48,13 @@ const config: BuildOptions = {
     },
   ],
   define: {
-    'process.env.DEFAULT_APP_NAME': JSON.stringify(isProd ? 'Insomnia' : 'insomnia-app'),
+    'process.env.DEFAULT_APP_NAME': JSON.stringify(isProd ? 'Restless' : 'insomnia-app'),
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
     '__IS_RENDERER__': JSON.stringify(false),
   },
   // node-llama-cpp is not included here because inso does not need it
-  external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
+  external: ['node-libcurl', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };
 

@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "restless-plugin-secret-managers",
+  "version": "0.1.0",
+  "description": "Reads secrets from HashiCorp Vault, AWS Secrets Manager and GCP Secret Manager.",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "aws4": "^1.13.2"
+  }
+}

@@ -2,18 +2,18 @@
   "private": true,
   "name": "insomnia-data",
   "license": "Apache-2.0",
-  "version": "13.3.1",
-  "author": "Kong <office@konghq.com>",
+  "version": "0.1.0",
+  "author": "Outman",
   "description": "Insomnia data functionalities",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/restless.git",
     "directory": "packages/insomnia-data"
   },
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/restless/issues"
   },
-  "homepage": "https://github.com/Kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/restless#readme",
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -44,10 +44,10 @@
     "zod": "^3.25.75"
   },
   "devDependencies": {
-    "@getinsomnia/node-libcurl": "3.3.0",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@types/deep-equal": "^1.0.4",
     "mocha": "^11.7.5",
-    "type-fest": "^4.40.0"
+    "type-fest": "^4.40.0",
+    "node-libcurl": "5.1.2"
   }
 }

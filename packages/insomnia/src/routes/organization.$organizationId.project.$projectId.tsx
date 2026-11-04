@@ -1,8 +1,7 @@
 import { models, services } from 'insomnia-data';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useOutletContext, useRouteLoaderData } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { logout } from '~/ui/account/session';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
@@ -13,12 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(organizationId, 'Organization ID is required');
 
   const userSession = await services.userSession.get();
-  const { id: sessionId, accountId } = userSession;
-
-  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
+  const { accountId } = userSession;
 
   const project = await services.project.getById(projectId);
 
@@ -65,7 +59,7 @@ export function useProjectLoaderData() {
 }
 
 export interface ProjectRouteContextValue {
-  isKonnectOrganization: boolean;
+  false: boolean;
 }
 
 export function useProjectRouteContext() {
@@ -79,14 +73,7 @@ export function useProjectRouteContext() {
  * project itself.
  */
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { organizationId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-  };
-
   const { activeProject } = loaderData;
-
-  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
   const gitRepositoryId =
     activeProject && models.project.isConnectedGitProject(activeProject)
@@ -101,7 +88,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     <GitFileIssuesProvider value={gitFileIssues}>
       <Outlet
         context={{
-          isKonnectOrganization,
         }}
       />
     </GitFileIssuesProvider>

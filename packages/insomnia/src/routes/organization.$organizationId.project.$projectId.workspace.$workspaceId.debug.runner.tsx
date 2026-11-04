@@ -35,7 +35,6 @@ import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
@@ -54,7 +53,6 @@ import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
 import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
-import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
@@ -156,8 +154,7 @@ export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
-  const currentPlan = useCurrentPlan();
-  const targetFolderId = searchParams.get('folder') || '';
+    const targetFolderId = searchParams.get('folder') || '';
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -288,11 +285,6 @@ export const Runner: FC = () => {
     }
     setCanceledRun(false);
     setIsRunning(true);
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.collectionRunExecute,
-      properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount },
-    });
 
     updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));

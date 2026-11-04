@@ -1,16 +1,15 @@
-import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
+import { exportRequestsToFile } from 'restless/src/ui/components/settings/import-export';
 
 import {
   type Child,
   useWorkspaceLoaderFetcher,
   type WorkspaceLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
@@ -357,15 +356,6 @@ export const ExportRequestsModal = ({
                 </Button>
                 <Button
                   onPress={() => {
-                    if (state?.treeRoot) {
-                      window.main.trackAnalyticsEvent({
-                        event: AnalyticsEvent.exportRequestsChosen,
-                        properties: {
-                          totalRequests: state.treeRoot.totalRequests,
-                          exported_requests: state.treeRoot.selectedRequests,
-                        },
-                      });
-                    }
                     state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
