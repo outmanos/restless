@@ -20,7 +20,7 @@ With restless you can:
 - **Test APIs** with scripts, test suites and the collection runner.
 - **Mock APIs** with a self-hosted mock server.
 - **Build CI/CD pipelines** with the `rl` CLI.
-- **Extend it** with plugins and themes.
+- **Extend it** with plugins and themes. Supports Insomnia's [plugins](https://insomnia.rest/plugins) and [themes](https://insomnia.rest/plugins?category=themes).
 
 Everything that needs an outside service is off until you enable it:
 
