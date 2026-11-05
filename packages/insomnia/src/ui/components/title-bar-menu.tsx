@@ -6,7 +6,7 @@ import type { AppMenuItem } from '~/main/title-bar';
 import { Icon } from '~/ui/components/icon';
 
 const popoverClass =
-  'min-w-[240px] overflow-y-auto rounded-lg border border-solid border-(--hl-sm) bg-(--color-bg) p-[4px] text-[13px] text-(--color-font) shadow-lg select-none focus:outline-none';
+  'menubar-popover min-w-[240px] overflow-y-auto rounded-lg border border-solid border-(--hl-sm) bg-(--color-bg) p-[4px] text-[13px] text-(--color-font) shadow-lg select-none focus:outline-none';
 const menuItemClass =
   'flex h-[28px] cursor-default items-center gap-[10px] rounded-sm px-[8px] outline-none data-[disabled]:opacity-40 data-[focused]:bg-(--color-surprise) data-[focused]:text-(--color-font-surprise) data-[open]:bg-(--hl-sm)';
 
@@ -85,6 +85,26 @@ export const TitleBarMenu: FC = () => {
     observer.observe(bar);
     return () => observer.disconnect();
   }, [menus]);
+
+  // The popovers are non-modal so hovering across the bar can switch menus, which also means
+  // they ignore outside clicks. Close them here, and when the window loses focus.
+  useEffect(() => {
+    if (openMenu === null) {
+      return;
+    }
+    const close = () => setOpenMenu(null);
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[role="menubar"], .menubar-popover')) {
+        close();
+      }
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePress, true);
+    window.addEventListener('blur', close);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePress, true);
+      window.removeEventListener('blur', close);
+    };
+  }, [openMenu]);
 
   const hiddenMenus = menus.slice(visibleCount);
   const shownMenus: AppMenuItem[] = hiddenMenus.length
