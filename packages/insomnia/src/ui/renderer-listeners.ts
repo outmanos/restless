@@ -6,6 +6,7 @@ import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
 
 import { dispatchEditorUndo } from './components/.client/codemirror/editor-undo';
+import { MigrationModal } from './components/migration/migration-modal';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 
@@ -16,6 +17,10 @@ window.main.on('edit:redo', () => dispatchEditorUndo('redo'));
 
 window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
+});
+
+window.main.on('open-migration', () => {
+  showModal(MigrationModal);
 });
 
 window.main.on('reload-plugins', async () => {

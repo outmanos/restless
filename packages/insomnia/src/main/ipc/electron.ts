@@ -302,6 +302,7 @@ export type RendererOnChannels =
   | 'sync.merge-conflicts'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
+  | 'open-migration'
   | 'toggle-sidebar'
   | 'update-status-changed'
   | 'show-oauth-authorization-modal'

@@ -338,6 +338,14 @@ export function createWindow(): ElectronBrowserWindow {
     },
   };
 
+  const migrateItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Migrate from…`,
+    click: () => {
+      const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+      window.webContents.send('open-migration');
+    },
+  };
+
   const preferencesItem: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Preferences`,
     click: () => {
@@ -762,6 +770,7 @@ export function createWindow(): ElectronBrowserWindow {
           },
         },
         openFolderItem,
+        migrateItem,
         { type: 'separator' },
         reloadPluginsItem,
         clearResponseHistoryItem,

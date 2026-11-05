@@ -3,6 +3,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
 
 import { ErrorBoundary } from './components/error-boundary';
+import { MigrationModal } from './components/migration/migration-modal';
 import { registerModal } from './components/modals';
 import { AddKeyCombinationModal } from './components/modals/add-key-combination-modal';
 import { AlertModal } from './components/modals/alert-modal';
@@ -50,6 +51,8 @@ const Modals = () => {
         />
 
         <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
+
+        <MigrationModal ref={instance => registerModal(instance, 'MigrationModal')} />
 
         <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
