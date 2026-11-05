@@ -139,6 +139,8 @@ export interface BrunoCollection {
   root: BrunoFolder;
   environments: BrunoEnvironment[];
   clientCertificateCount: number;
+  // Proto files the collection lists in its settings, which requests use without naming them
+  protoFileCount: number;
   hasProxy: boolean;
   issues: ReportEntry[];
 }
@@ -234,8 +236,6 @@ const exists = (target: string) =>
 async function readText(target: string) {
   return (await fs.readFile(target, 'utf8')).replace(/^﻿/, '');
 }
-
-const posix = (relativePath: string) => relativePath.split(path.sep).join('/');
 
 type EntryKind = 'directory' | 'file';
 
@@ -953,6 +953,7 @@ export async function readBrunoCollection(collectionPath: string): Promise<Bruno
   let name = path.basename(root);
   let settings = emptyFolderSettings();
   let clientCertificateCount = 0;
+  let protoFileCount = 0;
   let hasProxy = false;
 
   if (format === 'yml') {
@@ -964,6 +965,7 @@ export async function readBrunoCollection(collectionPath: string): Promise<Bruno
       context.ignore = asArray(asObject(asObject(doc.extensions).bruno).ignore).map(asString);
       settings = ymlFolderSettings(doc);
       clientCertificateCount = asArray(asObject(doc.config).clientCertificates).length;
+      protoFileCount = asArray(asObject(asObject(doc.config).protobuf).protoFiles).length;
       hasProxy = hasCustomProxy(asObject(doc.config).proxy);
     }
   } else {
@@ -974,6 +976,7 @@ export async function readBrunoCollection(collectionPath: string): Promise<Bruno
       name = asString(config.name).trim() || name;
       context.ignore = asArray(config.ignore).map(asString);
       clientCertificateCount = asArray(asObject(config.clientCertificates).certs).length;
+      protoFileCount = asArray(asObject(config.protobuf).protoFiles).length;
       hasProxy = hasCustomProxy(config.proxy);
     }
     if (await exists(path.join(root, COLLECTION_ROOT_FILES.bru))) {
@@ -997,6 +1000,7 @@ export async function readBrunoCollection(collectionPath: string): Promise<Bruno
     root: tree,
     environments,
     clientCertificateCount,
+    protoFileCount,
     hasProxy,
     issues: context.issues,
   };

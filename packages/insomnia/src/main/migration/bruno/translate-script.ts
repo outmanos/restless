@@ -145,16 +145,89 @@ export const BRUNO_SCRIPT_RULES: ScriptRule[] = [
 
 // What is still Bruno-only after the rules ran
 const LEFTOVER_PATTERNS: { pattern: RegExp; label?: string }[] = [
-  { pattern: new RegExp(START + String.raw`(?:bru|req|res)\.[A-Za-z_$][\w$]*`, 'g') },
+  { pattern: new RegExp(START + String.raw`(?:bru|req|res)(?:\.[A-Za-z_$][\w$]*)+`, 'g') },
   { pattern: new RegExp(START + String.raw`res\s*\(`, 'g'), label: 'res()' },
   { pattern: new RegExp(START + String.raw`require\s*\(`, 'g'), label: 'require()' },
   { pattern: new RegExp(START + String.raw`expect\.[A-Za-z_$][\w$]*`, 'g') },
 ];
 
+/**
+ * Blanks out string and comment contents, keeping every position. What a script says about `bru.` in a log
+ * message or a comment is not a call. Code inside `${ }` of a template literal is code, and is kept.
+ */
+export function maskNonCode(code: string): string {
+  const out = [...code];
+  const blank = (from: number, to: number) => {
+    for (let i = from; i < to; i++) {
+      if (out[i] !== '\n') {
+        out[i] = ' ';
+      }
+    }
+  };
+  // `{` depth at which each open `${` was entered, so the matching `}` returns to the template
+  const templates: number[] = [];
+  let braces = 0;
+  let i = 0;
+  // Reads template text from `i` until its closing backtick or the next `${`
+  const readTemplate = () => {
+    const start = i;
+    while (i < code.length && code[i] !== '`' && !(code[i] === '$' && code[i + 1] === '{')) {
+      i += code[i] === '\\' ? 2 : 1;
+    }
+    blank(start, Math.min(i, code.length));
+    if (code[i] === '$') {
+      templates.push(braces++);
+      i += 2;
+    } else {
+      i++;
+    }
+  };
+
+  while (i < code.length) {
+    const char = code[i];
+    if (char === '/' && code[i + 1] === '/') {
+      const end = code.indexOf('\n', i);
+      const stop = end === -1 ? code.length : end;
+      blank(i, stop);
+      i = stop;
+    } else if (char === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2);
+      const stop = end === -1 ? code.length : end + 2;
+      blank(i, stop);
+      i = stop;
+    } else if (char === '"' || char === "'") {
+      // These cannot span lines, so a quote that never closes only hides the rest of its own line
+      let end = i + 1;
+      while (end < code.length && code[end] !== char && code[end] !== '\n') {
+        end += code[end] === '\\' ? 2 : 1;
+      }
+      blank(i + 1, Math.min(end, code.length));
+      i = code[end] === char ? end + 1 : end;
+    } else if (char === '`') {
+      i++;
+      readTemplate();
+    } else if (char === '{') {
+      braces++;
+      i++;
+    } else if (char === '}') {
+      braces--;
+      i++;
+      if (templates.length > 0 && templates.at(-1) === braces) {
+        templates.pop();
+        readTemplate();
+      }
+    } else {
+      i++;
+    }
+  }
+  return out.join('');
+}
+
 export function findLeftovers(code: string): string[] {
   const found = new Set<string>();
+  const masked = maskNonCode(code);
   for (const { pattern, label } of LEFTOVER_PATTERNS) {
-    for (const match of code.matchAll(pattern)) {
+    for (const match of masked.matchAll(pattern)) {
       found.add(label ?? match[0]);
     }
   }

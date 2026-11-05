@@ -1,0 +1,21 @@
+meta {
+  name: MissingProto
+  type: grpc
+  seq: 5
+}
+
+grpc {
+  url: {{host}}
+  method: /hello.HelloService/SayHello
+  body: grpc
+  auth: inherit
+  methodType: unary
+  protoPath: protos/not-there.proto
+}
+
+body:grpc {
+  name: message 1
+  content: '''
+    {}
+  '''
+}

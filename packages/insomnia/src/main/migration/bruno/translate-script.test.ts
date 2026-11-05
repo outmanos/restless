@@ -214,6 +214,42 @@ describe('leftover scan', () => {
   it('finds nothing in translated code', () => {
     expect(findLeftovers('insomnia.test("a", () => { insomnia.expect(insomnia.response.code).to.equal(200); });')).toEqual([]);
   });
+
+  it('names the whole member path', () => {
+    expect(findLeftovers('bru.runner.stopExecution(); bru.cookies.jar();')).toEqual([
+      'bru.runner.stopExecution',
+      'bru.cookies.jar',
+    ]);
+  });
+
+  describe('ignores what is not code', () => {
+    it.each([
+      ['a string', 'console.log("req.url and bru.getVar and require(x)");'],
+      ['a single-quoted string', "const label = 'res.status is bru.sleep';"],
+      ['a template literal text', 'console.log(`uses req.url and res.body`);'],
+      ['a line comment', '// bru.runRequest would go here\nconst a = 1;'],
+      ['a block comment', '/* res.setBody(x)\n   bru.sleep(1) */ const a = 1;'],
+      // from a real Bruno test: the title mentions bru.setVar, the code does not call it
+      ['a test title', 'test("runtime vars set via bru.setVar preserve types", () => {});'],
+    ])('%s', (_label, code) => {
+      expect(findLeftovers(code)).toEqual([]);
+    });
+
+    it('still finds code inside ${ } of a template literal', () => {
+      expect(findLeftovers('console.log(`slept ${await bru.sleep(1)} ms`);')).toEqual(['bru.sleep']);
+      expect(findLeftovers('const s = `a ${`b ${req.setBody(1)}`} c`;')).toEqual(['req.setBody']);
+    });
+
+    it('does not let a quote that never closes hide the lines after it', () => {
+      expect(findLeftovers('const a = "oops\nawait bru.runRequest("ping");')).toEqual(['bru.runRequest']);
+      expect(findLeftovers('/"/.test(x);\nbru.sleep(1);')).toEqual(['bru.sleep']);
+    });
+
+    it('does not let an escaped quote end a string early', () => {
+      expect(findLeftovers('const a = "say \\" req.url \\" now";')).toEqual([]);
+      expect(findLeftovers('const a = "x\\\\"; bru.sleep(1);')).toEqual(['bru.sleep']);
+    });
+  });
 });
 
 describe('translateBrunoScript', () => {
