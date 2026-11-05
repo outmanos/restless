@@ -8,11 +8,13 @@ import {
   type CommitResult,
   detectInstalls,
   errorMessage,
+  failedPlans,
+  mergeRetried,
   pickBrunoFolder,
   planBrunoFolder,
   planSource,
 } from './flow';
-import { canImport, createInitialState, flowReducer } from './flow-state';
+import { canImport, canRetry, createInitialState, flowReducer } from './flow-state';
 
 // Plain async functions, not a router action: an action blocks navigation for as long as it runs.
 export function useMigrationFlow(initialSources?: DetectedSource[]) {
@@ -82,26 +84,44 @@ export function useMigrationFlow(initialSources?: DetectedSource[]) {
     }
   }, [read]);
 
+  // Writes the plans and ends on the report. Used for the first import and for a retry.
+  // The caller has already moved the flow to the importing step and set isImporting.
+  const runImport = useCallback(
+    async (plans: MigrationPlan[], combine: (fresh: CommitResult[]) => CommitResult[]) => {
+      let fresh: CommitResult[];
+      try {
+        fresh = await commitPlans(window.main, plans, progress => dispatch({ type: 'import-progress', progress }));
+      } catch (error) {
+        // commitPlans reports each failure itself, so getting here is a bug. The window still must not stay locked.
+        fresh = plans.map(plan => ({ ok: false, plan, error: errorMessage(error, 'The import failed.') }));
+      }
+      dispatch({ type: 'import-done', results: combine(fresh) });
+      isImporting.current = false;
+      // Some of it may have been written even when a plan failed, so always refresh.
+      revalidate();
+    },
+    [revalidate],
+  );
+
   const startImport = useCallback(async () => {
-    if (isImporting.current || !canImport(state)) {
+    if (isImporting.current || state.step !== 'review' || !canImport(state)) {
       return;
     }
     isImporting.current = true;
     dispatch({ type: 'import-start' });
-    let results: CommitResult[];
-    try {
-      results = await commitPlans(window.main, state.plans, progress =>
-        dispatch({ type: 'import-progress', progress }),
-      );
-    } catch (error) {
-      // commitPlans reports each failure itself, so getting here is a bug. The window still must not stay locked.
-      results = state.plans.map(plan => ({ ok: false, plan, error: errorMessage(error, 'The import failed.') }));
+    await runImport(state.plans, fresh => fresh);
+  }, [runImport, state]);
+
+  // Runs only the plans that stopped with an error. Safe to repeat: what already went in is skipped.
+  const retry = useCallback(async () => {
+    if (isImporting.current || !canRetry(state)) {
+      return;
     }
-    dispatch({ type: 'import-done', results });
-    isImporting.current = false;
-    // Some of it may have been written even when a plan failed, so always refresh.
-    revalidate();
-  }, [revalidate, state]);
+    isImporting.current = true;
+    dispatch({ type: 'retry-start' });
+    const previous = state.results;
+    await runImport(failedPlans(previous), fresh => mergeRetried(previous, fresh));
+  }, [runImport, state]);
 
   return {
     state,
@@ -109,6 +129,7 @@ export function useMigrationFlow(initialSources?: DetectedSource[]) {
     reviewSource,
     chooseBrunoFolder,
     startImport,
+    retry,
     back: useCallback(() => dispatch({ type: 'back' }), []),
     restart: useCallback(() => dispatch({ type: 'restart' }), []),
   };

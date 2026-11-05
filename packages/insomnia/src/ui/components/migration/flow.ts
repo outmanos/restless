@@ -122,6 +122,19 @@ export async function commitPlans(
   return results;
 }
 
+// False when every plan stopped with an error. Then there is no report to show, only the errors.
+export const hasReport = (results: readonly CommitResult[]): boolean => results.some(result => result.ok);
+
+export const failedPlans = (results: readonly CommitResult[]): MigrationPlan[] =>
+  results.filter(result => !result.ok).map(result => result.plan);
+
+// Puts the results of a retry where the failures were. What already went through stays as it was.
+// The retry ran the failed plans in order, so they line up one to one.
+export function mergeRetried(previous: readonly CommitResult[], retried: readonly CommitResult[]): CommitResult[] {
+  let next = 0;
+  return previous.map(result => (result.ok ? result : (retried[next++] ?? result)));
+}
+
 export interface PluginInstallDeps {
   install: (name: string, allowScopedPackageNames: boolean) => Promise<void>;
   // Loads the new plugin into the running app

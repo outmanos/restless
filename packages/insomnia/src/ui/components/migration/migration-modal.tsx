@@ -1,4 +1,12 @@
-import { forwardRef, type MutableRefObject, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  type MutableRefObject,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 
 import { Modal } from '~/basic-components';
 import type { DetectedSource } from '~/main/migration/types';
@@ -40,6 +48,13 @@ const MigrationDialog = ({
   const busy = isBusy(state);
   busyRef.current = busy;
 
+  // Each step starts at its top, so a keyboard or screen reader user follows the change
+  // instead of landing on the close button when the focused control goes away.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.focus({ preventScroll: true });
+  }, [state.step]);
+
   return (
     <Modal
       isOpen
@@ -52,7 +67,9 @@ const MigrationDialog = ({
       className="w-[min(44rem,calc(100vw-2rem))]"
     >
       <div
-        className="flex max-h-[calc(var(--visual-viewport-height)-12rem)] min-h-0 flex-col gap-4"
+        ref={contentRef}
+        tabIndex={-1}
+        className="mt-4 flex max-h-[calc(var(--visual-viewport-height)-12rem)] min-h-0 flex-col gap-4 outline-none"
         data-testid="migration-modal"
         data-step={state.step}
       >
@@ -70,7 +87,9 @@ const MigrationDialog = ({
           <ReviewStep plans={state.plans} canImport={canImport(state)} onBack={flow.back} onImport={flow.startImport} />
         )}
         {state.step === 'importing' && <ImportingStep progress={state.progress} />}
-        {state.step === 'report' && <ReportStep results={state.results} onRestart={flow.restart} onClose={onClose} />}
+        {state.step === 'report' && (
+          <ReportStep results={state.results} onRetry={flow.retry} onRestart={flow.restart} onClose={onClose} />
+        )}
       </div>
     </Modal>
   );

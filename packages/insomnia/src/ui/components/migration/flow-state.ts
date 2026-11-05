@@ -28,6 +28,7 @@ export type FlowAction =
   | { type: 'read-failed'; error: string }
   | { type: 'back' }
   | { type: 'import-start' }
+  | { type: 'retry-start' }
   | { type: 'import-progress'; progress: ImportProgress }
   | { type: 'import-done'; results: CommitResult[] }
   | { type: 'restart' };
@@ -85,6 +86,14 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         progress: { done: 0, total: state.plans.length, current: '' },
       };
     }
+    case 'retry-start': {
+      const failed = state.results.filter(result => !result.ok).length;
+      if (state.step !== 'report' || failed === 0) {
+        return state;
+      }
+      // The results stay, so the retry can be put back in place of the failures
+      return { ...state, step: 'importing', progress: { done: 0, total: failed, current: '' } };
+    }
     case 'import-progress': {
       if (state.step !== 'importing') {
         return state;
@@ -113,3 +122,7 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
 export const isBusy = (state: FlowState): boolean => state.step === 'importing';
 
 export const canImport = (state: Pick<FlowState, 'plans'>): boolean => state.plans.some(plan => plan.items.length > 0);
+
+// Plans that stopped with an error can be run again. That is safe: what already went in is skipped.
+export const canRetry = (state: Pick<FlowState, 'step' | 'results'>): boolean =>
+  state.step === 'report' && state.results.some(result => !result.ok);

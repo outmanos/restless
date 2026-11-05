@@ -117,6 +117,11 @@ const TYPE_LABELS: readonly TypeLabel[] = [
   { type: 'ClientCertificate', singular: 'client certificate', plural: 'client certificates' },
   { type: 'CaCertificate', singular: 'CA certificate', plural: 'CA certificates' },
   { type: 'PluginData', singular: 'plugin data record', plural: 'plugin data records' },
+  // Only ever listed as skipped, since they hold secrets or live outside the app's data
+  { type: 'GitRepository', singular: 'Git repository', plural: 'Git repositories' },
+  { type: 'GitCredentials', singular: 'Git credential', plural: 'Git credentials' },
+  { type: 'CloudCredential', singular: 'cloud credential', plural: 'cloud credentials' },
+  { type: 'OAuth2Token', singular: 'OAuth 2 token', plural: 'OAuth 2 tokens' },
 ];
 
 const TYPE_LABEL_BY_TYPE = new Map(TYPE_LABELS.map(label => [label.type, label]));

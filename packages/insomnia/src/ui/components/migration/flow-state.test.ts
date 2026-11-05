@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CommitResult } from './flow';
-import { canImport, createInitialState, type FlowAction, flowReducer, type FlowState, isBusy } from './flow-state';
+import {
+  canImport,
+  canRetry,
+  createInitialState,
+  type FlowAction,
+  flowReducer,
+  type FlowState,
+  isBusy,
+} from './flow-state';
 import { makeItem, makePlan, makeReport, makeSource } from './test-fixtures';
 
 const run = (state: FlowState, ...actions: FlowAction[]) => actions.reduce(flowReducer, state);
@@ -178,6 +186,63 @@ describe('importing', () => {
   it('ignores a result when no import is running', () => {
     const state = reviewing();
     expect(flowReducer(state, { type: 'import-done', results })).toBe(state);
+  });
+});
+
+describe('retrying', () => {
+  const failedResults: CommitResult[] = [
+    { ok: true, plan: importable, report: makeReport() },
+    { ok: false, plan: makePlan({ items: [makeItem('Request')] }), error: 'The database is locked' },
+    { ok: false, plan: makePlan({ items: [makeItem('Request')] }), error: 'The backup failed' },
+  ];
+  const onReport = (finished: CommitResult[]) =>
+    run(reviewing(), { type: 'import-start' }, { type: 'import-done', results: finished });
+
+  it('goes back to importing for the plans that failed, and locks the window again', () => {
+    const state = run(onReport(failedResults), { type: 'retry-start' });
+    expect(state.step).toBe('importing');
+    expect(state.progress).toEqual({ done: 0, total: 2, current: '' });
+    expect(isBusy(state)).toBe(true);
+  });
+
+  it('keeps the earlier results so the retry can be put back in place', () => {
+    const state = run(onReport(failedResults), { type: 'retry-start' });
+    expect(state.results).toEqual(failedResults);
+  });
+
+  it('ends on the report again with the merged results', () => {
+    const merged: CommitResult[] = failedResults.map(result =>
+      result.ok ? result : { ok: true, plan: result.plan, report: makeReport() },
+    );
+    const state = run(onReport(failedResults), { type: 'retry-start' }, { type: 'import-done', results: merged });
+    expect(state.step).toBe('report');
+    expect(state.results).toEqual(merged);
+    expect(canRetry(state)).toBe(false);
+    expect(isBusy(state)).toBe(false);
+  });
+
+  it('can be tried again when the retry fails too', () => {
+    const state = run(
+      onReport(failedResults),
+      { type: 'retry-start' },
+      { type: 'import-done', results: failedResults },
+    );
+    expect(canRetry(state)).toBe(true);
+  });
+
+  it('is only possible from a report that has a failure', () => {
+    const allWentThrough = onReport(results);
+    expect(canRetry(allWentThrough)).toBe(false);
+    expect(flowReducer(allWentThrough, { type: 'retry-start' })).toBe(allWentThrough);
+    const reviewState = reviewing();
+    expect(flowReducer(reviewState, { type: 'retry-start' })).toBe(reviewState);
+    const detecting = createInitialState([makeSource()]);
+    expect(flowReducer(detecting, { type: 'retry-start' })).toBe(detecting);
+  });
+
+  it('cannot be started twice', () => {
+    const state = run(onReport(failedResults), { type: 'retry-start' });
+    expect(flowReducer(state, { type: 'retry-start' })).toBe(state);
   });
 });
 

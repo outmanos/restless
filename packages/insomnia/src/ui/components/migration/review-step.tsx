@@ -6,6 +6,7 @@ import type { MigrationPlan } from '~/main/migration/types';
 import { QUIET_SKIPS_NOTE } from './labels';
 import { Body, CountList, EntryGroups, Footer, Section } from './parts';
 import {
+  commonFolder,
   countItemsByType,
   describeItems,
   formatCount,
@@ -34,6 +35,8 @@ export const ReviewStep = ({
     [plans, isSeveral],
   );
   const isFromInsomnia = plans.some(plan => plan.source.kind === 'insomnia' || plan.source.kind === 'insomnium');
+  // One path for one plan. For several collections, the folder they are all in.
+  const location = isSeveral ? commonFolder(plans.map(plan => plan.source.path)) : plans[0].source.path;
 
   return (
     <>
@@ -42,9 +45,11 @@ export const ReviewStep = ({
           <span className="font-semibold" data-testid="migration-review-title">
             {isSeveral ? `${formatCount(plans.length, 'collection')} found` : planTitle(plans[0])}
           </span>
-          <span className="truncate text-xs text-(--hl)" title={plans[0].source.path}>
-            {plans[0].source.path}
-          </span>
+          {location && (
+            <span className="truncate text-xs text-(--hl)" title={location}>
+              {location}
+            </span>
+          )}
         </div>
         <p className="text-sm text-(--hl)">
           Nothing is written until you click Import. The original data is never changed.

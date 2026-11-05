@@ -4,10 +4,14 @@ import type { MigrationPlan, MigrationReport } from '~/main/migration/types';
 
 import {
   commitPlans,
+  type CommitResult,
   detectInstalls,
   errorMessage,
+  failedPlans,
+  hasReport,
   type ImportProgress,
   installMigratedPlugin,
+  mergeRetried,
   pickBrunoFolder,
   planBrunoFolder,
   planSource,
@@ -219,6 +223,56 @@ describe('commitPlans()', () => {
     const api = { migrationCommit: vi.fn() };
     await expect(commitPlans(api, [])).resolves.toEqual([]);
     expect(api.migrationCommit).not.toHaveBeenCalled();
+  });
+});
+
+describe('retrying the plans that failed', () => {
+  const ok = (name: string): CommitResult => ({
+    ok: true,
+    plan: brunoPlan(name),
+    report: makeReport({ imported: { Request: 1 } }),
+  });
+  const failed = (name: string): CommitResult => ({ ok: false, plan: brunoPlan(name), error: `${name} broke` });
+
+  it('says whether any plan produced a report', () => {
+    expect(hasReport([failed('a'), ok('b')])).toBe(true);
+    expect(hasReport([failed('a'), failed('b')])).toBe(false);
+    expect(hasReport([])).toBe(false);
+  });
+
+  it('picks out only the plans that failed, in order', () => {
+    const results = [ok('a'), failed('b'), ok('c'), failed('d')];
+    expect(failedPlans(results).map(plan => plan.source.id)).toEqual(['bruno:/work/b', 'bruno:/work/d']);
+    expect(failedPlans([ok('a')])).toEqual([]);
+  });
+
+  it('puts the retry in place of the failures and keeps what went through', () => {
+    const previous = [ok('a'), failed('b'), ok('c'), failed('d')];
+    const retried = [ok('b'), failed('d')];
+    const merged = mergeRetried(previous, retried);
+    expect(merged).toHaveLength(4);
+    expect(merged[0]).toBe(previous[0]);
+    expect(merged[1]).toBe(retried[0]);
+    expect(merged[2]).toBe(previous[2]);
+    expect(merged[3]).toBe(retried[1]);
+    expect(merged.map(result => result.ok)).toEqual([true, true, true, false]);
+  });
+
+  it('keeps a failure when the retry returned fewer results than expected', () => {
+    const previous = [failed('a'), failed('b')];
+    const merged = mergeRetried(previous, [ok('a')]);
+    expect(merged[0].ok).toBe(true);
+    expect(merged[1]).toBe(previous[1]);
+  });
+
+  it('retries by running only the failed plans through the same commit', async () => {
+    const previous = [ok('a'), failed('b'), failed('c')];
+    const api = { migrationCommit: vi.fn(async (plan: MigrationPlan) => makeReport({ source: plan.source })) };
+    const fresh = await commitPlans(api, failedPlans(previous));
+    const merged = mergeRetried(previous, fresh);
+    expect(api.migrationCommit).toHaveBeenCalledTimes(2);
+    expect(api.migrationCommit.mock.calls.map(call => call[0].source.id)).toEqual(['bruno:/work/b', 'bruno:/work/c']);
+    expect(merged.every(result => result.ok)).toBe(true);
   });
 });
 

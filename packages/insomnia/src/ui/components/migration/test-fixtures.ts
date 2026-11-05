@@ -1,5 +1,9 @@
 import type { DetectedSource, MigrationPlan, MigrationReport, PlanItem, ReportEntry } from '~/main/migration/types';
 
+// The em dash and the en dash, built from code points so the source itself holds neither.
+// U+2014 and U+2013
+export const DASHES = [String.fromCodePoint(8212), String.fromCodePoint(8211)];
+
 // What a bridge call returns when something goes wrong. Named so tests can pass it on purpose.
 export const NOTHING = undefined;
 

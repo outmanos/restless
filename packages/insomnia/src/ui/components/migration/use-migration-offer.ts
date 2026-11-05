@@ -16,8 +16,9 @@ let hasOffered = false;
 // First launch: if another app is found on this computer, offer to copy it over. Once only.
 // It looks at local files and nothing else. Skipped with INSOMNIA_SKIP_ONBOARDING, like the old onboarding.
 export const useMigrationOffer = () => {
+  const settings = useRootLoaderData()?.settings;
   // Without settings loaded there is nothing to decide on, so act as if the offer was seen.
-  const hasSeenOffer = useRootLoaderData()?.settings.hasSeenMigrationOffer ?? true;
+  const hasSeenOffer = !settings || Boolean(settings.hasSeenMigrationOffer);
 
   useEffect(() => {
     if (hasOffered || !shouldCheckForOffer({ hasSeenOffer, skipOnboarding: getSkipOnboarding() })) {

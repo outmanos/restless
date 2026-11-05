@@ -13,7 +13,10 @@ export const entryLine = (entry: OriginEntry): string => {
 
 function groupLines(entries: readonly ReportEntry[]): string[] {
   const lines: string[] = [];
-  for (const group of groupEntries(entries)) {
+  for (const [index, group] of groupEntries(entries).entries()) {
+    if (index > 0) {
+      lines.push('');
+    }
     lines.push(`${group.title} (${group.entries.length})`);
     if (group.hint) {
       lines.push(`  ${group.hint}`);
@@ -32,6 +35,11 @@ function countLines(summary: ReturnType<typeof summarizeCounts>): string[] {
   }
   return lines.length > 0 ? lines : ['  Nothing was added'];
 }
+
+// When the import stops with an error there is no report, so nobody can say what was written.
+// A retry is safe because everything that already went in is skipped, never overwritten.
+export const FAILED_NOTE =
+  'No report was written, so some items may already be in restless. Trying again is safe: items already there are skipped and nothing is overwritten.';
 
 export interface Headline {
   tone: 'success' | 'warning' | 'error';
@@ -53,17 +61,13 @@ export function reportHeadline(results: readonly CommitResult[]): Headline {
   const added = addedCount(results);
 
   if (results.length > 0 && failed === results.length) {
-    return {
-      tone: 'error',
-      title: 'The import failed',
-      detail: 'Some items may have been added. Run it again. Items already added are skipped.',
-    };
+    return { tone: 'error', title: 'The import did not finish', detail: FAILED_NOTE };
   }
   if (failed > 0) {
     return {
       tone: 'warning',
       title: 'Import finished with errors',
-      detail: `${failed} of ${results.length} could not be imported. The rest went through.`,
+      detail: `${failed} of ${results.length} stopped with an error and have no report. The rest went through. Trying again is safe: items already there are skipped.`,
     };
   }
   if (added === 0) {
@@ -84,10 +88,7 @@ export function formatReportText(results: readonly CommitResult[]): string {
     lines.push('', `${planTitle(result.plan)} (${sourceLabel(source.kind)}, ${source.path})`);
 
     if (!result.ok) {
-      lines.push(
-        `Failed: ${result.error}`,
-        'Some items may have been added. Run it again. Items already added are skipped.',
-      );
+      lines.push(`Failed: ${result.error}`, FAILED_NOTE);
       continue;
     }
 

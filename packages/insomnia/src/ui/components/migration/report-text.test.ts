@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CommitResult } from './flow';
 import { QUIET_SKIPS_NOTE, REASON_INFO } from './labels';
-import { addedCount, entryLine, formatReportText, reportHeadline } from './report-text';
-import { makeEntry, makeItem, makePlan, makeReport, makeSource } from './test-fixtures';
+import { addedCount, entryLine, FAILED_NOTE, formatReportText, reportHeadline } from './report-text';
+import { DASHES, makeEntry, makeItem, makePlan, makeReport, makeSource } from './test-fixtures';
 
 const success = (overrides: Parameters<typeof makeReport>[0] = {}, plan = makePlan()): CommitResult => ({
   ok: true,
@@ -69,6 +69,15 @@ describe('formatReportText()', () => {
     expect(text.indexOf('Git projects')).toBeLessThan(text.indexOf('Secrets not copied'));
   });
 
+  it('separates the groups with a blank line', () => {
+    const text = formatReportText([
+      success({
+        entries: [makeEntry({ reason: 'git-project' }), makeEntry({ reason: 'secret-not-readable' })],
+      }),
+    ]);
+    expect(text).toMatch(/\n {2}- Get users \(request\)\n\nSecrets not copied \(1\)/);
+  });
+
   it('leaves out the skipped section when nothing was skipped', () => {
     expect(formatReportText([success()])).not.toContain('Skipped or needs a check');
   });
@@ -76,7 +85,8 @@ describe('formatReportText()', () => {
   it('lists a failed plan with its error and how to recover', () => {
     const text = formatReportText([failure('Disk is full')]);
     expect(text).toContain('Failed: Disk is full');
-    expect(text).toContain('Items already added are skipped.');
+    expect(text).toContain(FAILED_NOTE);
+    expect(text).toContain('Trying again is safe');
   });
 
   it('writes one block per plan, named after the collection', () => {
@@ -115,8 +125,9 @@ describe('formatReportText()', () => {
       }),
       failure('Broken'),
     ]);
-    expect(text).not.toContain('—');
-    expect(text).not.toContain('–');
+    for (const dash of DASHES) {
+      expect(text).not.toContain(dash);
+    }
   });
 
   it('keeps every entry, however many there are', () => {
@@ -165,14 +176,18 @@ describe('reportHeadline()', () => {
     expect(headline).toEqual({
       tone: 'warning',
       title: 'Import finished with errors',
-      detail: '2 of 3 could not be imported. The rest went through.',
+      detail:
+        '2 of 3 stopped with an error and have no report. The rest went through. Trying again is safe: items already there are skipped.',
     });
   });
 
-  it('reports an error when every plan failed, and says to run it again', () => {
+  it('reports an error when every plan failed, says there is no report and that trying again is safe', () => {
     const headline = reportHeadline([failure('Broken')]);
     expect(headline.tone).toBe('error');
-    expect(headline.title).toBe('The import failed');
-    expect(headline.detail).toContain('Run it again');
+    expect(headline.title).toBe('The import did not finish');
+    expect(headline.detail).toBe(FAILED_NOTE);
+    expect(headline.detail).toContain('No report was written');
+    expect(headline.detail).toContain('Trying again is safe');
+    expect(headline.detail).toContain('nothing is overwritten');
   });
 });

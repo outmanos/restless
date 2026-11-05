@@ -175,6 +175,28 @@ export function planTitle(plan: Pick<MigrationPlan, 'items' | 'source'>): string
   return named('Workspace') ?? named('Project') ?? (lastSegment(plan.source?.path ?? '') || 'Untitled');
 }
 
+// The folder that holds all of these paths, as a place to show over a list of collections.
+// Empty when they have nothing in common but the root.
+export function commonFolder(paths: readonly string[]): string {
+  const split = paths.map(path => path.split(/[/\\]/));
+  const [first] = split;
+  if (!first) {
+    return '';
+  }
+  let shared = first.length;
+  for (const parts of split) {
+    let index = 0;
+    while (index < shared && index < parts.length && parts[index] === first[index]) {
+      index += 1;
+    }
+    shared = index;
+  }
+  const separator = paths[0].includes('\\') && !paths[0].includes('/') ? '\\' : '/';
+  const folder = first.slice(0, shared).join(separator);
+  // A lone separator or drive letter says nothing useful
+  return folder.length > 1 && !/^[A-Za-z]:$/.test(folder) ? folder : '';
+}
+
 export function withOrigin(entries: readonly ReportEntry[] | undefined, origin: string | undefined): OriginEntry[] {
   return (entries ?? []).map(entry => (origin ? { ...entry, origin } : { ...entry }));
 }

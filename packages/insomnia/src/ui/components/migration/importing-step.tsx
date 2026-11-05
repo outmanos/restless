@@ -1,4 +1,6 @@
-import { Icon, Progress } from '~/basic-components';
+import { ProgressBar } from 'react-aria-components';
+
+import { Icon } from '~/basic-components';
 
 import type { ImportProgress } from './flow';
 import { Body } from './parts';
@@ -26,7 +28,16 @@ export const ImportingStep = ({ progress }: { progress: ImportProgress | null })
                 ? `Collection ${Math.min(done + 1, total)} of ${total}: ${progress.current}`
                 : `${done} of ${total} done`}
             </p>
-            <Progress percent={Math.round((done / total) * 100)} className="w-full" />
+            <ProgressBar aria-label="Import progress" value={done} maxValue={total} className="w-full">
+              {({ percentage }) => (
+                <div className="h-2 w-full overflow-hidden rounded-full bg-(--hl-sm)">
+                  <div
+                    className="h-full rounded-full bg-(--color-surprise) transition-[width] duration-300"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              )}
+            </ProgressBar>
           </>
         )}
         <p className="text-sm text-(--hl)">Keep this window open until it finishes.</p>

@@ -5,6 +5,7 @@ import type { ReportEntry } from '~/main/migration/types';
 import { REASON_INFO } from './labels';
 import {
   collectPlugins,
+  commonFolder,
   countItemsByType,
   describeCounts,
   describeItems,
@@ -268,6 +269,32 @@ describe('withOrigin()', () => {
     expect(copy).not.toBe(entry);
     expect(copy).not.toHaveProperty('origin');
     expect(withOrigin(NOTHING, 'x')).toEqual([]);
+  });
+});
+
+describe('commonFolder()', () => {
+  it('finds the folder that holds several collections', () => {
+    expect(commonFolder(['/home/me/work/shop-api', '/home/me/work/billing-api', '/home/me/work/search/api'])).toBe(
+      '/home/me/work',
+    );
+  });
+
+  it('works with Windows paths', () => {
+    expect(commonFolder(['C:\\work\\shop', 'C:\\work\\billing'])).toBe('C:\\work');
+  });
+
+  it('does not match half of a folder name', () => {
+    expect(commonFolder(['/work/shop-api', '/work/shop-web'])).toBe('/work');
+  });
+
+  it('returns the path itself for a single path', () => {
+    expect(commonFolder(['/home/me/work/shop-api'])).toBe('/home/me/work/shop-api');
+  });
+
+  it('returns nothing when only the root is shared', () => {
+    expect(commonFolder(['/a/one', '/b/two'])).toBe('');
+    expect(commonFolder(['C:\\one', 'D:\\two'])).toBe('');
+    expect(commonFolder([])).toBe('');
   });
 });
 

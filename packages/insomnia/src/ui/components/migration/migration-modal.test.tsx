@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MigrationPlan } from '~/main/migration/types';
 
 import { MigrationModal, type MigrationModalHandle, type MigrationModalOptions } from './migration-modal';
-import { makeEntry, makeItem, makePlan, makeReport, makeSource, NOTHING } from './test-fixtures';
+import { DASHES, makeEntry, makeItem, makePlan, makeReport, makeSource, NOTHING } from './test-fixtures';
 
 // The modal only needs a router for these three things, so they are replaced instead of mounting one.
 const revalidate = vi.fn();
@@ -263,6 +263,17 @@ describe('reviewing and importing from Insomnia', () => {
     expect(bridge.migrationCommit).not.toHaveBeenCalled();
   });
 
+  it('moves focus into the content on each step instead of leaving it on the close button', async () => {
+    await open();
+    expect(document.activeElement).toBe(find('migration-modal'));
+    await click('migration-review-insomnia');
+    expect(find('migration-modal')?.dataset.step).toBe('review');
+    expect(document.activeElement).toBe(find('migration-modal'));
+    await click('migration-import');
+    expect(find('migration-modal')?.dataset.step).toBe('report');
+    expect(document.activeElement).toBe(find('migration-modal'));
+  });
+
   it('goes back to the first step without importing', async () => {
     await open();
     await click('migration-review-insomnia');
@@ -280,6 +291,18 @@ describe('reviewing and importing from Insomnia', () => {
     expect(find('migration-read-error')?.textContent).toContain('Cannot read the folder');
     // Not stuck: the button works again.
     expect((find('migration-review-insomnia') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('says nothing was added, in report words, when everything was already there', async () => {
+    bridge.migrationCommit.mockResolvedValue(
+      makeReport({ entries: [makeEntry({ reason: 'already-imported', name: 'Get users' })] }),
+    );
+    await open();
+    await click('migration-review-insomnia');
+    await click('migration-import');
+    expect(find('migration-headline')?.textContent).toContain('Nothing was added');
+    expect(find('migration-report-counts')?.textContent).toContain('Nothing was added.');
+    expect(find('migration-report-counts')?.textContent).not.toContain('Nothing to copy');
   });
 
   it('commits the plan it showed, then shows the report and refreshes the data', async () => {
@@ -339,12 +362,104 @@ describe('reviewing and importing from Insomnia', () => {
     await click('migration-import');
     expect(find('migration-importing')).toBeNull();
     expect(find('migration-modal')?.dataset.step).toBe('report');
-    expect(find('migration-headline')?.textContent).toContain('The import failed');
+    expect(find('migration-headline')?.textContent).toContain('The import did not finish');
     expect(find('migration-report-failures')?.textContent).toContain('Disk is full');
     expect(revalidate).toHaveBeenCalledTimes(1);
     // The window can be closed again.
     await click('migration-done');
     expect(find('migration-modal')).toBeNull();
+  });
+
+  it('says there is no report and that trying again is safe, and shows only what is true', async () => {
+    bridge.migrationCommit.mockRejectedValue(new Error('Could not back up restless first: no space left'));
+    bridge.migrationPlanInsomnia.mockResolvedValue(
+      makePlan({ items: [makeItem('Request')], plugins: ['insomnia-plugin-faker'] }),
+    );
+    await open();
+    await click('migration-review-insomnia');
+    await click('migration-import');
+    const headline = find('migration-headline')?.textContent ?? '';
+    expect(headline).toContain('No report was written');
+    expect(headline).toContain('Trying again is safe');
+    expect(headline).toContain('nothing is overwritten');
+    expect(find('migration-report-failures')?.textContent).toContain('Could not back up restless first: no space left');
+    // There is nothing to show for a report that does not exist.
+    expect(find('migration-report-counts')).toBeNull();
+    expect(find('migration-report-issues')).toBeNull();
+    expect(find('migration-plugins')).toBeNull();
+    expect(text()).not.toContain('saves a copy of this report');
+    expect(text()).not.toContain('Nothing was left out');
+    // The way forward is one click away.
+    expect(find('migration-retry')?.textContent).toBe('Try again');
+  });
+
+  it('tries again with the same plan, without going back through the review', async () => {
+    bridge.migrationCommit
+      .mockRejectedValueOnce(new Error('The database is locked'))
+      .mockResolvedValueOnce(makeReport({ imported: { Request: 3 } }));
+    bridge.migrationPlanInsomnia.mockResolvedValue(makePlan({ items: [makeItem('Request')] }));
+    await open();
+    await click('migration-review-insomnia');
+    await click('migration-import');
+    expect(find('migration-headline')?.textContent).toContain('The import did not finish');
+    await click('migration-retry');
+    expect(bridge.migrationCommit).toHaveBeenCalledTimes(2);
+    expect(bridge.migrationPlanInsomnia).toHaveBeenCalledTimes(1);
+    expect(find('migration-modal')?.dataset.step).toBe('report');
+    expect(find('migration-headline')?.textContent).toContain('Import finished');
+    expect(find('migration-report-counts')?.textContent).toContain('3 requests');
+    expect(find('migration-report-failures')).toBeNull();
+    expect(find('migration-retry')).toBeNull();
+    expect(revalidate).toHaveBeenCalledTimes(2);
+  });
+
+  it('can be tried again as often as it takes, and the window is locked while it runs', async () => {
+    let finish: (value: ReturnType<typeof makeReport>) => void = () => {};
+    bridge.migrationCommit
+      .mockRejectedValueOnce(new Error('The database is locked'))
+      .mockRejectedValueOnce(new Error('The database is still locked'))
+      .mockReturnValueOnce(new Promise(resolve => (finish = resolve)));
+    bridge.migrationPlanInsomnia.mockResolvedValue(makePlan({ items: [makeItem('Request')] }));
+    await open();
+    await click('migration-review-insomnia');
+    await click('migration-import');
+    await click('migration-retry');
+    expect(find('migration-report-failures')?.textContent).toContain('The database is still locked');
+    expect(find('migration-retry')).not.toBeNull();
+    await click('migration-retry');
+    expect(find('migration-importing')).not.toBeNull();
+    await act(async () => {
+      handle.current!.hide();
+    });
+    expect(find('migration-modal')).not.toBeNull();
+    await act(async () => {
+      finish(makeReport({ imported: { Request: 1 } }));
+    });
+    await settle();
+    expect(find('migration-headline')?.textContent).toContain('Import finished');
+  });
+
+  it('retries only the collections that failed and keeps the ones that went through', async () => {
+    showOpenDialog.mockResolvedValue({ canceled: false, filePaths: ['/work'] });
+    bridge.migrationPlanBruno.mockResolvedValue([brunoPlan('shop'), brunoPlan('billing'), brunoPlan('search')]);
+    bridge.migrationCommit.mockImplementation(async (plan: MigrationPlan) => {
+      if (plan.source.id === 'bruno:/work/billing' && bridge.migrationCommit.mock.calls.length <= 3) {
+        throw new Error('Broken file');
+      }
+      return makeReport({ source: plan.source, imported: { Request: 1 } });
+    });
+    await open();
+    await click('migration-choose-bruno');
+    await click('migration-import');
+    expect(find('migration-headline')?.textContent).toContain('Import finished with errors');
+    expect(find('migration-headline')?.textContent).toContain('Trying again is safe');
+    expect(find('migration-report-counts')?.textContent).toContain('2 requests');
+    await click('migration-retry');
+    const retried = bridge.migrationCommit.mock.calls.slice(3).map(call => (call[0] as MigrationPlan).source.id);
+    expect(retried).toEqual(['bruno:/work/billing']);
+    expect(find('migration-headline')?.textContent).toContain('Import finished');
+    expect(find('migration-report-counts')?.textContent).toContain('3 requests');
+    expect(find('migration-report-failures')).toBeNull();
   });
 
   it('can start over after a report', async () => {
@@ -569,8 +684,9 @@ describe('what it never shows', () => {
     seen.push(text());
     for (const screen of seen) {
       expect(screen).not.toContain('Restless');
-      expect(screen).not.toContain('—');
-      expect(screen).not.toContain('–');
+      for (const dash of DASHES) {
+        expect(screen).not.toContain(dash);
+      }
     }
   });
 });

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Button, Icon } from '~/basic-components';
 
-import type { CommitFailure, CommitResult } from './flow';
+import { type CommitFailure, type CommitResult, hasReport } from './flow';
 import { QUIET_SKIPS_NOTE } from './labels';
 import { Body, CountList, EntryGroups, Footer, Notice, Section } from './parts';
 import { PluginList } from './plugin-list';
@@ -19,10 +19,12 @@ const COPY_LABELS: Record<CopyState, string> = {
 
 export const ReportStep = ({
   results,
+  onRetry,
   onRestart,
   onClose,
 }: {
   results: CommitResult[];
+  onRetry: () => void;
   onRestart: () => void;
   onClose: () => void;
 }) => {
@@ -42,7 +44,13 @@ export const ReportStep = ({
     [results, isSeveral],
   );
   const failures = results.filter((result): result is CommitFailure => !result.ok);
-  const plugins = useMemo(() => collectPlugins(results.map(result => result.plan)), [results]);
+  // When every plan stopped with an error there is no report, so only the errors are shown.
+  const isReported = hasReport(results);
+  // Plugins are for a finished migration. A plan that stopped with an error has not moved anything yet.
+  const plugins = useMemo(
+    () => collectPlugins(results.filter(result => result.ok).map(result => result.plan)),
+    [results],
+  );
   const isFromInsomnia = results.some(
     result => result.plan.source.kind === 'insomnia' || result.plan.source.kind === 'insomnium',
   );
@@ -73,12 +81,8 @@ export const ReportStep = ({
           {headline.detail}
         </Notice>
 
-        <Section title="Added" testId="migration-report-counts">
-          <CountList summary={added} />
-        </Section>
-
         {failures.length > 0 && (
-          <Section title="Failed" testId="migration-report-failures">
+          <Section title="Stopped with an error" testId="migration-report-failures">
             <ul className="flex flex-col gap-2 text-sm">
               {failures.map(failure => (
                 <li key={failure.plan.source.id} className="flex flex-col">
@@ -90,20 +94,28 @@ export const ReportStep = ({
           </Section>
         )}
 
-        <Section title="Skipped or needs a check" testId="migration-report-issues">
-          {groups.length > 0 ? (
-            <EntryGroups groups={groups} />
-          ) : (
-            <p className="text-sm text-(--hl)">Nothing was left out.</p>
-          )}
-        </Section>
+        {isReported && (
+          <>
+            <Section title="Added" testId="migration-report-counts">
+              <CountList summary={added} empty="Nothing was added." />
+            </Section>
 
-        {isFromInsomnia && <p className="text-xs text-(--hl)">{QUIET_SKIPS_NOTE}</p>}
-        <p className="text-xs text-(--hl)">
-          restless also saves a copy of this report in its data folder, under migrations.
-        </p>
+            <Section title="Skipped or needs a check" testId="migration-report-issues">
+              {groups.length > 0 ? (
+                <EntryGroups groups={groups} />
+              ) : (
+                <p className="text-sm text-(--hl)">Nothing was left out.</p>
+              )}
+            </Section>
 
-        {plugins.length > 0 && <PluginList names={plugins} />}
+            {isFromInsomnia && <p className="text-xs text-(--hl)">{QUIET_SKIPS_NOTE}</p>}
+            <p className="text-xs text-(--hl)">
+              restless also saves a copy of this report in its data folder, under migrations.
+            </p>
+
+            {plugins.length > 0 && <PluginList names={plugins} />}
+          </>
+        )}
       </Body>
       <Footer>
         <Button
@@ -116,9 +128,14 @@ export const ReportStep = ({
         <Button onPress={onRestart} data-testid="migration-restart">
           Migrate more
         </Button>
-        <Button primary onPress={onClose} data-testid="migration-done">
+        <Button primary={failures.length === 0} onPress={onClose} data-testid="migration-done">
           Done
         </Button>
+        {failures.length > 0 && (
+          <Button primary onPress={onRetry} data-testid="migration-retry">
+            Try again
+          </Button>
+        )}
       </Footer>
     </>
   );

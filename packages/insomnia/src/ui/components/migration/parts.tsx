@@ -62,7 +62,7 @@ export const Notice = ({
   </div>
 );
 
-export const CountList = ({ summary }: { summary: CountSummary }) => (
+export const CountList = ({ summary, empty = 'Nothing to copy.' }: { summary: CountSummary; empty?: string }) => (
   <div className="flex flex-col gap-1">
     {summary.rows.length > 0 ? (
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-x-4 gap-y-1 text-sm">
@@ -73,7 +73,7 @@ export const CountList = ({ summary }: { summary: CountSummary }) => (
         ))}
       </ul>
     ) : (
-      <p className="text-sm text-(--hl)">Nothing to copy.</p>
+      <p className="text-sm text-(--hl)">{empty}</p>
     )}
     {summary.supporting > 0 && (
       <p className="text-xs text-(--hl)">

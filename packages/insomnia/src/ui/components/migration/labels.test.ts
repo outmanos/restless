@@ -12,6 +12,7 @@ import {
   typeLabel,
   typePosition,
 } from './labels';
+import { DASHES } from './test-fixtures';
 
 // Adding a reason to ReportReason makes this fail to compile until the UI has a label for it.
 const ALL_REASONS = Object.keys({
@@ -49,8 +50,9 @@ describe('REASON_INFO and REASON_ORDER', () => {
     const text = [...Object.values(REASON_INFO).flatMap(info => [info.title, info.hint]), QUIET_SKIPS_NOTE].join('\n');
     expect(text).toContain('restless');
     expect(text).not.toContain('Restless');
-    expect(text).not.toContain('—');
-    expect(text).not.toContain('–');
+    for (const dash of DASHES) {
+      expect(text).not.toContain(dash);
+    }
   });
 
   it('points Git projects to File > Open Folder…', () => {
@@ -97,6 +99,13 @@ describe('typeLabel()', () => {
 
   it('defaults to the singular', () => {
     expect(typeLabel('CaCertificate')).toBe('CA certificate');
+  });
+
+  it('names the types that are only ever listed as skipped', () => {
+    expect(typeLabel('OAuth2Token')).toBe('OAuth 2 token');
+    expect(typeLabel('GitCredentials')).toBe('Git credential');
+    expect(typeLabel('CloudCredential', 2)).toBe('cloud credentials');
+    expect(typeLabel('GitRepository', 2)).toBe('Git repositories');
   });
 
   it('makes a label for a type it does not know', () => {
