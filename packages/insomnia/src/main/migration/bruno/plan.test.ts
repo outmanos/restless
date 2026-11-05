@@ -864,15 +864,31 @@ describe('NeDB and the committer', () => {
     }
   });
 
-  it('survives initModel and the database: every document inserts, and keeps every field', async () => {
+  it('survives initModel and the database: every document inserts, keeps every field, and fits its model', async () => {
+    const validated = new Set<string>();
     for (const plan of plans) {
       for (const candidate of plan.items) {
         const inserted: Record<string, any> = await database.docCreate(candidate.type as never, candidate.doc as never);
         for (const [key, value] of Object.entries(candidate.doc)) {
           expect(inserted[key], `${candidate.type} ${candidate.name}.${key}`).toEqual(value);
         }
+        // The zod schema of the model, where it has one: this is what names and types the fields are checked by
+        const model = models.getModel(candidate.type) as {
+          schema?: { safeParse(value: unknown): { success: boolean; error?: { issues: unknown[] } } };
+        } | null;
+        if (model?.schema) {
+          validated.add(candidate.type);
+          const parsed = model.schema.safeParse(inserted);
+          expect(parsed.success, `${candidate.type} ${candidate.name}: ${JSON.stringify(parsed.error?.issues)}`).toBe(
+            true,
+          );
+        }
       }
     }
+    // The check above has to have run on the main models, not skipped them
+    expect([...validated].sort()).toEqual(
+      ['CookieJar', 'Environment', 'GrpcRequest', 'Request', 'RequestGroup', 'WebSocketRequest', 'Workspace'].sort(),
+    );
   });
 
   it('is found by the app, which then creates no second base environment or cookie jar', async () => {
@@ -988,6 +1004,72 @@ describe('more request mappings, from small collections', () => {
         type: 'Workspace',
         name: 'temp',
         detail: 'Tags on 1 request(s) and folder(s) were not imported',
+      },
+    ]);
+  });
+
+  it('maps a SPARQL body, and docs to descriptions on a request and a folder', async () => {
+    const folder = makeCollection({
+      'a.bru': requestFile(
+        'query',
+        'post',
+        '',
+        'body:sparql {\n  SELECT * WHERE { ?s ?p ?o }\n}\n\ndocs {\n  # Query\n  Runs a query.\n}\n',
+      ).replace('body: none', 'body: sparql'),
+      'docs-folder/folder.bru': 'meta {\n  name: Documented\n}\n\ndocs {\n  About this folder\n}\n',
+      'docs-folder/b.bru': requestFile('inside', 'get', ''),
+    });
+    const [plan] = await planBruno(folder);
+    expect(request(plan, 'query')).toMatchObject({
+      method: 'POST',
+      body: { mimeType: 'application/sparql-query', text: 'SELECT * WHERE { ?s ?p ?o }' },
+      headers: [{ name: 'Content-Type', value: 'application/sparql-query' }],
+      description: '# Query\nRuns a query.',
+    });
+    expect(doc(plan, 'RequestGroup', 'Documented').description).toBe('About this folder');
+  });
+
+  it('writes post-response variables as runtime variables, after the response is read', async () => {
+    const folder = makeCollection({
+      'a.bru': requestFile(
+        'login',
+        'post',
+        '',
+        'vars:post-response {\n  token: res.body.token\n  @code: res.status\n  ~off: res.body.off\n  bad: res("data.id")\n}\n',
+      ),
+    });
+    const [plan] = await planBruno(folder);
+    expect(request(plan, 'login').afterResponseScript).toBe(
+      [
+        'insomnia.environment.set("token", insomnia.response.json().token);',
+        'insomnia.variables.set("code", insomnia.response.code);',
+        '// disabled: off',
+      ].join('\n'),
+    );
+    expect(plan.issues).toEqual([
+      {
+        reason: 'not-supported',
+        type: 'Request',
+        name: 'login',
+        detail: 'Post-response variable "bad" uses res(), so it was not imported',
+      },
+    ]);
+  });
+
+  it('keeps an environment colour that is a hex colour, and says when it is not', async () => {
+    const folder = makeCollection({
+      'environments/Red.bru': 'vars {\n  a: 1\n}\ncolor: #CE4F3B\n',
+      'environments/Green.bru': 'vars {\n  a: 1\n}\ncolor: green\n',
+    });
+    const [plan] = await planBruno(folder);
+    expect(doc(plan, 'Environment', 'Red').color).toBe('#CE4F3B');
+    expect(doc(plan, 'Environment', 'Green').color).toBeUndefined();
+    expect(issues(plan, 'not-supported', 'Green')).toEqual([
+      {
+        reason: 'not-supported',
+        type: 'Environment',
+        name: 'Green',
+        detail: 'The color "green" is not a hex color, so it was not kept',
       },
     ]);
   });
