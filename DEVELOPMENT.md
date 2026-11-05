@@ -29,7 +29,7 @@ Insomnia Inso CLI is built using a series of steps
 1. `insomnia-inso` uses monorepo references to import `insomnia` and `insomnia-testing` to expose `getSendRequestCallbackMemDb` and `generate`, `runTests`, `runTestsCli` respectively
 1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild to commonjs
 1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
-1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+1. `packages/insomnia-inso/binaries/rl` is an executable made with `pkg`
 
 `getSendRequestCallbackMemDb` exposes some behavior from the insomnia renderer.
 

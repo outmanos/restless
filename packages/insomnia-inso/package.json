@@ -20,11 +20,19 @@
     "rl": "bin/inso"
   },
   "pkg": {
-    "scripts": []
+    "scripts": [
+      "../../node_modules/restless-plugin-secret-managers/index.js"
+    ],
+    "assets": [
+      "../../node_modules/node-libcurl/**/*"
+    ]
   },
   "//": [
     "pkg attributes is used to manually include modules in the packing process of pkg",
-    "See: https://github.com/yao-pkg/pkg?tab=readme-ov-file#config"
+    "See: https://github.com/yao-pkg/pkg?tab=readme-ov-file#config",
+    "pkg copies a whole native addon package out of its snapshot when it loads, so node-libcurl is bundled as assets",
+    "The bundled secret manager plugin is loaded with a dynamic require, so pkg needs it listed in scripts",
+    "The Node target is pinned: 'host' follows .nvmrc, and pkg has no base binary for the newest Node versions"
   ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -36,8 +44,8 @@
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
-    "prepackage": "npm run build:production && rm -rf binaries/inso",
-    "package": "npx -y @yao-pkg/pkg@6.14.1 . --output binaries/inso --targets host",
+    "prepackage": "npm run build:production && node -e \"require('fs').rmSync('binaries',{recursive:true,force:true})\"",
+    "package": "npx -y @yao-pkg/pkg@6.14.1 . --output binaries/rl --targets node24",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
