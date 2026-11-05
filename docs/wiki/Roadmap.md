@@ -55,16 +55,16 @@ The top feature priority. Moving must be easy, or nobody moves.
 
 | | Pri | Size | Task |
 |---|---|---|---|
-| [ ] | P0 | M | Detect an Insomnia data folder and list what it holds |
-| [ ] | P0 | L | Import projects, collections, environments, cookies and certificates in one click |
-| [ ] | P0 | M | Show a report of what moved and what didn't |
-| [ ] | P0 | M | Import Bruno collections, `.bru` and YAML |
-| [ ] | P0 | S | Never change the source install |
-| [ ] | P1 | M | Offer migration on first launch when an install is found |
-| [ ] | P1 | S | Reinstall plugins found in the old install |
-| [ ] | P1 | M | Translate Bruno and Postman scripts, reporting what didn't convert |
-| [ ] | P1 | M | Bulk import of many collections |
-| [ ] | P2 | M | Import from a Postman workspace dump |
+| [x] | P0 | M | Detect an Insomnia data folder and list what it holds |
+| [x] | P0 | L | Import projects, collections, environments, cookies and certificates in one click |
+| [x] | P0 | M | Show a report of what moved and what didn't |
+| [x] | P0 | M | Import Bruno collections, `.bru` and YAML |
+| [x] | P0 | S | Never change the source install |
+| [x] | P1 | M | Offer migration on first launch when an install is found |
+| [x] | P1 | S | Reinstall plugins found in the old install |
+| [x] | P1 | M | Translate Bruno and Postman scripts, reporting what didn't convert |
+| [x] | P1 | M | Bulk import of many collections |
+| [x] | P2 | M | Import from a Postman workspace dump (through the import window) |
 
 ## 0.3.0: Files first
 
@@ -149,7 +149,7 @@ AI stays off by default.
 | | Pri | Size | Task |
 |---|---|---|---|
 | [ ] | P0 | M | Devtools panel: console, network, performance |
-| [ ] | P1 | M | Built-in terminal |
+| [ ] | P1 | M | Built-in terminal with a titlebar icon, running `rl help` on first open |
 | [ ] | P1 | L | AI chat sidebar, inline assist and autocomplete |
 | [ ] | P1 | M | AI generation for tests and scripts |
 | [ ] | P2 | L | Local model support inside the app |

@@ -9,6 +9,7 @@ import { CommandPalette } from '~/ui/components/command-palette';
 import { Hotkey } from '~/ui/components/hotkey';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { useMigrationOffer } from '~/ui/components/migration/use-migration-offer';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TitleBarMenu } from '~/ui/components/title-bar-menu';
 import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
@@ -39,6 +40,8 @@ const Component = () => {
   const patchSettings = useSettingsPatcher();
 
   useCloseConnection({ organizationId });
+
+  useMigrationOffer();
 
   // Reclaim cached editor undo/redo history when tabs close, so switching between
   // open tabs never evicts a still-open tab's history from the shared cache.

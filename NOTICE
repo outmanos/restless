@@ -6,3 +6,6 @@ License, Version 2.0. Files have been changed from the original. Run
 `git log` for the history of changes since the fork.
 
 restless is not affiliated with or endorsed by Kong Inc.
+
+restless uses @usebruno/lang by Anoop M D, Anusree P S and contributors, under
+the MIT License, to read Bruno collections.

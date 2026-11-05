@@ -1,0 +1,21 @@
+meta {
+  name: dog image
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{dogceo}}/api/breeds/image/random
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("request succeeded", function() {
+    expect(res.body.status).to.equal("success");
+  });
+}

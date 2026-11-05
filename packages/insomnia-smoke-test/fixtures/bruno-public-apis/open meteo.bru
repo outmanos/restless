@@ -1,0 +1,21 @@
+meta {
+  name: open meteo
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{openmeteo}}/v1/forecast?latitude=48.85&longitude=2.35&current=temperature_2m
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("temperature is a number", function() {
+    expect(res.body.current.temperature_2m > -100).to.equal(true);
+  });
+}

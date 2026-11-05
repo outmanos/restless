@@ -90,6 +90,7 @@ import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import { resolveUserDataFolder } from './path-guard';
+import type { MigrationBridgeAPI } from '../migration/ipc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
@@ -215,7 +216,7 @@ const appendToTimeline = async (_: unknown, options: { timelinePath: string; dat
   await fs.promises.appendFile(resolvedPath, options.data);
 };
 
-export interface RendererToMainBridgeAPI {
+export interface RendererToMainBridgeAPI extends MigrationBridgeAPI {
   runTests: (src: string) => Promise<TestResults>;
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
