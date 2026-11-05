@@ -176,6 +176,8 @@ export interface Settings {
   /** True once the user has dismissed the one-time "Welcome to focus mode" onboarding popup. */
   hasSeenSidebarFocusOnboarding: boolean;
   hasReadInstallerUpdateChoice: boolean;
+  /** True once the one-time first-launch offer to migrate from another app is no longer needed: it was declined, or the migration window was used. */
+  hasSeenMigrationOffer: boolean;
   theme: string;
   timeout: number;
   updateAutomatically: boolean;

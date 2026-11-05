@@ -1,0 +1,16 @@
+info:
+  name: WithProto
+  type: grpc
+  seq: 2
+
+grpc:
+  url: grpc://localhost:50051
+  method: /hello.HelloService/SayHello
+  methodType: unary
+  protoFilePath: protos/hello.proto
+  message:
+    - title: message 1
+      message: |-
+        {
+          "greeting": "amoveo"
+        }

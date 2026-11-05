@@ -1,20 +1,38 @@
-# Migrating from Insomnia
+# Migrating to restless
 
-One-click migration is the next priority on the [Roadmap](Roadmap). Until then, move your data by hand.
+Use `File > Migrate from…`, or the button in the import window. restless also offers this once on first launch if it finds an install.
 
-1. In Insomnia, export your data to a file.
-2. In restless, open a project, choose **Import**, and pick that file.
+## Insomnia and Insomnium
 
-Current YAML exports and older Insomnia formats are both supported.
+1. restless lists the installs it finds, with what each one holds.
+2. Pick one and review what will move and what won't.
+3. Choose **Import**, then read the report.
 
-## Git projects
+Close the other app first if it's open. Its latest changes may not be on disk yet.
 
-Use `File > Open Folder…` on the repository. restless reads the Insomnia YAML files in it directly.
+Projects, collections, environments, cookies, certificates, API specs, mock routes and tests all move. Each source project becomes a local project.
+
+## Bruno
+
+Choose **Bruno** and pick a collection folder, or a folder holding many. Both `.bru` and YAML collections work.
+
+Scripts are translated. If part of a script can't be, the original stays as a comment at the top and the report lists it. Check those scripts before relying on them.
+
+Bruno's workspace-level global environments aren't read.
 
 ## What doesn't move
 
-- Cloud Sync projects must be exported from Insomnia first.
-- Saved passwords and tokens may need entering again.
-- Installed plugins must be reinstalled.
+- **Secrets:** vault values, secret environment values and Bruno secrets are encrypted or stored elsewhere. Their names move, and the values must be entered again.
+- **Tokens and credentials:** OAuth tokens, Git credentials and cloud credentials.
+- **Git projects:** use `File > Open Folder…` on the repository.
+- **Cloud projects:** only what's already on disk moves. Anything else must be synced in the other app first.
+- **Settings and responses:** response history and app settings stay behind.
+- **Local MCP access:** it's turned off on everything imported, so you grant it again yourself.
 
-restless uses its own data folder, so it never changes an Insomnia install.
+## Plugins
+
+The report lists plugins found in the old install, each with its own install button. That's the only step that uses the network.
+
+## Safety
+
+restless never writes to the source install. It takes a backup of its own data before the first write. Running a migration again is safe: anything already imported is skipped, not overwritten.

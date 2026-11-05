@@ -11,12 +11,13 @@ Known problems, most urgent first. Priorities match the [Roadmap](Roadmap).
 | **P2** | `icon.svg` keeps old metadata | Its label still says Insomnium, and it carries an embedded manifest | Open |
 | **P2** | Flaky smoke test | `pre-request-script-features.test.ts:487` matches two elements with `Pre-request Scripts` | Open |
 | **P2** | Workflow actions use Node 20 | GitHub warns these actions are deprecated | Open |
+| **P2** | Git migration redirects to a missing route | `git-migration.$.tsx` sends new users to `/onboarding`, which no longer exists | Open |
+| **P2** | Titlebar submenus stay open | Clicking the preferences icon doesn't close them | Open |
+| **P2** | Import collection doesn't look clickable | No hand cursor, and the upload icon doesn't react | Open |
 
 ## Not verified yet
 
 | Check | Why it matters |
 |---|---|
-| Run the Windows installer | The update checkbox compiles, but nobody has used it |
 | Inspect the macOS `node-libcurl` binary | The Linux build is confirmed static, macOS isn't |
 | Test the updater against a real release | Needs a second release |
-| Measure first launch on packaged builds | Only a local Linux build showed no network requests |

@@ -6,6 +6,7 @@ import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } 
 import { Form, Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import { Button as BasicButton } from '~/basic-components';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { invariant } from '~/common/utils/invariant';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
@@ -13,6 +14,7 @@ import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { createProject } from '~/routes/organization.$organizationId.project.new';
 import { Checkbox } from '~/ui/components/base/checkbox';
+import { MigrationModal } from '~/ui/components/migration/migration-modal';
 
 import {
   clearResourceCache,
@@ -28,6 +30,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
+import { showModal } from '..';
 import { CurlIcon, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
@@ -408,6 +411,10 @@ export const ImportModal: FC<ImportModalProps> = ({
               scanResourcesFetcher.submit(e.currentTarget);
             }}
             loading={scanResourcesFetcher.state !== 'idle'}
+            onMigrate={() => {
+              modalRef.current?.hide();
+              showModal(MigrationModal);
+            }}
           />
         )}
       </Modal>
@@ -438,11 +445,13 @@ const ScanResourcesForm = ({
   from,
   scanResults,
   loading,
+  onMigrate,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: ImportModalProps['from'];
   scanResults?: ScanResult[];
   loading: boolean;
+  onMigrate?: () => void;
 }) => {
   const id = useId();
   const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
@@ -586,6 +595,14 @@ const ScanResourcesForm = ({
         <div className="mt-4 w-full items-center gap-4 text-wrap outline-hidden">
           ⚠️ Make sure that you trust the import source before continuing.
         </div>
+        {onMigrate && (
+          <div className="mt-4 flex w-full items-center justify-between gap-(--padding-sm) rounded-md border border-solid border-(--hl-md) bg-(--hl-xs) p-(--padding-sm)">
+            <span>Moving over from Insomnia, Insomnium or Bruno?</span>
+            <BasicButton size="sm" onPress={onMigrate} data-testid="import-migrate-button">
+              Migrate from another app…
+            </BasicButton>
+          </div>
+        )}
       </div>
 
       <div className="flex items-end justify-between gap-(--padding-sm)">
