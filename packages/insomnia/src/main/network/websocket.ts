@@ -20,7 +20,7 @@ import { setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { getUserAgent, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
 import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
@@ -28,7 +28,6 @@ import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 
-import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
@@ -266,7 +265,7 @@ const openWebSocketConnection = async (
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
     if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
-      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+      lowerCasedEnabledHeaders['user-agent'] = getUserAgent();
     }
     const start = performance.now();
 

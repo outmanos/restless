@@ -17,10 +17,9 @@ import { setDefaultProtocol } from 'insomnia-data/common';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { getUserAgent, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
 
-import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -309,7 +308,7 @@ const openSocketIOConnection = async (
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
     if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
-      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+      lowerCasedEnabledHeaders['user-agent'] = getUserAgent();
     }
 
     // attach cookies to the request

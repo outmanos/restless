@@ -5,7 +5,6 @@ Known problems, most urgent first. Priorities match the [Roadmap](Roadmap).
 | Priority | Bug | Effect | Status |
 |---|---|---|---|
 | **P1** | Environment table can lose a value | Saves can land out of order, so a value typed quickly is dropped. Seen as `manage environment` failing in full smoke runs | Cause not confirmed |
-| **P1** | Requests send `User-Agent: insomnia/0.1.0` | Every server sees the old name | Needs a decision |
 | **P1** | Linux builds need glibc 2.38 | CI builds on a recent Ubuntu, so older distros such as Ubuntu 22.04 and Debian 12 likely can't load `node-libcurl` | Open |
 | **P2** | `icon.svg` keeps old metadata | Its label still says Insomnium, and it carries an embedded manifest | Open |
 | **P2** | Flaky smoke test | `pre-request-script-features.test.ts:487` matches two elements with `Pre-request Scripts` | Open |

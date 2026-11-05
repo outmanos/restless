@@ -24,8 +24,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { invariant } from '~/common/utils/invariant';
 
-import { version } from '../../../package.json';
-import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import {
+  type AuthTypes,
+  CONTENT_TYPE_FORM_DATA,
+  CONTENT_TYPE_FORM_URLENCODED,
+  getUserAgent,
+} from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { assertPathAllowed, insecureReadFile, isPathAllowed } from '../secure-read-file';
@@ -516,7 +520,7 @@ export const createConfiguredCurlInstance = async ({
   const { headers, authentication } = req;
 
   const userAgent: RequestHeader | null = headers.find((h: any) => h.name.toLowerCase() === 'user-agent') || null;
-  const userAgentOrFallback = typeof userAgent?.value === 'string' ? userAgent?.value : 'insomnia/' + version;
+  const userAgentOrFallback = typeof userAgent?.value === 'string' ? userAgent?.value : getUserAgent();
   curl.setOpt(Curl.option.USERAGENT, userAgentOrFallback);
   if (req.suppressUserAgent) {
     curl.setOpt(Curl.option.USERAGENT, '');

@@ -34,6 +34,8 @@ export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaVaultSalt = () => env.INSOMNIA_VAULT_SALT;
 export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
 export const getAppVersion = () => version;
+// The product token every request sends unless the user sets their own User-Agent
+export const getUserAgent = () => `${appConfig.name}/${version}`;
 export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
