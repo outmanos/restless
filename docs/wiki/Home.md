@@ -34,4 +34,5 @@ restless started as a fork of Kong's Insomnia. It is independent and not affilia
 
 - [Principles](Principles)
 - [Roadmap](Roadmap)
+- [Bugs](Bugs)
 - [Decisions](Decisions)

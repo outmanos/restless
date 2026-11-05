@@ -28,4 +28,5 @@
 
 - [Principles](Principles)
 - [Roadmap](Roadmap)
+- [Bugs](Bugs)
 - [Decisions](Decisions)
