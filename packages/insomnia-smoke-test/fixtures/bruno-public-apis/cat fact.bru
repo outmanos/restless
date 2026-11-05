@@ -1,0 +1,25 @@
+meta {
+  name: cat fact
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{catfact}}/fact
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  source: restless
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("fact is not empty", function() {
+    expect(res.body.fact.length > 0).to.equal(true);
+  });
+}

@@ -1,0 +1,41 @@
+meta {
+  name: create post
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{jsonplaceholder}}/posts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "restless",
+    "body": "migrated from bruno",
+    "userId": 1
+  }
+}
+
+tests {
+  test("created", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("title survives", function() {
+    expect(res.body.title).to.equal("restless");
+  });
+}
+
+script:post-response {
+  bru.setEnvVar("last_post_title", res.body.title);
+}
+
+docs {
+  JSONPlaceholder is a fake REST API for prototyping. It accepts a post and echoes it back.
+}

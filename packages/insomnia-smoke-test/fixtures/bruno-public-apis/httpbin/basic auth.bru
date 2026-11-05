@@ -1,0 +1,21 @@
+meta {
+  name: basic auth
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{httpbin}}/basic-auth/restless/secret
+  body: none
+  auth: basic
+}
+
+auth:basic {
+  username: restless
+  password: secret
+}
+
+assert {
+  res.status: 200
+  res.body.authenticated: true
+}

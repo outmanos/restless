@@ -1,0 +1,29 @@
+meta {
+  name: get
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{httpbin}}/get?source=restless
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("query is echoed", function() {
+    expect(res.body.args.source).to.equal("restless");
+  });
+
+  test("pre-request header was sent", function() {
+    expect(res.body.headers["X-Source"]).to.equal("restless");
+  });
+}
+
+script:pre-request {
+  req.setHeader("x-source", "restless");
+}

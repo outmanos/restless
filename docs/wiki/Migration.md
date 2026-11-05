@@ -20,6 +20,12 @@ Scripts are translated. If part of a script can't be, the original stays as a co
 
 Bruno's workspace-level global environments aren't read.
 
+## Postman
+
+Postman workspace dumps go through the import window, not the migration window: choose **Import**, then **From File**, and pick the `.zip` Postman exported.
+
+Each collection and each environment in the dump becomes a workspace in the project you choose. Duplicate names stay as they are, and environments are separate workspaces, so pick the one with the variables you need before sending.
+
 ## What doesn't move
 
 - **Secrets:** vault values, secret environment values and Bruno secrets are encrypted or stored elsewhere. Their names move, and the values must be entered again.
