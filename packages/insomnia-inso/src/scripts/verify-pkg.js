@@ -1,7 +1,7 @@
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 
-const binary = path.resolve('binaries/inso');
+const binary = path.resolve('binaries/rl');
 const lintFixture = path.resolve('src/commands/fixtures/openapi-spec.yaml');
 const env = { ...process.env };
 delete env.CI;

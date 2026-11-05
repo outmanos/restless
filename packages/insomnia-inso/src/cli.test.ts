@@ -262,10 +262,10 @@ describe('inso dev bundle', () => {
 });
 
 const packagedSuccessCodes = shouldReturnSuccessCode.map(x =>
-  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'),
+  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/rl'),
 );
 const packagedErrorCodes = shouldReturnErrorCode.map(x =>
-  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'),
+  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/rl'),
 );
 
 describe('inso packaged binary', () => {
