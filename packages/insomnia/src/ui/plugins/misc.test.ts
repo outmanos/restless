@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 
-import { applyAccentColor, containsTemplateSyntax, generateThemeCSS, validateTheme, validateThemeName } from './misc';
+import { applyAccentColor, containsTemplateSyntax, generateThemeCSS, logoAccent, validateTheme, validateThemeName } from './misc';
 
 describe('containsTemplateSyntax', () => {
   it('will return true if the value contains nunjucks without', () => {
@@ -150,5 +150,20 @@ describe('applyAccentColor', () => {
     const css = generateThemeCSS(applyAccentColor(accentTheme, '#e5484d'));
     expect(css).toContain('--color-surprise: rgb(229, 72, 77)');
     expect(css).not.toContain('rgb(124, 108, 240)');
+  });
+});
+
+describe('logoAccent', () => {
+  it('returns the accent in a form CSS accepts', () => {
+    expect(logoAccent('#e5484d')).toBe('#E5484D');
+  });
+
+  it('keeps the brand color without an accent', () => {
+    expect(logoAccent()).toBeUndefined();
+    expect(logoAccent('')).toBeUndefined();
+  });
+
+  it('ignores a value that is not a color', () => {
+    expect(logoAccent('red; } body { display: none')).toBeUndefined();
   });
 });

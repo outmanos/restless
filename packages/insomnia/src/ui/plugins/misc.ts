@@ -280,7 +280,26 @@ export function getColorScheme({ autoDetectColorScheme }: Omit<ThemeSettings, 'a
   return 'default';
 }
 
+// The logo follows a custom accent. An empty value keeps the brand color, so the default look never changes.
+export function logoAccent(accentColor?: string): string | undefined {
+  if (!accentColor) {
+    return undefined;
+  }
+  try {
+    return Color(accentColor).hex();
+  } catch {
+    return undefined;
+  }
+}
+
 export function applyColorScheme(settings: ThemeSettings) {
+  const accent = logoAccent(settings.accentColor);
+  if (accent) {
+    document.documentElement.style.setProperty('--logo-accent', accent);
+  } else {
+    document.documentElement.style.removeProperty('--logo-accent');
+  }
+
   const scheme = getColorScheme(settings);
 
   switch (scheme) {
