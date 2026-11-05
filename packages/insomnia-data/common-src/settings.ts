@@ -175,6 +175,7 @@ export interface Settings {
   sidebarFocusForCollections: boolean;
   /** True once the user has dismissed the one-time "Welcome to focus mode" onboarding popup. */
   hasSeenSidebarFocusOnboarding: boolean;
+  hasReadInstallerUpdateChoice: boolean;
   theme: string;
   timeout: number;
   updateAutomatically: boolean;

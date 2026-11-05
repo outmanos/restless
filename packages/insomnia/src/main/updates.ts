@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import { app, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
@@ -34,6 +37,28 @@ const isUpdateSupported = () => {
     return false;
   }
   return !(process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']);
+};
+
+export const allowsAutomaticUpdates = (installerInfo: string) => {
+  try {
+    return JSON.parse(installerInfo).allowAutomaticUpdates === true;
+  } catch {
+    return false;
+  }
+};
+
+// The Windows installer asks once per user. After that the choice lives in Preferences.
+const applyInstallerUpdateChoice = async (settings: Settings) => {
+  if (process.platform !== 'win32' || settings.hasReadInstallerUpdateChoice) {
+    return settings;
+  }
+  const installerInfo = await fs
+    .readFile(path.join(path.dirname(process.execPath), 'installer-info.json'), 'utf8')
+    .catch(() => '');
+  return services.settings.patch({
+    hasReadInstallerUpdateChoice: true,
+    updateAutomatically: settings.updateAutomatically || allowsAutomaticUpdates(installerInfo),
+  });
 };
 
 let currentUpdateStatus: UpdateStatus = 'idle';
@@ -94,7 +119,7 @@ export const init = async () => {
   createListeners();
 
   const updateSupported = isUpdateSupported();
-  const settings = await services.settings.get();
+  const settings = await applyInstallerUpdateChoice(await services.settings.get());
   if (updateSupported) {
     if (settings.updateAutomatically) {
       checkForUpdates(settings);

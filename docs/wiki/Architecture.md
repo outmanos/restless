@@ -1,6 +1,6 @@
 # Architecture
 
-Restless is an Electron app, written in TypeScript with React and React Router.
+restless is an Electron app, written in TypeScript with React and React Router.
 
 ## Packages
 
@@ -46,7 +46,7 @@ There is one built-in local organization.
 
 ## Requests
 
-HTTP goes through libcurl using `node-libcurl`. On Linux it links the system `libcurl`.
+HTTP goes through libcurl using `node-libcurl`. Release builds on Linux and macOS link a static libcurl, built in CI by `.github/actions/static-libcurl`. Local builds use the system `libcurl`.
 
 ## Title bar
 

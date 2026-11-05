@@ -102,6 +102,11 @@ app.on('ready', async () => {
    */
   const disableSpellcheckerDownload = () => {
     electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
+    // Without this Chromium still requests a dictionary from that URL on launch
+    electron.session.defaultSession.setSpellCheckerEnabled(false);
+    if (process.platform !== 'darwin') {
+      electron.session.defaultSession.setSpellCheckerLanguages([]);
+    }
   };
   disableSpellcheckerDownload();
 

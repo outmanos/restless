@@ -1,6 +1,6 @@
 # Storage and Git
 
-Restless has two project types.
+restless has two project types.
 
 | Type | Where data lives | Best for |
 |---|---|---|
@@ -11,15 +11,15 @@ Restless has two project types.
 
 `File > Open Folder…` opens any folder as a Git project.
 
-- If the folder isn't a Git repository, Restless runs `git init` there.
-- Existing Restless or Insomnia YAML files are imported.
+- If the folder isn't a Git repository, restless runs `git init` there.
+- Existing restless or Insomnia YAML files are imported.
 - Collections are saved as plain YAML, so they work with normal Git tools.
 - Commits, branches and history work with no remote and no account.
-- Restless asks you to confirm you trust a folder, because collections can contain scripts.
+- restless asks you to confirm you trust a folder, because collections can contain scripts.
 
 ## Commit identity
 
-Restless uses the first identity it finds:
+restless uses the first identity it finds:
 
 1. The credential on the project
 2. `user.name` and `user.email` in the repository's own config
@@ -34,4 +34,4 @@ Add a remote with an access token in `Preferences > Credentials`. See [Optional 
 
 ## File format
 
-Collections use the Insomnia v5 YAML format, including its `collection.insomnia.rest/5.0` type. It is a format identifier, so Restless makes no connection to that address. Keeping it means files stay compatible with Insomnia.
+Collections use the Insomnia v5 YAML format, including its `collection.insomnia.rest/5.0` type. It is a format identifier, so restless makes no connection to that address. Keeping it means files stay compatible with Insomnia.

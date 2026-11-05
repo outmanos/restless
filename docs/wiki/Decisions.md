@@ -5,7 +5,8 @@ Why things are the way they are.
 | Decision | Why |
 |---|---|
 | Forked Insomnia, not the old Insomnium | The old fork was years behind, and Insomnia is Apache-2.0 |
-| Named Restless | Not close to Kong's Insomnia mark, and it contains "REST" |
+| Named restless | Not close to Kong's Insomnia mark, and it contains "REST" |
+| The name is always lowercase | It's the wordmark. App and file names such as `Restless-0.1.0.AppImage` keep their capital |
 | CLI command is `rl` | Short. The npm package is `restless-cli` |
 | Internal folders stay `insomnia` | A rename would conflict with every merge from Insomnia |
 | Keep `collection.insomnia.rest/5.0` | It's a format ID, and changing it breaks compatibility |

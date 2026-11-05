@@ -1,6 +1,6 @@
 # Plugins and Themes
 
-Restless loads Insomnia plugins.
+restless loads Insomnia plugins.
 
 ## Install a plugin
 
@@ -10,7 +10,7 @@ Plugins run code on your machine, so only install ones you trust.
 
 ## Insomnia web links
 
-Restless opens `insomnia://` links for plugin installs, theme installs and imports. Every other `insomnia://` link is ignored.
+restless opens `insomnia://` links for plugin installs, theme installs and imports. Every other `insomnia://` link is ignored.
 
 This is on by default. Turn off **Open Insomnia web links** in `Preferences > General` if you also use Insomnia. The change applies after a restart.
 

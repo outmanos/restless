@@ -285,9 +285,9 @@ export const General: FC = () => {
           <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Software Updates</h2>
           <div className="flex w-full items-center justify-between gap-2">
             <BooleanSetting
-              label="Automatically download and install updates"
+              label="Allow Automatic Updates"
               setting="updateAutomatically"
-              help="If disabled, receive a notification in-app when a new update is available."
+              help="Checks GitHub for new versions and downloads them. When off, Restless only checks when you ask it to."
             />
             <CheckForUpdatesButton />
           </div>

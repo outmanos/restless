@@ -14,7 +14,7 @@ The `rl` command runs collections and tests from a terminal or CI. It is publish
 
 ## Choosing the data source
 
-By default, `rl` reads the Restless data folder. Use `-w` to read something else:
+By default, `rl` reads the restless data folder. Use `-w` to read something else:
 
 ```bash
 rl run collection -w ./collection.yaml

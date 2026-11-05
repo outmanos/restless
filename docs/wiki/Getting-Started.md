@@ -1,6 +1,6 @@
 # Getting Started
 
-Restless opens straight into a local project called `My Project`, with a collection called `My Collection`. There is nothing to sign in to.
+restless opens straight into a local project called `My Project`, with a collection called `My Collection`. There is nothing to sign in to.
 
 ![Projects and collections](images/projects.png)
 

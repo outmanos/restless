@@ -76,10 +76,11 @@ export function init(): BaseSettings {
     showPasswords: false,
     sidebarFocusForCollections: true,
     hasSeenSidebarFocusOnboarding: false,
+    hasReadInstallerUpdateChoice: false,
     theme: getAppDefaultTheme(),
     // milliseconds
     timeout: 30_000,
-    updateAutomatically: true,
+    updateAutomatically: false,
     updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,

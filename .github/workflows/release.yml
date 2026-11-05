@@ -51,10 +51,12 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libfontconfig-dev rpm
+      - if: runner.os != 'Windows'
+        uses: ./.github/actions/static-libcurl
       - run: npm ci
       - run: npm run build -w restless
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
       - run: npx electron-builder build --config electron-builder.config.js ${{ matrix.targets }} --publish never
         working-directory: packages/insomnia
         env:
@@ -70,7 +72,7 @@ jobs:
 
   publish:
     needs: [version, build]
-    if: ${{ !cancelled() && needs.version.outputs.release == 'true' }}
+    if: ${{ !cancelled() && needs.version.outputs.release == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
