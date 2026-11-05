@@ -28,9 +28,9 @@ import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/ele
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
-import { registerMigrationHandlers } from './main/migration/ipc';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
+import { registerMigrationHandlers } from './main/migration/ipc';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';

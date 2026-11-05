@@ -68,6 +68,7 @@ import { backup, restoreBackup } from '../backup';
 import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
+import type { MigrationBridgeAPI } from '../migration/ipc';
 import type { CurlBridgeAPI } from '../network/curl';
 import { getAuthHeader as getAuthHeaderInMain } from '../network/get-auth-header';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -90,7 +91,6 @@ import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import { resolveUserDataFolder } from './path-guard';
-import type { MigrationBridgeAPI } from '../migration/ipc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
