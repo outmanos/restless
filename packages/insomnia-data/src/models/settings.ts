@@ -77,6 +77,7 @@ export function init(): BaseSettings {
     sidebarFocusForCollections: true,
     hasSeenSidebarFocusOnboarding: false,
     hasReadInstallerUpdateChoice: false,
+    hasSeenMigrationOffer: false,
     theme: getAppDefaultTheme(),
     // milliseconds
     timeout: 30_000,

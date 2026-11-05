@@ -28,6 +28,7 @@ import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/ele
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
+import { registerMigrationHandlers } from './main/migration/ipc';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
@@ -82,6 +83,7 @@ app.on('ready', async () => {
   registerElectronHandlers();
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
+  registerMigrationHandlers();
   registerPathHandlers();
   registergRPCHandlers();
   registerCookieHandlers();
