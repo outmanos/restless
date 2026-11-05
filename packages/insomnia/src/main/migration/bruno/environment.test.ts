@@ -16,7 +16,13 @@ function build(variables: BrunoVariable[]) {
   const reports: ReportEntry[] = [];
   const renames = new Map<string, string>();
   const built = buildEnvironment(
-    { environmentId: 'env_1', environmentName: 'Local', renames, report: issue => reports.push(issue), onTemplateIssue: () => {} },
+    {
+      environmentId: 'env_1',
+      environmentName: 'Local',
+      renames,
+      report: issue => reports.push(issue),
+      onTemplateIssue: () => {},
+    },
     variables,
   );
   return { ...built, reports, renames };
@@ -34,8 +40,7 @@ function nedbKeyProblems(value: unknown, path = ''): string[] {
 }
 
 // What `{{ _.a.b }}` reads from the data
-const lookup = (data: unknown, reference: string) =>
-  reference.split('.').reduce<any>((node, key) => node?.[key], data);
+const lookup = (data: unknown, reference: string) => reference.split('.').reduce<any>((node, key) => node?.[key], data);
 
 describe('buildEnvironment', () => {
   it('stores plain variables as text rows', () => {
@@ -124,7 +129,7 @@ describe('buildEnvironment', () => {
       ['dotted name first', ['api.url', 'api']],
     ])('renames the dotted name when a plain value holds the key (%s)', (_label, order) => {
       const { data, reports, renames } = build(order.map(name => variable(name, `value of ${name}`)));
-      expect(data).toEqual({ 'api': 'value of api', 'api_url': 'value of api.url' });
+      expect(data).toEqual({ api: 'value of api', api_url: 'value of api.url' });
       expect(nedbKeyProblems(data)).toEqual([]);
       // The reference follows the rename, so the template mapping stays correct
       expect(renames.get('api.url')).toBe('api_url');
@@ -156,7 +161,10 @@ describe('buildEnvironment', () => {
       expect(prod.data).toEqual({ api_url: 'prod-url' });
       expect(reports.map(report => [report.name, report.detail])).toEqual([
         ['Local', 'Variable "api.url" is stored as "api_url" because "api" already holds a value'],
-        ['Prod', 'Variable "api.url" is stored as "api_url" so that every environment of the collection uses the same name'],
+        [
+          'Prod',
+          'Variable "api.url" is stored as "api_url" so that every environment of the collection uses the same name',
+        ],
       ]);
     });
 
@@ -167,7 +175,7 @@ describe('buildEnvironment', () => {
 
     it('renames a dotted name that runs into another dotted name', () => {
       const { data, renames } = build([variable('a.b', '1'), variable('a.b.c', '2')]);
-      expect(data).toEqual({ 'a': { b: '1' }, 'a_b_c': '2' });
+      expect(data).toEqual({ a: { b: '1' }, a_b_c: '2' });
       expect(renames.get('a.b.c')).toBe('a_b_c');
     });
 
@@ -222,10 +230,17 @@ describe('resolveEnvironmentVariables', () => {
   });
 
   it('copies inherited variables in, and lets the environment override them', () => {
-    const base = environment('base', [variable('host', 'base-host'), variable('only_base', 'b'), variable('off', 'x', { enabled: false })]);
+    const base = environment('base', [
+      variable('host', 'base-host'),
+      variable('only_base', 'b'),
+      variable('off', 'x', { enabled: false }),
+    ]);
     const dev = environment('dev', [variable('host', 'dev-host'), variable('only_dev', 'd')], ['base']);
     const problems: string[] = [];
-    const names = resolveEnvironmentVariables(dev, [base, dev], problem => problems.push(problem)).map(v => [v.name, v.value]);
+    const names = resolveEnvironmentVariables(dev, [base, dev], problem => problems.push(problem)).map(v => [
+      v.name,
+      v.value,
+    ]);
     expect(names).toEqual([
       ['only_base', 'b'],
       ['host', 'dev-host'],
@@ -244,7 +259,9 @@ describe('resolveEnvironmentVariables', () => {
   it('reports a parent that is missing, and a loop, and keeps going', () => {
     const problems: string[] = [];
     const lonely = environment('lonely', [variable('x')], ['ghost']);
-    expect(resolveEnvironmentVariables(lonely, [lonely], problem => problems.push(problem)).map(v => v.name)).toEqual(['x']);
+    expect(resolveEnvironmentVariables(lonely, [lonely], problem => problems.push(problem)).map(v => v.name)).toEqual([
+      'x',
+    ]);
     const a = environment('a', [variable('x')], ['b']);
     const b = environment('b', [variable('y')], ['a']);
     resolveEnvironmentVariables(a, [a, b], problem => problems.push(problem));

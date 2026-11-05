@@ -104,7 +104,10 @@ const unsupportedFor = (context: Context, owner: Owner) => (detail: string) =>
 
 function converter(context: Context, owner: Owner) {
   const onIssue = (issue: TemplateIssue) =>
-    unsupportedFor(context, owner)(`{{${issue.expression}}} has no restless equivalent. It was left as written and will not render.`);
+    unsupportedFor(
+      context,
+      owner,
+    )(`{{${issue.expression}}} has no restless equivalent. It was left as written and will not render.`);
   return (text: string) => convertTemplate(text, onIssue, context.renames);
 }
 
@@ -244,7 +247,12 @@ function planEnvironments(context: Context): PlanItem[] {
       id: stableId(context, models.environment.prefix, 'environment', environment.relativePath),
       name: environment.name,
       variables: resolveEnvironmentVariables(environment, collection.environments, problem =>
-        report(context, { reason: 'not-supported', type: models.environment.type, name: environment.name, detail: `Environment ${problem}` }),
+        report(context, {
+          reason: 'not-supported',
+          type: models.environment.type,
+          name: environment.name,
+          detail: `Environment ${problem}`,
+        }),
       ),
     })),
   ];
@@ -254,7 +262,13 @@ function planEnvironments(context: Context): PlanItem[] {
   const ignore = () => {};
   for (const input of inputs) {
     buildEnvironment(
-      { environmentId: input.id, environmentName: input.name, renames: context.renames, report: ignore, onTemplateIssue: ignore },
+      {
+        environmentId: input.id,
+        environmentName: input.name,
+        renames: context.renames,
+        report: ignore,
+        onTemplateIssue: ignore,
+      },
       input.variables,
     );
   }
@@ -424,7 +438,9 @@ function mapUrl(rawUrl: string, query: BrunoParam[], convert: (text: string) => 
   }
   const hash = rawUrl.indexOf('#', start);
   const search = rawUrl.slice(start + 1, hash === -1 ? undefined : hash);
-  const known = new Set(query.filter(param => param.enabled).map(param => `${decode(param.name)}=${decode(param.value)}`));
+  const known = new Set(
+    query.filter(param => param.enabled).map(param => `${decode(param.name)}=${decode(param.value)}`),
+  );
   for (const pair of search.split('&').filter(Boolean)) {
     const equals = pair.indexOf('=');
     const name = equals === -1 ? pair : pair.slice(0, equals);
@@ -511,7 +527,9 @@ async function mapBody(
 function reportUnusedSettings(request: BrunoRequest, unsupported: (detail: string) => void) {
   const { maxRedirects, timeout } = request.settings;
   const unused = [
-    ...(maxRedirects !== undefined && maxRedirects !== DEFAULT_MAX_REDIRECTS ? [`max redirects (${maxRedirects})`] : []),
+    ...(maxRedirects !== undefined && maxRedirects !== DEFAULT_MAX_REDIRECTS
+      ? [`max redirects (${maxRedirects})`]
+      : []),
     ...(typeof timeout === 'number' && timeout > 0 ? [`timeout (${timeout} ms)`] : []),
   ];
   if (unused.length > 0) {
@@ -597,13 +615,14 @@ async function planHttpRequest(context: Context, request: BrunoRequest, parentId
   ];
 }
 
-async function planProtoFile(context: Context, protoPath: string, owner: Owner) {
+// The ID of the proto file document, or an empty string when there is none
+async function planProtoFile(context: Context, protoPath: string, owner: Owner): Promise<string> {
   if (!protoPath) {
-    return undefined;
+    return '';
   }
   if (protoPath.includes('{{')) {
     unsupportedFor(context, owner)('A proto file path with a variable in it is not supported');
-    return undefined;
+    return '';
   }
   const absolute = path.isAbsolute(protoPath) ? protoPath : path.resolve(context.collection.path, protoPath);
   const known = context.protoFiles.get(absolute);
@@ -615,9 +634,14 @@ async function planProtoFile(context: Context, protoPath: string, owner: Owner) 
     protoText = await fs.readFile(absolute, 'utf8');
   } catch {
     report(context, { reason: 'file-missing', ...owner, detail: protoPath });
-    return undefined;
+    return '';
   }
-  const id = stableId(context, models.protoFile.prefix, 'proto', posix(path.relative(context.collection.path, absolute)));
+  const id = stableId(
+    context,
+    models.protoFile.prefix,
+    'proto',
+    posix(path.relative(context.collection.path, absolute)),
+  );
   context.protoFiles.set(absolute, id);
   context.protoItems.push(
     makeItem(models.protoFile.type, {
@@ -781,7 +805,9 @@ export async function planCollection(collection: BrunoCollection): Promise<Migra
     unsupported(`${collection.clientCertificateCount} client certificate(s) were not imported`);
   }
   if (collection.protoFileCount > 0) {
-    unsupported(`${collection.protoFileCount} proto file(s) listed in the collection settings were not imported. Pick a proto file on each gRPC request.`);
+    unsupported(
+      `${collection.protoFileCount} proto file(s) listed in the collection settings were not imported. Pick a proto file on each gRPC request.`,
+    );
   }
   if (collection.hasProxy) {
     unsupported('The proxy settings of the collection were not imported');

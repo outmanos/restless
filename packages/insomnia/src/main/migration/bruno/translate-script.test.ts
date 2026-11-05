@@ -32,7 +32,12 @@ const RULE_CASES: Record<string, { input: string; expected: string }[]> = {
   'bru.getAllVars': [{ input: 'bru.getAllVars()', expected: 'insomnia.variables.toObject()' }],
   'bru.getVar': [{ input: 'bru.getVar("token")', expected: 'insomnia.variables.get("token")' }],
   'bru.hasVar': [{ input: 'bru.hasVar("token")', expected: 'insomnia.variables.has("token")' }],
-  'bru.setVar': [{ input: 'bru.setVar("token", res.body.token)', expected: 'insomnia.environment.set("token", insomnia.response.json().token)' }],
+  'bru.setVar': [
+    {
+      input: 'bru.setVar("token", res.body.token)',
+      expected: 'insomnia.environment.set("token", insomnia.response.json().token)',
+    },
+  ],
   'bru.deleteVar': [{ input: 'bru.deleteVar("token")', expected: 'insomnia.environment.unset("token")' }],
 
   'bru.getAllCollectionVars': [
@@ -112,7 +117,9 @@ const RULE_CASES: Record<string, { input: string; expected: string }[]> = {
   ],
   'res.getHeaders': [{ input: 'res.getHeaders()', expected: LOWERCASED_HEADERS }],
   'res.statusText': [{ input: 'res.statusText', expected: 'insomnia.response.status' }],
-  'res.status': [{ input: 'expect(res.status).to.equal(200)', expected: 'insomnia.expect(insomnia.response.code).to.equal(200)' }],
+  'res.status': [
+    { input: 'expect(res.status).to.equal(200)', expected: 'insomnia.expect(insomnia.response.code).to.equal(200)' },
+  ],
   'res.responseTime': [{ input: 'res.responseTime < 500', expected: 'insomnia.response.responseTime < 500' }],
   'res.body': [{ input: 'res.body.items[0]', expected: 'insomnia.response.json().items[0]' }],
   'res.headers': [{ input: "res.headers['content-type']", expected: `${LOWERCASED_HEADERS}['content-type']` }],
@@ -189,7 +196,9 @@ describe('rule boundaries', () => {
   });
 
   it('is stable when run twice', () => {
-    const once = translateBrunoExpression('bru.setVar("a", res.getBody().b); test("t", () => expect(res.status).to.equal(200));').code;
+    const once = translateBrunoExpression(
+      'bru.setVar("a", res.getBody().b); test("t", () => expect(res.status).to.equal(200));',
+    ).code;
     expect(translateBrunoExpression(once).code).toBe(once);
   });
 });
@@ -212,7 +221,9 @@ describe('leftover scan', () => {
   });
 
   it('finds nothing in translated code', () => {
-    expect(findLeftovers('insomnia.test("a", () => { insomnia.expect(insomnia.response.code).to.equal(200); });')).toEqual([]);
+    expect(
+      findLeftovers('insomnia.test("a", () => { insomnia.expect(insomnia.response.code).to.equal(200); });'),
+    ).toEqual([]);
   });
 
   it('names the whole member path', () => {
@@ -278,13 +289,15 @@ describe('translateBrunoScript', () => {
       'const password = "della";',
       '',
       'const authString = `${username}:${password}`;',
-      "const encodedAuthString = btoa(authString);",
+      'const encodedAuthString = btoa(authString);',
       '',
       'req.setHeader("Authorization", `Basic ${encodedAuthString}`);',
     ].join('\n');
     const result = translateBrunoScript(script);
     expect(result.partial).toBe(false);
-    expect(result.code).toContain('insomnia.request.upsertHeader({ key: "Authorization", value: `Basic ${encodedAuthString}` });');
+    expect(result.code).toContain(
+      'insomnia.request.upsertHeader({ key: "Authorization", value: `Basic ${encodedAuthString}` });',
+    );
   });
 
   describe.each([
@@ -350,7 +363,10 @@ describe('buildPreRequestVariables', () => {
         issue => issues.push(issue),
       ),
     ).toBe(
-      ['insomnia.variables.set("token", "{{ _.request_pre_var_token }}");', 'insomnia.variables.set("secret", "{{process.env.SECRET}}");'].join('\n'),
+      [
+        'insomnia.variables.set("token", "{{ _.request_pre_var_token }}");',
+        'insomnia.variables.set("secret", "{{process.env.SECRET}}");',
+      ].join('\n'),
     );
     expect(issues).toEqual([{ kind: 'process-env', expression: 'process.env.SECRET' }]);
   });
@@ -456,7 +472,9 @@ describe('buildAssertionTests', () => {
   });
 
   it('keeps {{var}} operands as a template for replaceIn', () => {
-    expect(lineFor('res.body.id', 'eq', '{{userId}}').code).toContain('.to.equal(insomnia.variables.replaceIn("{{userId}}"));');
+    expect(lineFor('res.body.id', 'eq', '{{userId}}').code).toContain(
+      '.to.equal(insomnia.variables.replaceIn("{{userId}}"));',
+    );
   });
 
   it('reads a bare res.body as JSON, or as text when the body is not JSON', () => {

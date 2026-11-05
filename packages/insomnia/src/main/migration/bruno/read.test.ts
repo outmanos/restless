@@ -26,7 +26,9 @@ const findRequest = (collection: BrunoCollection, name: string) => {
   return request;
 };
 const findFolder = (folder: BrunoFolder, relativePath: string): BrunoFolder | undefined =>
-  folder.relativePath === relativePath ? folder : folder.folders.map(child => findFolder(child, relativePath)).find(Boolean);
+  folder.relativePath === relativePath
+    ? folder
+    : folder.folders.map(child => findFolder(child, relativePath)).find(Boolean);
 
 const temporaryFolders: string[] = [];
 afterEach(() => {
@@ -78,7 +80,12 @@ describe('finding collections', () => {
 describe('reading a .bru collection', () => {
   it('reads the collection, its settings and its folders', async () => {
     const collection = await readBrunoCollection(BRU_COLLECTION);
-    expect(collection).toMatchObject({ format: 'bru', name: 'bruno-testbench', hasProxy: false, clientCertificateCount: 0 });
+    expect(collection).toMatchObject({
+      format: 'bru',
+      name: 'bruno-testbench',
+      hasProxy: false,
+      clientCertificateCount: 0,
+    });
     expect(collection.settings.headers.map(header => header.name)).toEqual(['check', 'token', 'collection-header']);
     expect(collection.settings.auth).toEqual({ mode: 'bearer', values: { token: '{{bearer_auth_token}}' } });
     expect(collection.settings.scripts.req).toContain("bru.getVar('should-test-collection-scripts')");
@@ -146,7 +153,10 @@ describe('reading a .bru collection', () => {
 
   it('keeps only the authentication mode a request uses', async () => {
     // runRequest.bru has auth:basic and auth:bearer blocks but `auth: none`
-    expect(findRequest(await readBrunoCollection(BRU_COLLECTION), 'runRequest').auth).toEqual({ mode: 'none', values: {} });
+    expect(findRequest(await readBrunoCollection(BRU_COLLECTION), 'runRequest').auth).toEqual({
+      mode: 'none',
+      values: {},
+    });
   });
 
   it.each([
@@ -203,14 +213,20 @@ describe('reading a .bru collection', () => {
     expect(request.scripts.req).toContain('bru.setVar("my_json", cv)');
     expect(request.scripts.res).toBe('bru.deleteVar("my_json")');
     expect(request.scripts.tests).toContain('GraphQL variables with nested object');
-    expect(findRequest(collection, 'follow-redirect').settings).toMatchObject({ encodeUrl: true, followRedirects: false });
+    expect(findRequest(collection, 'follow-redirect').settings).toMatchObject({
+      encodeUrl: true,
+      followRedirects: false,
+    });
   });
 
   it('reads assertions: the operator is the first word of the value', async () => {
     const assertions = findRequest(await readBrunoCollection(BRU_COLLECTION), 'test-assert-combinations').assertions;
     expect(assertions).toHaveLength(28);
     expect(assertions[0]).toEqual({ expression: 'res.body.string', operator: 'eq', value: 'foo', enabled: true });
-    expect(assertions.find(a => a.expression === 'res.body.numberBig.toString()')).toMatchObject({ operator: 'eq', value: "'9007199254740992000'" });
+    expect(assertions.find(a => a.expression === 'res.body.numberBig.toString()')).toMatchObject({
+      operator: 'eq',
+      value: "'9007199254740992000'",
+    });
     // no operator means eq
     const noOperator = findRequest(await readBrunoCollection(BRU_COLLECTION), 'Bearer Auth 200').assertions;
     expect(noOperator).toEqual([
@@ -219,7 +235,12 @@ describe('reading a .bru collection', () => {
     ]);
     // a value with colons in it stays whole
     const echo = findRequest(await readBrunoCollection(BRU_COLLECTION), 'echo multipart').assertions;
-    expect(echo.at(-2)).toEqual({ expression: 'res.body', operator: 'contains', value: 'Content-Type: application/json--test', enabled: true });
+    expect(echo.at(-2)).toEqual({
+      expression: 'res.body',
+      operator: 'contains',
+      value: 'Content-Type: application/json--test',
+      enabled: true,
+    });
     // unary operators carry no value
     expect(findRequest(await readBrunoCollection(BRU_COLLECTION), 'Digest Auth 200').assertions[1]).toEqual({
       expression: 'res.body.authenticated',
@@ -235,7 +256,11 @@ describe('reading a .bru collection', () => {
       kind: 'grpc',
       url: '{{host}}',
       method: '/hello.HelloService/SayHello',
-      grpc: { methodType: 'unary', protoPath: '', messages: [{ name: 'message 1', content: '{\n  "greeting": "amoveo"\n}' }] },
+      grpc: {
+        methodType: 'unary',
+        protoPath: '',
+        messages: [{ name: 'message 1', content: '{\n  "greeting": "amoveo"\n}' }],
+      },
     });
     expect(findRequest(collection, 'BidiHello').grpc?.messages).toHaveLength(2);
     expect(findRequest(collection, 'MissingProto').grpc?.protoPath).toBe('protos/not-there.proto');
@@ -259,10 +284,15 @@ describe('reading a .bru collection', () => {
     const { environments } = await readBrunoCollection(BRU_COLLECTION);
     expect(environments.map(environment => environment.name)).toEqual(['Local', 'Prod', 'base', 'dev']);
     const local = environments.find(environment => environment.name === 'Local')!;
-    expect(local.variables.find(variable => variable.name === 'env.var1')).toMatchObject({ value: 'envVar1', secret: false });
+    expect(local.variables.find(variable => variable.name === 'env.var1')).toMatchObject({
+      value: 'envVar1',
+      secret: false,
+    });
     expect(local.variables.find(variable => variable.name === 'typed_env_num')?.value).toBe(300);
     expect(local.variables.find(variable => variable.name === 'typed_env_obj')?.value).toEqual({ scope: 'env' });
-    expect(local.variables.filter(variable => variable.secret).map(variable => [variable.name, variable.value])).toEqual(
+    expect(
+      local.variables.filter(variable => variable.secret).map(variable => [variable.name, variable.value]),
+    ).toEqual(
       [
         'github_client_secret',
         'github_client_id',
@@ -281,8 +311,18 @@ describe('reading a .bru collection', () => {
   it('reports files it cannot parse and goes on with the rest', async () => {
     const collection = await readBrunoCollection(BRU_COLLECTION);
     expect(collection.issues).toEqual([
-      { reason: 'parse-error', type: 'Request', name: 'broken/nested/broken.bru', detail: 'Syntax error at line 11, column 1' },
-      { reason: 'parse-error', type: 'Request', name: 'broken/shallow-broken.bru', detail: 'Syntax error at line 11, column 1' },
+      {
+        reason: 'parse-error',
+        type: 'Request',
+        name: 'broken/nested/broken.bru',
+        detail: 'Syntax error at line 11, column 1',
+      },
+      {
+        reason: 'parse-error',
+        type: 'Request',
+        name: 'broken/shallow-broken.bru',
+        detail: 'Syntax error at line 11, column 1',
+      },
     ]);
     expect(findRequest(collection, 'healthy').relativePath).toBe('broken/healthy.bru');
   });
@@ -302,15 +342,17 @@ describe('reading an OpenCollection YAML collection', () => {
 
   it('reads folders with their own variables', async () => {
     const collection = await readBrunoCollection(YML_COLLECTION);
-    expect(findFolder(collection.root, 'variable-datatypes')?.settings.vars.req.map(variable => variable.name)).toEqual([
-      'fold_str',
-      'fold_num',
-      'fold_bool',
-      'fold_obj',
-    ]);
+    expect(findFolder(collection.root, 'variable-datatypes')?.settings.vars.req.map(variable => variable.name)).toEqual(
+      ['fold_str', 'fold_num', 'fold_bool', 'fold_obj'],
+    );
     expect(findFolder(collection.root, 'auth/oauth2-folder')).toMatchObject({
       seq: 3,
-      settings: { auth: { mode: 'oauth2', values: { grantType: 'client_credentials', clientId: 'client_id_1', credentialsPlacement: 'body' } } },
+      settings: {
+        auth: {
+          mode: 'oauth2',
+          values: { grantType: 'client_credentials', clientId: 'client_id_1', credentialsPlacement: 'body' },
+        },
+      },
     });
     expect(findFolder(collection.root, 'auth/oauth1-folder')?.settings.auth).toMatchObject({
       mode: 'oauth1',
@@ -338,14 +380,29 @@ describe('reading an OpenCollection YAML collection', () => {
     expect(findRequest(collection, 'delayed body').assertions).toEqual([
       { expression: 'res.status', operator: 'eq', value: '200', enabled: true },
     ]);
-    expect(findRequest(collection, 'delayed body').params).toEqual([{ name: 'time', value: '1000', enabled: true, type: 'query' }]);
+    expect(findRequest(collection, 'delayed body').params).toEqual([
+      { name: 'time', value: '1000', enabled: true, type: 'query' },
+    ]);
   });
 
   it('reads form, multipart and authentication', async () => {
     const collection = await readBrunoCollection(YML_COLLECTION);
-    expect(findRequest(collection, 'form-urlencoded').body.formUrlEncoded.map(field => field.name)).toEqual(['fu_str', 'fu_num', 'fu_bool', 'fu_obj']);
-    expect(findRequest(collection, 'multipart').body.multipartForm.map(part => part.type)).toEqual(['text', 'text', 'text', 'text']);
-    expect(findRequest(collection, 'api').auth).toEqual({ mode: 'ntlm', values: expect.objectContaining({ username: 'ntlmtest', domain: '' }) });
+    expect(findRequest(collection, 'form-urlencoded').body.formUrlEncoded.map(field => field.name)).toEqual([
+      'fu_str',
+      'fu_num',
+      'fu_bool',
+      'fu_obj',
+    ]);
+    expect(findRequest(collection, 'multipart').body.multipartForm.map(part => part.type)).toEqual([
+      'text',
+      'text',
+      'text',
+      'text',
+    ]);
+    expect(findRequest(collection, 'api').auth).toEqual({
+      mode: 'ntlm',
+      values: expect.objectContaining({ username: 'ntlmtest', domain: '' }),
+    });
     expect(findRequest(collection, 'EdgeGrid GET 200').auth.mode).toBe('akamai-edgegrid');
     expect(findRequest(collection, 'oauth2-request').auth.mode).toBe('inherit');
   });
@@ -359,7 +416,12 @@ describe('reading an OpenCollection YAML collection', () => {
       method: '/hello.HelloService/SayHello',
       headers: [{ name: 'x-keep', value: 'kept-value', enabled: true }],
     });
-    expect(grpc.scripts.grpcHooks).toEqual(['before-call-start', 'before-message-send', 'after-message-receive', 'after-call-end']);
+    expect(grpc.scripts.grpcHooks).toEqual([
+      'before-call-start',
+      'before-message-send',
+      'after-message-receive',
+      'after-call-end',
+    ]);
     expect(findRequest(collection, 'WithProto').grpc?.protoPath).toBe('protos/hello.proto');
     expect(findRequest(collection, 'ws-multi-msg').ws?.messages.map(message => [message.name, message.type])).toEqual([
       ['message 1', 'json'],
@@ -402,8 +464,18 @@ describe('reading an OpenCollection YAML collection', () => {
   it('reports files it cannot parse and goes on with the rest', async () => {
     const collection = await readBrunoCollection(YML_COLLECTION);
     expect(collection.issues).toEqual([
-      { reason: 'parse-error', type: 'Request', name: 'broken/nested/broken.yml', detail: 'Syntax error at line 9, column 1' },
-      { reason: 'parse-error', type: 'Request', name: 'broken/shallow-broken.yml', detail: 'Syntax error at line 9, column 1' },
+      {
+        reason: 'parse-error',
+        type: 'Request',
+        name: 'broken/nested/broken.yml',
+        detail: 'Syntax error at line 9, column 1',
+      },
+      {
+        reason: 'parse-error',
+        type: 'Request',
+        name: 'broken/shallow-broken.yml',
+        detail: 'Syntax error at line 9, column 1',
+      },
     ]);
     expect(findRequest(collection, 'healthy').relativePath).toBe('broken/healthy.yml');
   });
@@ -415,7 +487,8 @@ describe('malformed input', () => {
       'bruno.json': '{"name": "leaky", "token": "TOPSECRET-in-config",}',
       'bad.bru': 'meta {\n  name: bad\n}\n\nauth:bearer {\n  token: TOPSECRET-in-request\n\nget {',
       'environments/Bad.bru': 'vars {\n  password: TOPSECRET-in-env\n',
-      'ok.bru': 'meta {\n  name: ok\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://x\n  body: none\n  auth: none\n}\n',
+      'ok.bru':
+        'meta {\n  name: ok\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://x\n  body: none\n  auth: none\n}\n',
     });
     const collection = await readBrunoCollection(folder);
     expect(collection.issues.map(issue => [issue.reason, issue.name])).toEqual([
@@ -432,13 +505,14 @@ describe('malformed input', () => {
   it('reads a file with a byte order mark and Windows line endings', async () => {
     const folder = makeCollection({
       'bruno.json': '{"name":"crlf"}',
-      'a.bru': '﻿meta {\r\n  name: a\r\n  type: http\r\n  seq: 1\r\n}\r\n\r\nget {\r\n  url: http://x\r\n  body: none\r\n  auth: none\r\n}\r\n',
+      'a.bru': `${String.fromCodePoint(0xfe_ff)}meta {\r\n  name: a\r\n  type: http\r\n  seq: 1\r\n}\r\n\r\nget {\r\n  url: http://x\r\n  body: none\r\n  auth: none\r\n}\r\n`,
     });
     expect(findRequest(await readBrunoCollection(folder), 'a')).toMatchObject({ method: 'GET', url: 'http://x' });
   });
 
   it('skips the folders Bruno skips, and the ones bruno.json ignores', async () => {
-    const request = 'meta {\n  name: r\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://x\n  body: none\n  auth: none\n}\n';
+    const request =
+      'meta {\n  name: r\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://x\n  body: none\n  auth: none\n}\n';
     const folder = makeCollection({
       'bruno.json': '{"name":"skips","ignore":["generated"]}',
       'node_modules/dep/r.bru': request,
@@ -457,7 +531,9 @@ describe('malformed input', () => {
     });
     const collection = await readBrunoCollection(folder);
     expect(allRequests(collection.root)).toEqual([]);
-    expect(collection.issues).toEqual([{ reason: 'not-supported', type: 'Request', name: 'my app', detail: 'Bruno apps are not supported' }]);
+    expect(collection.issues).toEqual([
+      { reason: 'not-supported', type: 'Request', name: 'my app', detail: 'Bruno apps are not supported' },
+    ]);
   });
 });
 
@@ -473,7 +549,10 @@ describe('reading changes nothing', () => {
   });
 
   it('works on a folder it is not allowed to write to', async () => {
-    const folder = makeCollection({ 'bruno.json': '{"name":"readonly"}', 'sub/r.bru': 'meta {\n  name: r\n}\n\nget {\n  url: http://x\n}\n' });
+    const folder = makeCollection({
+      'bruno.json': '{"name":"readonly"}',
+      'sub/r.bru': 'meta {\n  name: r\n}\n\nget {\n  url: http://x\n}\n',
+    });
     const chmodAll = (mode: number) => {
       for (const target of [folder, path.join(folder, 'sub')]) {
         fs.chmodSync(target, mode);

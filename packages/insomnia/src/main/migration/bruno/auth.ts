@@ -16,9 +16,7 @@ const PKCE_S256 = 'S256';
 
 // Drops what is empty, so the document only holds what the collection set
 function compact<T extends object>(values: T): T {
-  return Object.fromEntries(
-    Object.entries(values).filter(([, value]) => value !== undefined && value !== ''),
-  ) as T;
+  return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined && value !== '')) as T;
 }
 
 /**
@@ -99,7 +97,9 @@ function mapOAuth1(values: Record<string, any>, context: AuthContext): AuthTypeO
   }
   return compact({
     type: 'oauth1' as const,
-    signatureMethod: OAUTH1_SIGNATURE_METHODS.has(signatureMethod) ? (signatureMethod as AuthTypeOAuth1['signatureMethod']) : undefined,
+    signatureMethod: OAUTH1_SIGNATURE_METHODS.has(signatureMethod)
+      ? (signatureMethod as AuthTypeOAuth1['signatureMethod'])
+      : undefined,
     consumerKey: text(values.consumerKey),
     consumerSecret: text(values.consumerSecret),
     tokenKey: text(values.accessToken),

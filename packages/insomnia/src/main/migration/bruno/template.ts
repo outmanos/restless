@@ -17,7 +17,10 @@ const IDENTIFIER = /^[\p{ID_Start}_$][\p{ID_Continue}$‌‍]*$/u;
 function toLookup(name: string) {
   return name
     .split('.')
-    .reduce((lookup, segment) => (IDENTIFIER.test(segment) ? `${lookup}.${segment}` : forceBracketNotation(lookup, segment)), '_');
+    .reduce(
+      (lookup, segment) => (IDENTIFIER.test(segment) ? `${lookup}.${segment}` : forceBracketNotation(lookup, segment)),
+      '_',
+    );
 }
 
 /**

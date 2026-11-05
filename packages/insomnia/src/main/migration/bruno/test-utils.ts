@@ -21,9 +21,23 @@ function listFiles(directory: string): string[] {
 export function hashDirectory(directory: string): string {
   const hash = createHash('sha256');
   for (const file of listFiles(directory)) {
-    hash.update(`${path.relative(directory, file)}\0`).update(fs.readFileSync(file)).update('\0');
+    hash
+      .update(`${path.relative(directory, file)}\0`)
+      .update(fs.readFileSync(file))
+      .update('\0');
   }
   return hash.digest('hex');
+}
+
+// Where a value is `undefined`. A plan crosses IPC and is stored as JSON, where such a key is silently lost.
+export function undefinedPaths(value: unknown, location = ''): string[] {
+  if (value === undefined) {
+    return [location || '/'];
+  }
+  if (value === null || typeof value !== 'object') {
+    return [];
+  }
+  return Object.entries(value).flatMap(([key, child]) => undefinedPaths(child, `${location}/${key}`));
 }
 
 // NeDB refuses a key with a dot, or one that starts with $, at any depth

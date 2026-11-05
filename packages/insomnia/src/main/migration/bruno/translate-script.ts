@@ -73,7 +73,11 @@ export const BRUNO_SCRIPT_RULES: ScriptRule[] = [
 
   // --- collection variables, which restless keeps in the base environment ---
   text('bru.getAllCollectionVars', String.raw`bru\.getAllCollectionVars\(`, 'insomnia.collectionVariables.toObject('),
-  text('bru.deleteAllCollectionVars', String.raw`bru\.deleteAllCollectionVars\(`, 'insomnia.collectionVariables.clear('),
+  text(
+    'bru.deleteAllCollectionVars',
+    String.raw`bru\.deleteAllCollectionVars\(`,
+    'insomnia.collectionVariables.clear(',
+  ),
   text('bru.getCollectionVar', String.raw`bru\.getCollectionVar\(`, 'insomnia.collectionVariables.get('),
   text('bru.setCollectionVar', String.raw`bru\.setCollectionVar\(`, 'insomnia.collectionVariables.set('),
   text('bru.hasCollectionVar', String.raw`bru\.hasCollectionVar\(`, 'insomnia.collectionVariables.has('),
@@ -508,9 +512,7 @@ function operandToJs(operand: string): string {
     return String(number);
   }
   // {{var}} stays in Bruno's form: this string goes through insomnia.variables.replaceIn
-  return value.includes('{{')
-    ? `insomnia.variables.replaceIn(${JSON.stringify(value)})`
-    : JSON.stringify(value);
+  return value.includes('{{') ? `insomnia.variables.replaceIn(${JSON.stringify(value)})` : JSON.stringify(value);
 }
 
 function operandsToJs(operator: string, operand: string): string {

@@ -233,18 +233,26 @@ const exists = (target: string) =>
     () => false,
   );
 
+// Some editors put one at the start of a file, and the parsers do not expect it
+const BYTE_ORDER_MARK = String.fromCodePoint(0xfe_ff);
+
 async function readText(target: string) {
-  return (await fs.readFile(target, 'utf8')).replace(/^﻿/, '');
+  const text = await fs.readFile(target, 'utf8');
+  return text.startsWith(BYTE_ORDER_MARK) ? text.slice(1) : text;
 }
 
-type EntryKind = 'directory' | 'file';
+type EntryKind = 'directory' | 'file' | 'other';
 
-async function entryKind(directory: string, entry: { name: string; isSymbolicLink(): boolean; isDirectory(): boolean; isFile(): boolean }) {
+async function entryKind(
+  directory: string,
+  entry: { name: string; isSymbolicLink(): boolean; isDirectory(): boolean; isFile(): boolean },
+): Promise<EntryKind> {
   try {
     const stat = entry.isSymbolicLink() ? await fs.stat(path.join(directory, entry.name)) : entry;
-    return (stat.isDirectory() ? 'directory' : stat.isFile() ? 'file' : undefined) as EntryKind | undefined;
+    return stat.isDirectory() ? 'directory' : stat.isFile() ? 'file' : 'other';
   } catch {
-    return undefined;
+    // a broken link, or a file that went away
+    return 'other';
   }
 }
 
@@ -254,7 +262,10 @@ async function listEntries(directory: string) {
 }
 
 export async function isBrunoCollection(directory: string) {
-  return (await exists(path.join(directory, BRUNO_CONFIG_FILE))) || (await exists(path.join(directory, OPEN_COLLECTION_FILE)));
+  return (
+    (await exists(path.join(directory, BRUNO_CONFIG_FILE))) ||
+    (await exists(path.join(directory, OPEN_COLLECTION_FILE)))
+  );
 }
 
 /** The collection folders in `root`: the folder itself, or the ones below it. Collections do not nest. */
@@ -317,7 +328,8 @@ function bruAuth(mode: unknown, auth: unknown, file: Record<string, any>): Bruno
   const key = AUTH_VALUE_KEYS[name];
   const values = key ? asObject(asObject(auth)[key]) : {};
   // The extra OAuth 2 parameters are blocks of their own in the file
-  const hasExtraParameters = name === 'oauth2' && Object.keys(file).some(block => block.startsWith('oauth2_additional_parameters_'));
+  const hasExtraParameters =
+    name === 'oauth2' && Object.keys(file).some(block => block.startsWith('oauth2_additional_parameters_'));
   return { mode: name, values: hasExtraParameters ? { ...values, additionalParameters: true } : values };
 }
 
@@ -369,7 +381,10 @@ function ymlAuth(auth: unknown): BrunoAuth {
       return { mode: 'oauth2', values: ymlOAuth2(values) };
     }
     case 'apikey': {
-      return { mode: 'apikey', values: { ...values, placement: values.placement === 'query' ? 'queryparams' : 'header' } };
+      return {
+        mode: 'apikey',
+        values: { ...values, placement: values.placement === 'query' ? 'queryparams' : 'header' },
+      };
     }
     case 'oauth1': {
       const key = asObject(values.privateKey);
@@ -436,8 +451,38 @@ const ymlPostResponseVariables = (actions: unknown): BrunoVariable[] =>
     }));
 
 // "res.status: eq 200" is a name and "eq 200" a value. The operator is the first word of the value.
-const UNARY_OPERATORS = new Set(['isEmpty', 'isNotEmpty', 'isNull', 'isUndefined', 'isDefined', 'isTruthy', 'isFalsy', 'isJson', 'isNumber', 'isString', 'isBoolean', 'isArray']);
-const BINARY_OPERATORS = new Set(['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'notIn', 'contains', 'notContains', 'length', 'matches', 'notMatches', 'startsWith', 'endsWith', 'between']);
+const UNARY_OPERATORS = new Set([
+  'isEmpty',
+  'isNotEmpty',
+  'isNull',
+  'isUndefined',
+  'isDefined',
+  'isTruthy',
+  'isFalsy',
+  'isJson',
+  'isNumber',
+  'isString',
+  'isBoolean',
+  'isArray',
+]);
+const BINARY_OPERATORS = new Set([
+  'eq',
+  'neq',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'in',
+  'notIn',
+  'contains',
+  'notContains',
+  'length',
+  'matches',
+  'notMatches',
+  'startsWith',
+  'endsWith',
+  'between',
+]);
 
 function bruAssertions(list: unknown): BrunoAssertion[] {
   return asArray(list).map(item => {
@@ -630,7 +675,8 @@ function bruRequest(json: any, relativePath: string): ParsedRequest {
   if (meta.type === 'app') {
     return { skipped: 'Bruno apps', name };
   }
-  const kind: BrunoRequestKind = meta.type === 'graphql' ? 'graphql' : meta.type === 'grpc' ? 'grpc' : meta.type === 'ws' ? 'ws' : 'http';
+  const kind: BrunoRequestKind =
+    meta.type === 'graphql' ? 'graphql' : meta.type === 'grpc' ? 'grpc' : meta.type === 'ws' ? 'ws' : 'http';
   const section = asObject(kind === 'grpc' ? json.grpc : kind === 'ws' ? json.ws : json.http);
   const script = asObject(json.script);
   const request: BrunoRequest = {
@@ -665,7 +711,10 @@ function bruRequest(json: any, relativePath: string): ParsedRequest {
     request.grpc = {
       methodType: asString(section.methodType),
       protoPath: asString(section.protoPath),
-      messages: asArray(json.body?.grpc).map(message => ({ name: asString(message.name), content: asString(message.content) })),
+      messages: asArray(json.body?.grpc).map(message => ({
+        name: asString(message.name),
+        content: asString(message.content),
+      })),
     };
   }
   if (kind === 'ws') {
@@ -706,7 +755,10 @@ function ymlRequest(doc: any, relativePath: string): ParsedRequest {
     tags: asArray(info.tags).map(asString),
     description,
     docs,
-    method: kind === 'grpc' ? asString(section.method) : (kind === 'graphql' ? asString(section.method) || 'POST' : asString(section.method) || 'GET').toUpperCase(),
+    method:
+      kind === 'grpc'
+        ? asString(section.method)
+        : (kind === 'graphql' ? asString(section.method) || 'POST' : asString(section.method) || 'GET').toUpperCase(),
     url: asString(section.url),
     headers: ymlKeyValues(kind === 'grpc' ? section.metadata : section.headers),
     params: ymlKeyValues(section.params).map((param, index) => ({
@@ -728,7 +780,10 @@ function ymlRequest(doc: any, relativePath: string): ParsedRequest {
       methodType: asString(section.methodType),
       protoPath: asString(section.protoFilePath),
       messages: Array.isArray(message)
-        ? message.map((entry, index) => ({ name: asString(entry.title) || `message ${index + 1}`, content: asString(entry.message) }))
+        ? message.map((entry, index) => ({
+            name: asString(entry.title) || `message ${index + 1}`,
+            content: asString(entry.message),
+          }))
         : message
           ? [{ name: '', content: asString(message) }]
           : [],
@@ -745,7 +800,14 @@ function ymlRequest(doc: any, relativePath: string): ParsedRequest {
             selected: entry.selected === true,
           }))
         : message
-          ? [{ name: '', type: asString(asObject(message).type) || 'text', content: asString(asObject(message).data), selected: true }]
+          ? [
+              {
+                name: '',
+                type: asString(asObject(message).type) || 'text',
+                content: asString(asObject(message).data),
+                selected: true,
+              },
+            ]
           : [],
     };
   }
@@ -867,7 +929,12 @@ async function readFolder(directory: string, relativePath: string, context: Read
   try {
     entries = await listEntries(directory);
   } catch (error) {
-    context.issues.push({ reason: 'parse-error', type: 'RequestGroup', name: relativePath || '.', detail: describeError(error) });
+    context.issues.push({
+      reason: 'parse-error',
+      type: 'RequestGroup',
+      name: relativePath || '.',
+      detail: describeError(error),
+    });
     return folder;
   }
 
@@ -896,7 +963,8 @@ async function readFolder(directory: string, relativePath: string, context: Read
     } else if (kind === 'file' && entry.name.toLowerCase().endsWith(EXTENSIONS[format])) {
       const atRoot = relativePath === '';
       const isSpecial =
-        entry.name === folderFile || (atRoot && (entry.name === COLLECTION_ROOT_FILES[format] || entry.name === 'collection.yml'));
+        entry.name === folderFile ||
+        (atRoot && (entry.name === COLLECTION_ROOT_FILES[format] || entry.name === 'collection.yml'));
       if (isSpecial || isIgnored(entryPath, context.ignore)) {
         continue;
       }
@@ -908,7 +976,12 @@ async function readFolder(directory: string, relativePath: string, context: Read
         continue;
       }
       if ('skipped' in parsed) {
-        context.issues.push({ reason: 'not-supported', type: 'Request', name: parsed.name, detail: `${parsed.skipped} are not supported` });
+        context.issues.push({
+          reason: 'not-supported',
+          type: 'Request',
+          name: parsed.name,
+          detail: `${parsed.skipped} are not supported`,
+        });
       } else {
         folder.requests.push(parsed);
       }
