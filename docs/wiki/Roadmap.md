@@ -64,7 +64,7 @@ The top feature priority. Moving must be easy, or nobody moves.
 | [x] | P1 | S | Reinstall plugins found in the old install |
 | [x] | P1 | M | Translate Bruno and Postman scripts, reporting what didn't convert |
 | [x] | P1 | M | Bulk import of many collections |
-| [ ] | P2 | M | Import from a Postman workspace dump |
+| [x] | P2 | M | Import from a Postman workspace dump (through the import window) |
 
 ## 0.3.0: Files first
 
