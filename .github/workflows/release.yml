@@ -72,7 +72,8 @@ jobs:
 
   publish:
     needs: [version, build]
-    if: ${{ !cancelled() && needs.version.outputs.release == 'true' && github.ref == 'refs/heads/main' }}
+    # A missing platform must not publish a partial release: the v$version tag would then block the retry
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.version.outputs.release == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
