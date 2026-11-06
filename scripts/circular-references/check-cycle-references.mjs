@@ -26,8 +26,7 @@ const EXIT_NEW_CYCLES = 1;
 const EXIT_BASELINE_DRIFT = 2;
 
 // Same scope as `npm run lint`/`type-check`/`test` (--workspaces --if-present): the packages
-// actually declared as npm workspaces, not every directory under packages/ (e.g.
-// insomnia-component-docs is intentionally excluded and its deps aren't installed at the root).
+// actually declared as npm workspaces, not every directory under packages/.
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
 const packageDirs = rootPackageJson.workspaces
   .map(workspace => ({ name: path.basename(workspace), dir: path.join(repoRoot, workspace) }))

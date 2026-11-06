@@ -3,8 +3,7 @@
 Insomnia's shared component library, built on `react-aria-components` + TailwindCSS. Full design/roadmap:
 Insomnia Shared Component Library Plan (Confluence). Conventions: [`AGENTS.md`](./AGENTS.md).
 
-Full per-component docs (props, variants, live examples) live on the Docusaurus site
-`packages/insomnia-component-docs`, not in this file.
+Props and variants are documented in each component's TypeScript types.
 
 ## Import
 
@@ -16,8 +15,7 @@ import { Button, Modal, Icon } from '~/basic-components';
 current file layout (flat) is an implementation detail. Physical layering into
 `primitives/overlays/collections/layout/typography` is **deferred to M5** (see the plan) — because
 consumers go through the barrel, that later move only edits the barrel's internal re-exports, never
-a business import. New code and the docs' `ReactLiveScope` must use the barrel so those moves stay
-free. Existing deep imports (`~/basic-components/button`, ~18 files) are left as-is until M5.
+a business import. New code must use the barrel so those moves stay free. Existing deep imports (`~/basic-components/button`, ~18 files) are left as-is until M5.
 
 ## Usage index (current)
 
