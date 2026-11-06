@@ -45,6 +45,10 @@ There are no dates. Milestones ship in order, once their P0 tasks are done.
 | [x] | P1 | M | Custom title bar and themed menus on Windows and Linux |
 | [ ] | P0 | S | Confirm the Windows and macOS builds pass in CI |
 | [ ] | P0 | S | Test the updater against a real release |
+| [ ] | P1 | S | Updates settings: "Automatic updates" is one toggle, and "Check for updates" stays available either way |
+| [ ] | P1 | S | When automatic updates are on, show "Check at startup" (on by default) and "Check every" (daily by default) |
+| [ ] | P1 | S | Say when a build cannot update itself (deb, rpm, tar.gz, unpacked), in settings and once in the log, and point to the package manager or the AppImage |
+| [ ] | P1 | S | Automatic checks stay quiet unless an update is found or the check fails, and only the manual check says "Up to date" |
 | [ ] | P1 | S | Check title bar, menus and shortcuts on Windows and macOS |
 | [ ] | P1 | S | Fix the remaining audit findings |
 | [ ] | P1 | S | Enable the AUR job once registration reopens |
