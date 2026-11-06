@@ -75,7 +75,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [x] | P0 | M | Keep Git collections as YAML in a chosen folder |
 | [x] | P0 | S | GitHub and GitLab sign-in off by default |
 | [x] | P0 | S | Decide the native format (see [Decisions](Decisions)) |
-| [ ] | P0 | L | Store collections as readable files, one per request |
+| [ ] | P0 | L | Store collections as readable files, one YAML file per collection |
 | [ ] | P0 | M | Watch the folder and reload on external edits |
 | [ ] | P0 | M | Open any folder as a collection |
 | [ ] | P0 | M | Settings as a plain JSON file, with export and import. Preferences, themes and shortcuts included |
@@ -176,6 +176,10 @@ AI stays off by default.
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
 | [ ] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release |
+
+## Ideas, not scheduled
+
+- **Split collections.** A collection file that references its requests with `$ref`, each request in its own file next to it. Small diffs, and loose request files that can be opened alone and added to a collection later. It needs a document type that older clients refuse, in a namespace restless owns. See [the design](https://github.com/outmanos/restless/blob/main/docs/design/0.3.0-files-first.md).
 
 ## Baseline
 

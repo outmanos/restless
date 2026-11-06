@@ -18,6 +18,7 @@ Why things are the way they are.
 | Bundled fonts | Nothing downloads at runtime |
 | Native file format is YAML. `.bru` is read and written for Bruno collections | YAML is what Git sync already stores, and `.bru` keeps Bruno collections portable |
 | The native YAML schema is Insomnia's `collection.insomnia.rest/5.0` | It's what Git sync already writes, and it keeps existing Insomnia repositories working. OpenCollection was considered and rejected |
+| A split collection, if built, uses a document type in a namespace restless owns | Kong could define the next `collection.insomnia.rest` number differently, and older clients must refuse a file they would otherwise open with items missing |
 | Files keep the plain `.yaml` extension | A custom extension would be an invented file type, and `.rl` already belongs to Ragel. A file is recognized by its `type` field, as an OpenAPI file is by `openapi` |
 | Keep Nunjucks for templates | Template tags, plugins and existing collections depend on it, and it has filters and logic. Bruno's `{{var}}` becomes `{{ _.var }}` on import, and should convert back on `.bru` export |
 
