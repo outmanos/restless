@@ -171,6 +171,7 @@ AI stays off by default.
 | [ ] | P1 | M | Command palette covers every action |
 | [ ] | P1 | S | Sidebar density and keyboard navigation |
 | [ ] | P1 | M | Light theme matching the dark palette |
+| [ ] | P1 | M | Arch and CachyOS: a pacman repository, so `pacman -Syu` updates restless. Each release ships a `PKGBUILD` until then |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
 | [ ] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release |

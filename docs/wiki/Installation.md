@@ -9,10 +9,25 @@ Download restless from [GitHub Releases](https://github.com/outmanos/restless/re
 | Any Linux | `.AppImage` or `.tar.gz` |
 | Debian, Ubuntu, Mint | `.deb` |
 | Fedora, RHEL, openSUSE | `.rpm` |
+| Arch, CachyOS, Manjaro | `PKGBUILD`, see below |
 
 Windows and macOS builds are not signed yet, so you may see a warning on first launch.
 
 The AUR, winget, Homebrew, Flathub and Snap are planned. See [Distribution](Distribution).
+
+## Arch, CachyOS and Manjaro
+
+Each release carries a ready-made `PKGBUILD`. This builds a package from the release and installs it, in one command:
+
+```bash
+cd "$(mktemp -d)" && curl -fsSLO https://github.com/outmanos/restless/releases/latest/download/PKGBUILD && makepkg -si
+```
+
+- Nothing is compiled. It downloads the release, packs it and asks for your password to install, which takes about a minute.
+- The `PKGBUILD` is a short text file. Download it first and read it if you prefer: `curl -fsSLO <the same URL>`.
+- It installs to `/opt/restless` as the package `restless-bin`. Remove it with `sudo pacman -R restless-bin`.
+- To update, run the command again. A pacman repository, with normal `pacman -Syu` updates, is on the [Roadmap](Roadmap).
+- The sandbox needs user namespaces, which Arch's kernels enable. On `linux-hardened`, enable them or start restless with `--no-sandbox`.
 
 ## Data folder
 
