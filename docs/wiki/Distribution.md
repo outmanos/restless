@@ -5,6 +5,7 @@ Every outlet starts from a GitHub Release. Status is tracked on the [Roadmap](Ro
 | Outlet | Account needed | How it updates | Status |
 |---|---|---|---|
 | GitHub Releases | None | `release.yml` | Ready |
+| Arch `PKGBUILD` | None | `release.yml` attaches it to each release | Ships with the release that adds it |
 | AUR | AUR account and SSH key | `release.yml`, once enabled | Package ready, registration is closed |
 | winget | GitHub | Workflow opens a pull request | Planned |
 | Homebrew tap | GitHub | Workflow updates `outmanos/homebrew-tap` | Planned |
