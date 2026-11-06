@@ -60,7 +60,9 @@ export const Preferences: FC<{
   selectedTab: SettingsTabKey;
   onSelectTab: (tab: SettingsTabKey) => void;
   onClose: () => void;
-}> = ({ selectedTab, onSelectTab, onClose }) => (
+  projectId?: string;
+  workspaceId?: string;
+}> = ({ selectedTab, onSelectTab, onClose, projectId, workspaceId }) => (
   <div className="flex min-h-0 w-full flex-1 flex-col bg-(--color-bg) text-(--color-font)" data-testid="preferences">
     <h1 className="shrink-0 border-b border-solid border-(--hl-md) px-6 py-3 text-lg font-bold">
       {getProductName()} Preferences
@@ -115,7 +117,7 @@ export const Preferences: FC<{
         </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="data">
           <div className="max-w-4xl">
-            <ImportExport hideSettingsModal={onClose} />
+            <ImportExport hideSettingsModal={onClose} projectId={projectId} workspaceId={workspaceId} />
           </div>
         </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="plugins">

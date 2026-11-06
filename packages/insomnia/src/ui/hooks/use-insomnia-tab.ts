@@ -74,11 +74,30 @@ function inferTabType(resource: TabResource): TabType | null {
 export const SETTINGS_TAB_ID = 'settings';
 
 // Preferences lives in the tab strip like any other page. It has no project or workspace.
-export const buildSettingsTab = (organizationId: string, section?: string | null): BaseTab => ({
+// The project and collection Preferences was opened from. The Data section exports and imports into them.
+export interface SettingsContext {
+  projectId?: string | null;
+  workspaceId?: string | null;
+}
+
+export const buildSettingsUrl = (organizationId: string, section?: string | null, context: SettingsContext = {}) => {
+  const params = new URLSearchParams();
+  if (section) params.set('tab', section);
+  if (context.projectId) params.set('project', context.projectId);
+  if (context.workspaceId) params.set('workspace', context.workspaceId);
+  const search = params.toString();
+  return `/organization/${organizationId}/settings${search ? `?${search}` : ''}`;
+};
+
+export const buildSettingsTab = (
+  organizationId: string,
+  section?: string | null,
+  context: SettingsContext = {},
+): BaseTab => ({
   type: 'settings',
   id: SETTINGS_TAB_ID,
   name: 'Preferences',
-  url: `/organization/${organizationId}/settings${section ? `?tab=${section}` : ''}`,
+  url: buildSettingsUrl(organizationId, section, context),
   organizationId,
   projectId: '',
   workspaceId: '',
@@ -348,9 +367,14 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     if (matchPath('/organization/:organizationId/settings', pathname)) {
       const currentOrgTab = appTabsRef?.current?.[organizationId];
       if (!currentOrgTab?.tabList.some(tab => tab.id === SETTINGS_TAB_ID)) {
-        addTab(buildSettingsTab(organizationId, new URLSearchParams(window.location.search).get('tab')), {
-          setActive: true,
-        });
+        const search = new URLSearchParams(window.location.search);
+        addTab(
+          buildSettingsTab(organizationId, search.get('tab'), {
+            projectId: search.get('project'),
+            workspaceId: search.get('workspace'),
+          }),
+          { setActive: true },
+        );
       } else if (currentOrgTab.activeTabId !== SETTINGS_TAB_ID) {
         changeActiveTab(SETTINGS_TAB_ID);
       }
@@ -386,7 +410,16 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     return () => {
       cancelled = true;
     };
-  }, [addTab, addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, pathname, routeInfo]);
+  }, [
+    addTab,
+    addTemporaryTab,
+    appTabsRef,
+    changeActiveTab,
+    getNavigationResources,
+    organizationId,
+    pathname,
+    routeInfo,
+  ]);
 
   // Keyboard shortcut to close current tab
   useDocBodyKeyboardShortcuts({

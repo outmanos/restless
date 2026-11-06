@@ -215,7 +215,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,
-              url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
+              url: `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
           } else if (isRequestGroup(doc)) {
             const folderEntities = await database.getWithDescendants(doc, [
@@ -232,8 +232,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
                   workspaceId: workspace._id,
                   workspaceName: workspace.name,
                   url: isRequestGroup(entity)
-                    ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
-                    : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
+                    ? `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
+                    : `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request/${entity._id}`,
                 },
               };
             });
@@ -242,7 +242,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         }
       }
     },
-    [organizationId, projectId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
+    [organizationId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
   );
 
   useEffect(() => {

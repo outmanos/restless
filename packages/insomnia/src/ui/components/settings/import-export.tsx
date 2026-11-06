@@ -24,7 +24,6 @@ import { SelectModal } from 'restless/src/ui/components/modals/select-modal';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
@@ -679,14 +678,13 @@ const UntrackedWorkspace = ({
 interface Props {
   hideSettingsModal: () => void;
   onModalChange?: (isOpen: boolean) => void;
+  /** The project and collection Preferences was opened from. Export and import act on these. */
+  projectId?: string;
+  workspaceId?: string;
 }
 
-export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId?: string;
-  };
+export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange, projectId, workspaceId }) => {
+  const { organizationId } = useParams() as { organizationId: string };
   const organizations = [models.organization.LOCAL_ORGANIZATION];
 
   const { features } = useOrganizationPermissions();
@@ -703,8 +701,16 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
 
-  const workspaceData = useWorkspaceLoaderData();
-  const activeWorkspaceName = workspaceData?.activeWorkspace.name;
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = workspaceId ? services.workspace.getById(workspaceId) : Promise.resolve(null);
+    load.then(workspace => !cancelled && setActiveWorkspace(workspace || null));
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId]);
+  const activeWorkspaceName = activeWorkspace?.name;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [workspaceCount, setWorkspaceCount] = useState(0);
 
@@ -760,9 +766,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           </Heading>
           <div className="flex flex-wrap gap-2">
             {activeProject &&
-              (workspaceData?.activeWorkspace ? (
+              (activeWorkspace ? (
                 <ExportSection
-                  workspace={workspaceData.activeWorkspace}
+                  workspace={activeWorkspace}
                   projectName={projectName}
                   setIsExportModalOpen={setIsExportModalOpen}
                   handleExportProjectToFile={handleExportProjectToFile}
@@ -903,16 +909,16 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           projectName={projectName}
           workspaceName={activeWorkspaceName}
           organizationId={organizationId}
-          defaultProjectId={projectId}
+          defaultProjectId={projectId ?? ''}
           defaultWorkspaceId={workspaceId}
         />
       )}
       {isImportProjectsModalOpen && (
         <ImportProjectsModal onHide={() => setIsImportProjectsModalOpen(false)} organizationId={organizationId} />
       )}
-      {isExportModalOpen && workspaceData?.activeWorkspace && (
+      {isExportModalOpen && activeWorkspace && (
         <ExportRequestsModal
-          workspaceIdToExport={workspaceData.activeWorkspace._id}
+          workspaceIdToExport={activeWorkspace._id}
           onClose={() => setIsExportModalOpen(false)}
         />
       )}
