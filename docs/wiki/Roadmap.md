@@ -92,6 +92,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P0 | M | Inherited auth and settings at collection and folder level |
 | [ ] | P0 | M | Restore open tabs and sidebar state per collection |
 | [ ] | P0 | M | Large response protection |
+| [ ] | P0 | L | Every core action reachable with the keyboard alone, with visible focus and a logical tab order |
 | [ ] | P1 | M | Transient requests, savable later |
 | [ ] | P1 | M | Preview tabs and pinned tabs |
 | [ ] | P1 | S | Autosave setting |
@@ -99,6 +100,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | S | Unresolved variable warnings |
 | [ ] | P1 | M | Saved response examples, usable in docs and mocks |
 | [ ] | P1 | M | Collection and folder docs as Markdown |
+| [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |
