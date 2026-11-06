@@ -8,6 +8,7 @@ import {
   type Settings as BaseSettings,
   UpdateChannel,
   UpdateCheckInterval,
+  NewRequestCollection,
 } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
@@ -85,6 +86,7 @@ export function init(): BaseSettings {
     updateAutomatically: false,
     updateChannel: UpdateChannel.stable,
     updateCheckOnStartup: true,
+    newRequestCollection: NewRequestCollection.lastUsed,
     updateCheckInterval: UpdateCheckInterval.daily,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,

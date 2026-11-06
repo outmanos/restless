@@ -22,6 +22,7 @@ const icon = (paths: ReactNode): FC<{ className?: string }> => {
 };
 
 export const settingsTabIcons = {
+  general: icon(<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4" />),
   appearance: icon(
     <>
       <circle cx="12" cy="12" r="9" />
@@ -57,7 +58,10 @@ export const settingsTabIcons = {
     </>,
   ),
   ai: icon(
-    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" />,
+    <>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+      <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+    </>,
   ),
   about: icon(
     <>

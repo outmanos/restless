@@ -31,6 +31,18 @@ const unsupportedText: Record<UpdateUnsupportedReason, string> = {
   'disabled': 'Updates were turned off with the INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable.',
 };
 
+// A link that shows where it goes while it is hovered or focused, so nobody clicks blind
+const AboutLink: FC<{ href: string; children: string }> = ({ href, children }) => (
+  <span className="group flex items-baseline gap-3">
+    <Link className="text-(--color-surprise) hover:underline" href={href} title={href}>
+      {children}
+    </Link>
+    <span className="invisible truncate text-xs text-(--hl) group-focus-within:visible group-hover:visible">
+      {href}
+    </span>
+  </span>
+);
+
 const Updates: FC = () => {
   const { settings } = useRootLoaderData()!;
   const support = window.main.getUpdateSupport();
@@ -40,9 +52,7 @@ const Updates: FC = () => {
       <div>
         <p className="faint">{unsupportedText[support.reason]}</p>
         <p className="pad-top-sm">
-          <Link className="text-(--color-surprise) hover:underline" href={`${repo}/releases/latest`}>
-            Latest release
-          </Link>
+          <AboutLink href={`${repo}/releases/latest`}>Latest release</AboutLink>
         </p>
       </div>
     );
@@ -140,9 +150,7 @@ export const About: FC = () => {
       <ul className="flex flex-col gap-1">
         {links.map(({ label, href }) => (
           <li key={href}>
-            <Link className="text-(--color-surprise) hover:underline" href={href}>
-              {label}
-            </Link>
+            <AboutLink href={href}>{label}</AboutLink>
           </li>
         ))}
       </ul>

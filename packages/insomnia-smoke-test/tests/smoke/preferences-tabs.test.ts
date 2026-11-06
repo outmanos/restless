@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../playwright/test';
 
 const TABS = [
+  'General',
   'Appearance',
   'Editor',
   'Keyboard',
@@ -37,14 +38,16 @@ test('Settings live in the tab that matches their name', async ({ page }) => {
   await modal.waitFor();
 
   const placements: [string, string][] = [
+    ['General', 'Default collection for new requests'],
+    ['General', 'Sidebar focus for collections'],
+    ['General', 'Show legacy unit tests'],
+    ['General', 'Open Insomnia web links'],
     ['Appearance', 'Interface font'],
     ['Editor', 'Autocomplete popup delay (ms)'],
     ['Keyboard', 'Key map'],
     ['Requests', 'Enable proxy'],
     ['Security', 'Reveal passwords'],
     ['Plugins', 'Additional plugin path'],
-    ['Plugins', 'Open Insomnia web links'],
-    ['Scripting', 'Show legacy unit tests'],
   ];
   for (const [tab, setting] of placements) {
     await modal.getByRole('tab', { name: tab }).click();

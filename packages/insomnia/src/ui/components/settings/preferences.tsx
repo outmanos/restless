@@ -7,8 +7,8 @@ import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { About } from './about';
 import { Appearance } from './appearance';
-import { BooleanSetting } from './boolean-setting';
 import { Editor } from './editor';
+import { General } from './general';
 import { ImportExport } from './import-export';
 import { Keyboard } from './keyboard';
 import { Plugins } from './plugins';
@@ -18,6 +18,7 @@ import { settingsTabIcons } from './settings-tab-icons';
 import { TextSetting } from './text-setting';
 
 export type SettingsTabKey =
+  | 'general'
   | 'appearance'
   | 'editor'
   | 'keyboard'
@@ -30,9 +31,10 @@ export type SettingsTabKey =
   | 'ai'
   | 'about';
 
-export const DEFAULT_SETTINGS_TAB: SettingsTabKey = 'appearance';
+export const DEFAULT_SETTINGS_TAB: SettingsTabKey = 'general';
 
 const TABS: { id: SettingsTabKey; label: string; icon: keyof typeof settingsTabIcons }[] = [
+  { id: 'general', label: 'General', icon: 'general' },
   { id: 'appearance', label: 'Appearance', icon: 'appearance' },
   { id: 'editor', label: 'Editor', icon: 'editor' },
   { id: 'keyboard', label: 'Keyboard', icon: 'keyboard' },
@@ -85,6 +87,11 @@ export const Preferences: FC<{
         })}
       </TabList>
       <div className="min-w-0 flex-1">
+        <TabPanel className={PANEL_CLASS_NAME} id="general">
+          <div className="max-w-4xl">
+            <General />
+          </div>
+        </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="appearance">
           <div className="max-w-4xl">
             <Appearance />
@@ -124,11 +131,6 @@ export const Preferences: FC<{
                 help="Add a custom path to direct Restless to a different plugin directory."
                 placeholder="~/.insomnia:/other/path"
               />
-              <BooleanSetting
-                label="Open Insomnia web links"
-                setting="handleInsomniaLinks"
-                help="Opens insomnia:// plugin, theme and import links here. Turn this off if you also use Insomnia. Takes effect after a restart."
-              />
             </div>
             <Plugins />
           </div>
@@ -140,13 +142,6 @@ export const Preferences: FC<{
         </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="scripting">
           <div className="max-w-4xl">
-            <div className="pb-4">
-              <BooleanSetting
-                label="Show legacy unit tests"
-                setting="enableLegacyUnitTests"
-                help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
-              />
-            </div>
             <ScriptingSettings />
           </div>
         </TabPanel>

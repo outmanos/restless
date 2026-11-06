@@ -75,15 +75,13 @@ test.describe('multiple-tab feature test', () => {
     await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
     await insomnia.projectPage.createCollection('Plus button collection');
     await page.getByLabel('Tab Plus', { exact: true }).click();
-    await page.getByRole('menuitem', { name: 'add request to current' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitem', { name: 'add request to current' }).click();
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'plus request', 'Plus button collection');
     await page.getByLabel('Restless Tabs').getByLabel('tab-plus request', { exact: true }).click();
 
     await page.mouse.move(0, 0);
     await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
     await insomnia.projectPage.createCollection('Test add tab collection');
-    await page.getByLabel('Tab Plus', { exact: true }).click();
+    await page.getByLabel('More ways to add a request').click();
     await page.getByRole('menuitem', { name: 'add request to other' }).waitFor({ state: 'visible' });
     await page.getByRole('menuitem', { name: 'add request to other' }).click();
     await page.getByLabel('Select Workspace').waitFor({ state: 'visible' });

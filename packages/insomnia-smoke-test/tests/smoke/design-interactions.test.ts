@@ -18,7 +18,7 @@ test.describe('Design interactions', () => {
     await page.waitForURL(/\/workspace\//);
     // Show test suite in settings
     await insomnia.statusbar.openPreferences();
-    await page.getByRole('tab', { name: 'Scripting' }).click();
+    await page.getByRole('tab', { name: 'General' }).click();
     await page.locator('input[name="enableLegacyUnitTests"]').click();
     await insomnia.preferencesPage.closePreferences();
     // Switch to Test tab

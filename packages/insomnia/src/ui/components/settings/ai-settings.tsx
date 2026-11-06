@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, Switch } from 'react-aria-components';
 
 import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
-import { Badge } from '~/ui/components/base/badge';
 import { BooleanSetting } from '~/ui/components/settings/boolean-setting';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
@@ -121,10 +120,7 @@ export const AISettings = () => {
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="mb-2 text-lg font-semibold text-(--color-font)">
-              <Badge color="surprise" icon="sparkles" label="AI" />
-              Features
-            </h3>
+            <h3 className="mb-2 text-lg font-semibold text-(--color-font)">Features</h3>
           </div>
 
           <div className="flex items-center justify-between">
