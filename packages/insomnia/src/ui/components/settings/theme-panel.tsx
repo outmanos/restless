@@ -8,6 +8,7 @@ import type { PluginTheme } from '~/common/plugins/bridge-types';
 import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
+import { ACCENT_PRESETS } from './accent-presets';
 
 const ThemePreview: FC<{ theme: PluginTheme; accentColor?: string }> = ({ theme, accentColor }) => (
   <svg
@@ -73,17 +74,6 @@ const ThemePreview: FC<{ theme: PluginTheme; accentColor?: string }> = ({ theme,
     </g>
   </svg>
 );
-
-const ACCENT_PRESETS = [
-  { name: 'Violet', color: '#7c6cf0' },
-  { name: 'Blue', color: '#2f7ff0' },
-  { name: 'Teal', color: '#14a8a0' },
-  { name: 'Green', color: '#3fa34d' },
-  { name: 'Amber', color: '#e0a100' },
-  { name: 'Orange', color: '#ea6a1f' },
-  { name: 'Red', color: '#e5484d' },
-  { name: 'Pink', color: '#e0489d' },
-];
 
 const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange: (color: string) => void }> = ({
   accentColor,
