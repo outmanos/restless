@@ -12,8 +12,8 @@ import { localTemplateTags } from '~/common/templating/local-template-tags';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import * as templateUtils from '~/common/templating/utils';
 import { init as initPluginStore } from '~/plugins/context/store';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { openSettings } from '~/ui/settings-navigation';
 import * as templating from '~/ui/templating/renderer-safe';
 
 import { database as db } from '../../../common/database';
@@ -316,7 +316,7 @@ export const TagEditor: FC<Props> = props => {
           className="cursor-pointer text-(--color-surprise)"
           onPress={() => {
             props.close();
-            showSettingsModal({ tab: 'security' });
+            openSettings({ tab: 'security' });
           }}
         >
           {linkText}

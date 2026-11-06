@@ -6,6 +6,8 @@ test.describe('design document operations', () => {
     await page.locator('body').click();
     await page.getByPlaceholder('Enter a name for your API Collection').fill('jurassic park');
     await page.getByPlaceholder('Enter a name for your API Collection').press('Enter');
+    // Preferences returns to the page it was opened from, so wait for this one to open first
+    await page.waitForURL(/\/workspace\//);
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Files').getByLabel('jurassic park').click();
   });
@@ -16,7 +18,7 @@ test.describe('design document operations', () => {
     await page.getByPlaceholder('Enter a name for your API Collection').press('Enter');
     // Show test suite in settings
     await insomnia.statusbar.openPreferences();
-    await page.getByRole('tab', { name: 'Scripting' }).click();
+    await page.getByRole('tab', { name: 'General' }).click();
     await page.locator('input[name="enableLegacyUnitTests"]').click();
     await insomnia.preferencesPage.closePreferences();
     await page.getByTestId('api-collection-tab-tests').click();

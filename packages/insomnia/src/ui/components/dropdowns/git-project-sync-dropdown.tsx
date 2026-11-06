@@ -25,9 +25,9 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { MergeConflict } from '~/sync/git/merge-types';
 import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { openSettings } from '~/ui/settings-navigation';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
@@ -209,7 +209,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                   className="underline hover:opacity-70"
                   onClick={() => {
                     queue.close(toastKey);
-                    showSettingsModal({ tab: 'credentials' });
+                    openSettings({ tab: 'credentials' });
                   }}
                 >
                   Re-authenticate
@@ -296,7 +296,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                   className="underline hover:opacity-70"
                   onClick={() => {
                     queue.close(toastKey);
-                    showSettingsModal({ tab: 'credentials' });
+                    openSettings({ tab: 'credentials' });
                   }}
                 >
                   Re-authenticate
@@ -412,7 +412,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                     className="underline hover:opacity-70"
                     onClick={() => {
                       queue.close(toastKey);
-                      showSettingsModal({ tab: 'credentials' });
+                      openSettings({ tab: 'credentials' });
                     }}
                   >
                     Re-authenticate

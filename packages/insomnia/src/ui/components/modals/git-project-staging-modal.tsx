@@ -60,11 +60,11 @@ import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { ConfirmUnknownFieldsCommitModal } from '~/ui/components/modals/confirm-unknown-fields-commit-modal';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { openSettings } from '~/ui/settings-navigation';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { DiffEditor } from '../diff-view-editor';
@@ -764,7 +764,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
               <Button
                 type="button"
                 className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-surprise) underline"
-                onPress={() => showSettingsModal({ tab: 'credentials' })}
+                onPress={() => openSettings({ tab: 'credentials' })}
               >
                 PAT Credential
               </Button>{' '}
@@ -1096,7 +1096,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <Icon icon="exclamation-triangle" /> Remote connection is unavailable. Ensure your{' '}
             <Button
               className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-font-danger) underline"
-              onPress={() => showSettingsModal({ tab: 'credentials' })}
+              onPress={() => openSettings({ tab: 'credentials' })}
             >
               PAT Credential
             </Button>{' '}
@@ -1817,7 +1817,7 @@ const OriginalGitProjectStagingModal: FC<
                           className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm"
                           onPress={() => {
                             onClose();
-                            showSettingsModal({ tab: 'ai' });
+                            openSettings({ tab: 'ai' });
                           }}
                         >
                           Enable AI to Try

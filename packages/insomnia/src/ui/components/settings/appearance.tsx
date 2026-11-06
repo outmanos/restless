@@ -54,10 +54,5 @@ export const Appearance: FC = () => (
       setting="forceVerticalLayout"
       help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
     />
-    <BooleanSetting
-      label="Sidebar focus for collections"
-      setting="sidebarFocusForCollections"
-      help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
-    />
   </div>
 );

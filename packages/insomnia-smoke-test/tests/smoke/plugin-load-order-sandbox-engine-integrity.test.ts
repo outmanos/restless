@@ -82,7 +82,7 @@ const clearPluginToast = async (page: Page) => {
     .catch(() => {});
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
-    // eslint-disable-next-line playwright/no-force-option -- necessary to avoid flakiness with re-rendering toast
+     
     await dismissButtons
       .first()
       .click({ force: true, timeout: 500 })

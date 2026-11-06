@@ -12,7 +12,7 @@ Plugins run code on your machine, so only install ones you trust.
 
 restless opens `insomnia://` links for plugin installs, theme installs and imports. Every other `insomnia://` link is ignored.
 
-This is on by default. Turn off **Open Insomnia web links** in `Preferences > Privacy & Security` if you also use Insomnia. The change applies after a restart.
+This is on by default. Turn off **Open Insomnia web links** in `Preferences > Plugins` if you also use Insomnia. The change applies after a restart.
 
 ## Themes
 

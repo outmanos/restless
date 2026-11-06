@@ -298,7 +298,7 @@ test.describe('Environment Editor', () => {
     await insomnia.pressEscape();
 
     // creating navigates into the new environment's own page; go back to the collection
-    await insomnia.navigationSidebar.selectWorkspace('My first collection');
+    await insomnia.navigationSidebar.selectWorkspace('My First Collection');
 
     // the new environment shows up in the project dropdown's list, but is not auto-selected
     await expect.soft(page.getByLabel('Select a Project Environment')).toContainText('No Project Environment');

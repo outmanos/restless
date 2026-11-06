@@ -18,7 +18,6 @@ import { PromptModal } from './components/modals/prompt-modal';
 import { RequestRenderErrorModal } from './components/modals/request-render-error-modal';
 import { ResponseDebugModal } from './components/modals/response-debug-modal';
 import { SelectModal } from './components/modals/select-modal';
-import { SettingsModal } from './components/modals/settings-modal';
 import { SyncMergeModal } from './components/modals/sync-merge-modal';
 import { WrapperModal } from './components/modals/wrapper-modal';
 
@@ -49,8 +48,6 @@ const Modals = () => {
           ref={instance => registerModal(instance, 'GenerateCodeModal')}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
         />
-
-        <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
 
         <MigrationModal ref={instance => registerModal(instance, 'MigrationModal')} />
 

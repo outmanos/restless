@@ -44,7 +44,7 @@ test.describe('title bar menu', () => {
     await page.getByTestId('settings-button').click();
 
     await softly(page.getByRole('menu')).toBeHidden();
-    await softly(page.locator('text=Restless Preferences').first()).toBeVisible();
+    await softly(page.getByTestId('preferences')).toBeVisible();
   });
 
   test('closes when clicking the empty title bar', async ({ page }) => {

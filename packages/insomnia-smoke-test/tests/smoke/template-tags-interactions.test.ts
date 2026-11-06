@@ -71,7 +71,7 @@ test('All built-in template tags render their expected preview value', async ({ 
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+  await page.getByRole('tab', { name: 'Security' }).click();
   await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));
   await page.getByTestId('dataFolders-btn').click();
   await page.locator('.app').press('Escape');

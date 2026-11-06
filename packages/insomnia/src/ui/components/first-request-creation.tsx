@@ -125,7 +125,7 @@ export const FirstRequestCreation = ({
     await createWorkspaceFetcher.submit({
       organizationId,
       projectId,
-      name: 'My first collection',
+      name: 'My First Collection',
       scope: 'collection',
       redirectAfterCreate: false,
       source: 'first-request-pane',
@@ -168,7 +168,7 @@ export const FirstRequestCreation = ({
       createWorkspaceFetcher.submit({
         organizationId,
         projectId,
-        name: 'My first collection',
+        name: 'My First Collection',
         scope: 'collection',
         withRequest: true,
         source: 'first-request-pane',

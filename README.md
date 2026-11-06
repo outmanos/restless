@@ -17,6 +17,8 @@ for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It 
 This fork was inspired by the original Insomnium, which was unfortunately nuked. You can read
 [its backstory here](docs/insomnium/README.md).
 
+Read about the story behind restless [here](https://blog.outmanos.com/posts/the-api-client-cycle/).
+
 With restless you can:
 
 - **Work offline** with every core feature and no login.
@@ -50,10 +52,17 @@ Download the latest version from [GitHub Releases](https://github.com/outmanos/r
 | Any Linux               | `.AppImage` or `.tar.gz`  |
 | Debian, Ubuntu, Mint    | `.deb`                    |
 | Fedora, RHEL, openSUSE  | `.rpm`                    |
+| Arch, CachyOS, Manjaro  | `PKGBUILD`, see below     |
 
 Windows and macOS builds are not signed yet, so you may see a warning on first launch.
 
-The AUR, winget, Homebrew, Flathub and Snap are planned.
+On Arch, CachyOS and Manjaro, this builds a package from the latest release and installs it:
+
+```bash
+cd "$(mktemp -d)" && curl -fsSLO https://github.com/outmanos/restless/releases/latest/download/PKGBUILD && makepkg -si
+```
+
+restless will also be in the AUR once account registrations reopen. winget, Homebrew, Flathub and Snap are planned.
 
 ## Bugs and Feature Requests
 

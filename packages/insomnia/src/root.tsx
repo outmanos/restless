@@ -37,7 +37,6 @@ import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
-import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
@@ -49,6 +48,7 @@ import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { dimTitleBarWithDialogs, setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { openSettings } from '~/ui/settings-navigation';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 
 import type { Route } from './+types/root';
@@ -427,7 +427,7 @@ const Root = () => {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
                 await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: 'plugins' });
+                openSettings({ tab: 'plugins' });
               } catch (err) {
                 showError({
                   title: 'Plugin Install',
@@ -460,7 +460,7 @@ const Root = () => {
               });
               await plugins.reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: 'appearance' });
+              openSettings({ tab: 'appearance' });
             }
           },
         });
@@ -507,7 +507,7 @@ const Root = () => {
               // close the modal to hint user Azure oauth url if exists
               closeModalBtn.click();
             }
-            showModal(SettingsModal, { tab: 'credentials' });
+            openSettings({ tab: 'credentials' });
           } else {
             showError({
               title: 'Azure Authorization Failed',

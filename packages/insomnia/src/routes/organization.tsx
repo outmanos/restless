@@ -10,7 +10,7 @@ import { Hotkey } from '~/ui/components/hotkey';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { useMigrationOffer } from '~/ui/components/migration/use-migration-offer';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { SettingsOpener } from '~/ui/components/settings/settings-opener';
 import { TitleBarMenu } from '~/ui/components/title-bar-menu';
 import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
 import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
@@ -19,6 +19,7 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { openSettings } from '~/ui/settings-navigation';
 
 const titleBarButton =
   'flex h-[26px] w-[28px] items-center justify-center rounded-sm text-[14px] text-(--color-font) opacity-80 hover:opacity-100 transition-colors outline-none hover:bg-(--hl-sm) focus-visible:ring-1 focus-visible:ring-(--color-surprise)';
@@ -65,6 +66,7 @@ const Component = () => {
   return (
     <AppDataCacheProvider>
       <InsomniaTabProvider>
+        <SettingsOpener />
         <SidebarContext.Provider value={{ isSidebarCollapsed: isSidebarCollapsed ?? false, toggleSidebar }}>
           <div className="h-full w-full">
             <div className="grid-template-app-layout relative grid h-full w-full bg-(--color-bg)">
@@ -108,7 +110,7 @@ const Component = () => {
                       data-testid="settings-button"
                       aria-label="Preferences"
                       className={titleBarButton}
-                      onPress={() => showSettingsModal()}
+                      onPress={() => openSettings()}
                     >
                       <Icon icon="gear" />
                     </Button>

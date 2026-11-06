@@ -4,7 +4,7 @@ import React, { type FC } from 'react';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import appConfig from '../../../../config/config.json';
-import { getAppVersion, getProductName, type UpdateUnsupportedReason } from '../../../common/constants';
+import { getAppVersion, type UpdateUnsupportedReason } from '../../../common/constants';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { showToast } from '../toast-notification';
@@ -26,10 +26,22 @@ const links = [
 const unsupportedText: Record<UpdateUnsupportedReason, string> = {
   'package-manager':
     'This build does not update itself. Update it with your package manager, or download a new release. The AppImage updates itself.',
-  portable: 'The portable Windows build does not update itself. Download a new release to update.',
-  development: 'Updates are off in development builds.',
-  disabled: 'Updates were turned off with the INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable.',
+  'portable': 'The portable Windows build does not update itself. Download a new release to update.',
+  'development': 'Updates are off in development builds.',
+  'disabled': 'Updates were turned off with the INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable.',
 };
+
+// A link that shows where it goes while it is hovered or focused, so nobody clicks blind
+const AboutLink: FC<{ href: string; children: string }> = ({ href, children }) => (
+  <span className="group flex items-baseline gap-3">
+    <Link className="text-(--color-surprise) hover:underline" href={href} title={href}>
+      {children}
+    </Link>
+    <span className="invisible truncate text-xs text-(--hl) group-focus-within:visible group-hover:visible">
+      {href}
+    </span>
+  </span>
+);
 
 const Updates: FC = () => {
   const { settings } = useRootLoaderData()!;
@@ -40,7 +52,7 @@ const Updates: FC = () => {
       <div>
         <p className="faint">{unsupportedText[support.reason]}</p>
         <p className="pad-top-sm">
-          <Link href={`${repo}/releases/latest`}>Latest release</Link>
+          <AboutLink href={`${repo}/releases/latest`}>Latest release</AboutLink>
         </p>
       </div>
     );
@@ -59,7 +71,7 @@ const Updates: FC = () => {
       {settings.updateAutomatically && (
         <div className="pad-top-sm">
           <BooleanSetting
-            label="Check when Restless starts"
+            label="Check for updates on startup"
             setting="updateCheckOnStartup"
             help="If checked, looks for a new version each time the app opens."
           />
@@ -71,6 +83,7 @@ const Updates: FC = () => {
                 { value: UpdateCheckInterval.sixHours, name: '6 hours' },
                 { value: UpdateCheckInterval.daily, name: 'Day' },
                 { value: UpdateCheckInterval.weekly, name: 'Week' },
+                { value: UpdateCheckInterval.monthly, name: 'Month' },
               ]}
               help="How often to look again while Restless stays open."
             />
@@ -83,7 +96,7 @@ const Updates: FC = () => {
           setting="updateChannel"
           values={[
             { value: UpdateChannel.stable, name: 'Release (recommended)' },
-            { value: UpdateChannel.beta, name: 'Early access (beta)' },
+            { value: UpdateChannel.beta, name: 'Pre-releases (beta)' },
           ]}
         />
       </div>
@@ -97,9 +110,18 @@ export const About: FC = () => {
   return (
     <div>
       <SettingsHeading first>
-        {getProductName()} {getAppVersion()}
+        <span className="flex items-center gap-3">
+          restless
+          <span
+            data-testid="about-version"
+            className="rounded-md bg-[rgba(var(--color-surprise-rgb),0.5)] px-2 py-0.5 text-sm font-normal text-(--color-font-surprise)"
+          >
+            v{getAppVersion()}
+          </span>
+        </span>
       </SettingsHeading>
-      <p className="faint">An offline-first API client. No account, no telemetry. Based on Insomnia.</p>
+      <p>Thank you for using restless!</p>
+      <p className="faint">restless is an offline-first API client. No account, no telemetry. Based on Insomnia.</p>
 
       <SettingsHeading>Updates</SettingsHeading>
       <Updates />
@@ -129,7 +151,7 @@ export const About: FC = () => {
       <ul className="flex flex-col gap-1">
         {links.map(({ label, href }) => (
           <li key={href}>
-            <Link href={href}>{label}</Link>
+            <AboutLink href={href}>{label}</AboutLink>
           </li>
         ))}
       </ul>

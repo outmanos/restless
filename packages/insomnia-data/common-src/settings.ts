@@ -88,11 +88,18 @@ export enum UpdateChannel {
   beta = 'beta',
 }
 
+// Which collection the tab strip's + button adds a new request to, when no collection is open.
+export enum NewRequestCollection {
+  lastUsed = 'lastUsed',
+  first = 'first',
+}
+
 // How often the app looks for a new version by itself, once automatic updates are on.
 export enum UpdateCheckInterval {
   sixHours = 'sixHours',
   daily = 'daily',
   weekly = 'weekly',
+  monthly = 'monthly',
 }
 
 // How far the configured HTTP/HTTPS proxy reaches.
@@ -189,6 +196,7 @@ export interface Settings {
   timeout: number;
   updateAutomatically: boolean;
   updateChannel: UpdateChannel;
+  newRequestCollection: NewRequestCollection;
   /** With automatic updates on, also look for a new version each time the app starts. */
   updateCheckOnStartup: boolean;
   updateCheckInterval: UpdateCheckInterval;

@@ -28,15 +28,9 @@ const onHideConfidentialValuesToggled = (isHiding: boolean) => {
   });
 };
 
-export const PrivacySecurity: FC = () => (
+export const Security: FC = () => (
   <div>
-    <SettingsHeading first>Privacy</SettingsHeading>
-    <p className="faint">
-      Restless has no account and sends no telemetry. It only talks to the network when you send a request, use a
-      service you set up yourself, or check GitHub for a new version.
-    </p>
-
-    <SettingsHeading>Secrets</SettingsHeading>
+    <SettingsHeading first>Secrets</SettingsHeading>
     <BooleanSetting label="Reveal passwords" setting="showPasswords" />
     <BooleanSetting
       label="Hide Confidential values in Preview/Console"
@@ -76,12 +70,5 @@ export const PrivacySecurity: FC = () => (
     <SettingsHeading>Response preview</SettingsHeading>
     <BooleanSetting label="Disable JS in HTML preview" setting="disableHtmlPreviewJs" />
     <BooleanSetting label="Disable links in response viewer" setting="disableResponsePreviewLinks" />
-
-    <SettingsHeading>Links</SettingsHeading>
-    <BooleanSetting
-      label="Open Insomnia web links"
-      setting="handleInsomniaLinks"
-      help="Opens insomnia:// plugin, theme and import links here. Turn this off if you also use Insomnia. Takes effect after a restart."
-    />
   </div>
 );

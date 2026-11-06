@@ -23,7 +23,8 @@ export type TabType =
   | 'collection'
   | 'runner'
   | 'test'
-  | 'testSuite';
+  | 'testSuite'
+  | 'settings';
 export interface BaseTab {
   type: TabType;
   name: string;
@@ -122,6 +123,10 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
       return <Icon icon="check" />;
     }
 
+    if (type === 'settings') {
+      return <Icon icon="gear" />;
+    }
+
     return null;
   };
 
@@ -175,7 +180,11 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
       ref={scrollIntoView}
     >
       {({ isSelected, isHovered }) => (
-        <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className="h-full">
+        <Tooltip
+          delay={1000}
+          message={tab.type === 'settings' ? tab.name : `${tab.projectName} / ${tab.workspaceName}`}
+          className="h-full"
+        >
           <div
             onDoubleClick={handleDoubleClick}
             onAuxClick={e => handleAuxClick(e, tab.id)}

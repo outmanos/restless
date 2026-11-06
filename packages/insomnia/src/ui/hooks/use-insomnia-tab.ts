@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-data';
 import type { Project, Request, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { matchPath, useLocation, useNavigate } from 'react-router';
 
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -71,6 +71,40 @@ function inferTabType(resource: TabResource): TabType | null {
   }
   return null;
 }
+export const SETTINGS_TAB_ID = 'settings';
+
+// Preferences lives in the tab strip like any other page. It has no project or workspace.
+// The project and collection Preferences was opened from. The Data section exports and imports into them.
+export interface SettingsContext {
+  projectId?: string | null;
+  workspaceId?: string | null;
+}
+
+export const buildSettingsUrl = (organizationId: string, section?: string | null, context: SettingsContext = {}) => {
+  const params = new URLSearchParams();
+  if (section) params.set('tab', section);
+  if (context.projectId) params.set('project', context.projectId);
+  if (context.workspaceId) params.set('workspace', context.workspaceId);
+  const search = params.toString();
+  return `/organization/${organizationId}/project/settings${search ? `?${search}` : ''}`;
+};
+
+export const buildSettingsTab = (
+  organizationId: string,
+  section?: string | null,
+  context: SettingsContext = {},
+): BaseTab => ({
+  type: 'settings',
+  id: SETTINGS_TAB_ID,
+  name: 'Preferences',
+  url: buildSettingsUrl(organizationId, section, context),
+  organizationId,
+  projectId: '',
+  workspaceId: '',
+  projectName: '',
+  workspaceName: '',
+});
+
 export const buildRunnerTabId = (workspaceId: string, folderId?: string | null) => {
   return folderId ? `runner_${folderId}` : `runner_${workspaceId}`;
 };
@@ -313,8 +347,9 @@ export const useTabNavigate = () => {
 };
 
 export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
-  const { appTabsRef, changeActiveTab, closeTabById, addTemporaryTab } = useInsomniaTabContext();
+  const { appTabsRef, changeActiveTab, closeTabById, addTab, addTemporaryTab } = useInsomniaTabContext();
   const { routeInfo, getNavigationResources } = useInsomniaNavigation();
+  const { pathname } = useLocation();
 
   // Sync active tab with current route (only activates existing tabs, or creates/updates temporary tab if no match)
   useEffect(() => {
@@ -327,6 +362,24 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     // Dropping a run is safe: `routeInfo` is derived from the same location, so every
     // location change also re-runs this effect for the settled route.
     const isStale = () => cancelled || window.location.pathname + window.location.search !== routeAtStart;
+
+    // Preferences is not a resource: it keeps one permanent tab of its own
+    if (matchPath('/organization/:organizationId/project/settings', pathname)) {
+      const currentOrgTab = appTabsRef?.current?.[organizationId];
+      if (!currentOrgTab?.tabList.some(tab => tab.id === SETTINGS_TAB_ID)) {
+        const search = new URLSearchParams(window.location.search);
+        addTab(
+          buildSettingsTab(organizationId, search.get('tab'), {
+            projectId: search.get('project'),
+            workspaceId: search.get('workspace'),
+          }),
+          { setActive: true },
+        );
+      } else if (currentOrgTab.activeTabId !== SETTINGS_TAB_ID) {
+        changeActiveTab(SETTINGS_TAB_ID);
+      }
+      return;
+    }
 
     (async () => {
       const routeTabId = await getNavigationTabId(routeInfo);
@@ -357,7 +410,16 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     return () => {
       cancelled = true;
     };
-  }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo]);
+  }, [
+    addTab,
+    addTemporaryTab,
+    appTabsRef,
+    changeActiveTab,
+    getNavigationResources,
+    organizationId,
+    pathname,
+    routeInfo,
+  ]);
 
   // Keyboard shortcut to close current tab
   useDocBodyKeyboardShortcuts({
