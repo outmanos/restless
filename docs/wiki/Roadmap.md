@@ -100,6 +100,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | S | Unresolved variable warnings |
 | [ ] | P1 | M | Saved response examples, usable in docs and mocks |
 | [ ] | P1 | M | Collection and folder docs as Markdown |
+| [ ] | P1 | M | In-app help links open the matching wiki page, not the README. About 27 links. Write the pages that are missing: scripting, template tags, keyboard shortcuts, design documents |
 | [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
