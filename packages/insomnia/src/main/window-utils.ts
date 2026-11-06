@@ -595,20 +595,6 @@ export function createWindow(): ElectronBrowserWindow {
       {
         type: 'separator',
       },
-      // On macOS these live in the application menu, where that platform expects them
-      ...(isMac
-        ? []
-        : [
-            checkForUpdatesItem,
-            changelogItem,
-            {
-              label: `${MNEMONIC_SYM}About`,
-              click: aboutMenuClickHandler,
-            },
-            {
-              type: 'separator' as const,
-            },
-          ]),
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
@@ -649,6 +635,20 @@ export function createWindow(): ElectronBrowserWindow {
           );
         },
       },
+      // On macOS these live in the application menu, where that platform expects them
+      ...(isMac
+        ? []
+        : [
+            {
+              type: 'separator' as const,
+            },
+            checkForUpdatesItem,
+            changelogItem,
+            {
+              label: `${MNEMONIC_SYM}About`,
+              click: aboutMenuClickHandler,
+            },
+          ]),
     ],
   };
 

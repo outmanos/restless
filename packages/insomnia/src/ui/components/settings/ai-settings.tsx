@@ -120,7 +120,7 @@ export const AISettings = () => {
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="mb-2 text-lg font-semibold text-(--color-font)">Features</h3>
+            <h3 className="mb-2 text-lg font-semibold text-(--color-font)">AI Features</h3>
           </div>
 
           <div className="flex items-center justify-between">
