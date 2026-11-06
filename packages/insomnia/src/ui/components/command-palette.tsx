@@ -1,6 +1,6 @@
 import type { CommandSearchResult } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations, isMac } from 'insomnia-data/common';
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
@@ -450,12 +450,13 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   // so if Enter comes first, wait for the results of what was typed instead of opening a stale one.
   const topResult = comboboxSections[0]?.children[0];
   const resultsMatchInput = resultsFilter === inputValue && !isSearching;
-  const openTopResultWhenReady = useRef(false);
+  const openTopResultWhenReady = useRef<{ withTab: boolean } | null>(null);
 
   useEffect(() => {
     if (openTopResultWhenReady.current && resultsMatchInput) {
-      openTopResultWhenReady.current = false;
-      topResult?.action();
+      const { withTab } = openTopResultWhenReady.current;
+      openTopResultWhenReady.current = null;
+      topResult?.action(withTab);
     }
   }, [resultsMatchInput, topResult]);
 
@@ -484,7 +485,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       defaultFilter={() => true}
       allowsEmptyCollection
       onInputChange={value => {
-        openTopResultWhenReady.current = false;
+        openTopResultWhenReady.current = null;
         search(value);
       }}
       // By default, Escape would just clear the input field. We need to press twice to close the dialog.
@@ -522,18 +523,37 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                   <Input
                     slot="input"
                     placeholder="Search and switch between requests, collections and documents"
-                    // Capture phase, so this runs before the combobox commits the text and clears the input
+                    // Capture phase, so this runs before the combobox commits the text and clears the input,
+                    // and before the global Ctrl+Enter shortcut can send the request behind the dialog.
+                    // Enter opens the top result, and Ctrl+Enter (Cmd on macOS) opens it in a new tab.
                     onKeyDownCapture={e => {
-                      const nothingHighlighted = !e.currentTarget.getAttribute('aria-activedescendant');
-                      if (e.key !== 'Enter' || e.nativeEvent.isComposing || !nothingHighlighted || !inputValue.trim()) {
+                      if (e.key !== 'Enter' || e.nativeEvent.isComposing) {
+                        return;
+                      }
+                      const withTab = isMac ? e.metaKey : e.ctrlKey;
+                      const highlightedId = e.currentTarget.getAttribute('aria-activedescendant');
+                      if (highlightedId) {
+                        // A result is highlighted, and the combobox opens it on a plain Enter
+                        const key = highlightedId.slice(highlightedId.indexOf('-option-') + '-option-'.length);
+                        const highlighted = comboboxSections
+                          .flatMap(section => section.children)
+                          .find(item => item.id.replace(/\s+/g, '') === key);
+                        if (withTab && highlighted) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          highlighted.action(true);
+                        }
+                        return;
+                      }
+                      if (!inputValue.trim()) {
                         return;
                       }
                       e.preventDefault();
                       e.stopPropagation();
                       if (resultsMatchInput) {
-                        topResult?.action();
+                        topResult?.action(withTab);
                       } else {
-                        openTopResultWhenReady.current = true;
+                        openTopResultWhenReady.current = { withTab };
                       }
                     }}
                     className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"

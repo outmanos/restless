@@ -82,4 +82,26 @@ test('Command palette - Enter opens the top result without arrowing to it', asyn
   await expect
     .soft(page.getByTestId('workspace-breadcrumb-level-1').locator('span'))
     .toContainText('E2E testing specification - swagger 2 1.0.0');
+
+  // Ctrl+Enter (Cmd+Enter on macOS) opens the top result in a new tab instead of replacing the current one,
+  // and must not send the request behind the dialog, which is what that shortcut does elsewhere
+  const newTabShortcut = process.platform === 'darwin' ? 'Meta+Enter' : 'Control+Enter';
+  const tabs = page.getByTestId('tab-title');
+  await insomnia.navigationSidebar.clickRequestOrFolder('sends request with cookie and get cookie in response');
+  const tabsBefore = await tabs.count();
+
+  await page.locator('body').press(shortcut);
+  await search.fill('send js');
+  await search.press(newTabShortcut);
+  await expect.soft(tabs).toHaveCount(tabsBefore + 1);
+  await expect.soft(page.getByTestId('response-pane').getByTestId('response-status-tag')).toBeHidden();
+
+  // The same with a result that was highlighted with the arrow keys
+  await page.locator('body').press(shortcut);
+  await search.fill('delayed request');
+  // The unfiltered list also contains it, so wait until it is the first row
+  await expect.soft(page.getByRole('listbox', { name: 'Commands' }).getByRole('option').first()).toContainText('delayed request');
+  await search.press('ArrowDown');
+  await search.press(newTabShortcut);
+  await expect.soft(tabs).toHaveCount(tabsBefore + 2);
 });
