@@ -169,6 +169,7 @@ AI stays off by default.
 | [ ] | P0 | S | npm: `restless-cli` |
 | [ ] | P1 | L | Replace leftover legacy components |
 | [ ] | P1 | M | Restyle the collection sidebar, response pane and empty states |
+| [ ] | P1 | M | Replace old and mismatched icons with one consistent open-licensed set. API collections and design documents share a generic bars icon, mock server uses a plain server icon, and neither matches newer ones such as environment. The settings tabs use the same set |
 | [ ] | P1 | M | Settings as a searchable tab, split by section |
 | [ ] | P1 | M | Command palette covers every action |
 | [ ] | P1 | S | Sidebar density and keyboard navigation |
