@@ -10,6 +10,7 @@ Known problems, most urgent first. Priorities match the [Roadmap](Roadmap).
 | **P2** | Flaky smoke test | `pre-request-script-features.test.ts:487` matches two elements with `Pre-request Scripts` | Open |
 | **P2** | Workflow actions use Node 20 | GitHub warns these actions are deprecated | Open |
 | **P2** | Git migration redirects to a missing route | `git-migration.$.tsx` sends new users to `/onboarding`, which no longer exists | Open |
+| **P2** | `npm sbom` fails | The dependency tree has a missing peer (`@codemirror/language`), an invalid `minimatch` and a local `lodash.set` shim, so no bill of materials can be generated | Open |
 | **P2** | Import collection doesn't look clickable | No hand cursor, and the upload icon doesn't react | Open |
 
 ## Not verified yet

@@ -102,12 +102,17 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | M | Collection and folder docs as Markdown |
 | [ ] | P1 | M | In-app help links open the matching wiki page, not the README. About 27 links. Write the pages that are missing: scripting, template tags, keyboard shortcuts, design documents |
 | [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
+| [ ] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Privacy and Security, Data, Plugins and About, with every setting where you would look for it |
+| [ ] | P1 | M | Searchable settings: a search box that jumps to the setting |
+| [ ] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
+| [ ] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |
 | [ ] | P2 | S | Environment color on request tabs |
 | [ ] | P2 | S | Response layout toggle |
 | [ ] | P2 | M | Visual diff for request changes |
+| [ ] | P2 | S | A themed SVG icon for each settings tab |
 
 ## 0.5.0: Testing
 
@@ -170,13 +175,13 @@ AI stays off by default.
 | [ ] | P0 | S | npm: `restless-cli` |
 | [ ] | P1 | L | Replace leftover legacy components |
 | [ ] | P1 | M | Restyle the collection sidebar, response pane and empty states |
-| [ ] | P1 | M | Settings as a searchable tab, split by section |
 | [ ] | P1 | M | Command palette covers every action |
 | [ ] | P1 | S | Sidebar density and keyboard navigation |
 | [ ] | P1 | M | Light theme matching the dark palette |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
 | [ ] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release |
+| [ ] | P2 | M | Publish a software bill of materials with each release. `npm sbom` needs the dependency tree fixed first |
 
 ## Baseline
 
