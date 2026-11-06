@@ -83,7 +83,7 @@ const Updates: FC = () => {
           setting="updateChannel"
           values={[
             { value: UpdateChannel.stable, name: 'Release (recommended)' },
-            { value: UpdateChannel.beta, name: 'Early access (beta)' },
+            { value: UpdateChannel.beta, name: 'Pre-releases (beta)' },
           ]}
         />
       </div>
