@@ -44,3 +44,11 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
     .soft(page.getByTestId('workspace-breadcrumb-level-1').locator('span'))
     .toContainText('E2E testing specification - swagger 2 1.0.0');
 });
+
+test('Command palette - the title bar button is just a label and its shortcut', async ({ page }) => {
+  const button = page.getByTestId('quick-search');
+
+  await expect.soft(button).toContainText('Search');
+  await expect.soft(button).not.toContainText('Search..');
+  await expect.soft(button.locator('svg')).toHaveCount(0);
+});

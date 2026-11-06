@@ -74,10 +74,7 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
         data-testid="quick-search"
         className="flex h-[26px] w-[min(600px,38vw)] shrink-0 items-center justify-between gap-2 rounded-md border border-solid border-(--hl-sm) bg-transparent px-[10px] text-[13px] text-(--color-font) opacity-80 ring-1 ring-transparent transition-all ring-inset hover:bg-(--hl-xs) hover:opacity-100 focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
-        <div>
-          <Icon icon="search" className="mr-2" />
-          Search..
-        </div>
+        <span>Search</span>
         {requestSwitchKeyCombination && (
           <Keyboard className="inline-block items-center space-x-0.5 rounded-md bg-(--hl-xs) px-2 py-0.5 text-center font-sans text-sm font-normal text-(--hl) shadow-xs">
             {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
