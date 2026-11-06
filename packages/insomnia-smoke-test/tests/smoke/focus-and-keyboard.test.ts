@@ -25,7 +25,7 @@ test.describe('Focus and keyboard navigation', () => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
     // Create a fresh HTTP request (this goes through the create -> redirect path that focuses the URL).
-    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
     await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
 
     // The URL bar should be focused so the user can start typing immediately.
@@ -88,7 +88,7 @@ test.describe('Focus and keyboard navigation', () => {
   test('workspace settings dialog focuses the Name field', async ({ page, insomnia }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
 
     await expect.soft(page.getByRole('dialog').getByRole('textbox', { name: 'Name' })).toBeFocused();
@@ -108,7 +108,7 @@ test.describe('Focus and keyboard navigation', () => {
   test('Tab from the URL bar moves focus to Send', async ({ page, insomnia }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
     await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
 
     // Fresh request focuses the URL bar; Tab should advance to the Send button. (The URL autofocus
@@ -121,7 +121,7 @@ test.describe('Focus and keyboard navigation', () => {
   test('Tab reaches the request tabs and they show a keyboard focus ring', async ({ page, insomnia }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
     await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
     await expect.soft(page.locator(focusedEditorWithChild('request-url-bar'))).toHaveCount(1);
 

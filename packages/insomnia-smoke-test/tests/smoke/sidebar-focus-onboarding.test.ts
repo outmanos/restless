@@ -21,7 +21,7 @@ test.describe('sidebar focus mode onboarding', () => {
     // A brand-new project starts empty, so the first collection comes from this welcome-state
     // button rather than the "Create in project" menu (which only appears once a project has content).
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
-    await insomnia.navigationSidebar.expectWorkspaceActive('My first collection');
+    await insomnia.navigationSidebar.expectWorkspaceActive('My First Collection');
 
     const onboarding = page.getByRole('dialog', { name: 'Sidebar focus mode onboarding' });
     await expect.soft(onboarding).toBeVisible();
@@ -34,13 +34,13 @@ test.describe('sidebar focus mode onboarding', () => {
 
     // Leaving and re-entering focus mode in the same session shouldn't bring it back.
     await insomnia.navigationSidebar.backToAllProjects();
-    await insomnia.navigationSidebar.selectWorkspace('My first collection');
-    await insomnia.navigationSidebar.expectWorkspaceActive('My first collection');
+    await insomnia.navigationSidebar.selectWorkspace('My First Collection');
+    await insomnia.navigationSidebar.expectWorkspaceActive('My First Collection');
     await expect.soft(onboarding).toBeHidden();
 
     // Reload to confirm the dismissal was actually written to settings, not just in-memory state.
     await page.reload({ waitUntil: 'networkidle' });
-    await insomnia.navigationSidebar.expectWorkspaceActive('My first collection');
+    await insomnia.navigationSidebar.expectWorkspaceActive('My First Collection');
     await expect.soft(onboarding).toBeHidden();
   });
 
@@ -55,6 +55,6 @@ test.describe('sidebar focus mode onboarding', () => {
 
     const onboarding = page.getByRole('dialog', { name: 'Sidebar focus mode onboarding' });
     await expect.soft(onboarding).toBeHidden();
-    await expect.soft(insomnia.navigationSidebar.workspaceGridListItem('My first collection')).toBeVisible();
+    await expect.soft(insomnia.navigationSidebar.workspaceGridListItem('My First Collection')).toBeVisible();
   });
 });

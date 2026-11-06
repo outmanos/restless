@@ -202,7 +202,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     createNewWorkspaceFetcher.submit({
       organizationId,
       projectId,
-      name: 'My first collection',
+      name: 'My First Collection',
       scope: 'collection',
       withRequest: true,
       source: 'home-page',

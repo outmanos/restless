@@ -10,7 +10,7 @@ test('can select and send a QUERY request with a body', async ({ page, insomnia 
 
   // Create a collection and import a request that targets the echo endpoint with a body
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
-  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
   await page
     .getByRole('dialog')
