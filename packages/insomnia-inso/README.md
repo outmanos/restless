@@ -76,7 +76,7 @@ $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" -w $PWD/packages
 ```sh
 # run modify package command and then a unit test
 npm run package -w insomnia-inso && \
-$PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" -w $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+$PWD/packages/insomnia-inso/binaries/rl run test "Echo Test Suite" -w $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 
 ```
 
@@ -104,7 +104,7 @@ inso -w <INSO_NEDB_PATH>
 ./packages/insomnia-inso/bin/inso -w <INSO_NEDB_PATH>
 
 # using a binary
-./packages/insomnia-inso/binaries/insomnia-inso -w <INSO_NEDB_PATH>
+./packages/insomnia-inso/binaries/rl -w <INSO_NEDB_PATH>
 ```
 
 ## How to debug the bundled assets

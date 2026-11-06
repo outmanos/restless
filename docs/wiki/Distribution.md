@@ -14,7 +14,7 @@ Every outlet starts from a GitHub Release. Status is tracked on the [Roadmap](Ro
 | Scoop | GitHub | Own bucket repository | Planned |
 | Chocolatey | Chocolatey account | Workflow push, then moderation | Planned |
 | apt and dnf | Cloudsmith or Packagecloud | Workflow upload | Planned |
-| npm | npm account | Workflow publishes `restless-cli` | Planned |
+| npm | npm account | Workflow publishes `restless-cli`. The package is still private | Planned |
 
 ## Enabling the AUR
 

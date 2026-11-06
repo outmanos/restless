@@ -13,7 +13,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
   const version = process.env.VERSION || packageJson.version;
 
   if (platform === 'darwin') {
-    return spawn('ditto', ['-c', '-k', '../binaries/inso', `inso-macos-${version}.zip`], { cwd });
+    return spawn('ditto', ['-c', '-k', '../binaries/rl', `rl-macos-${version}.zip`], { cwd });
   }
 
   if (platform === 'win32' || platform === 'linux') {
@@ -23,8 +23,8 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
         '-C',
         '../binaries',
         platform === 'win32' ? '-a -cf' : '-cJf',
-        platform === 'win32' ? `inso-windows-${version}.zip` : `inso-linux-${process.arch}-${version}.tar.xz`,
-        platform === 'win32' ? 'inso.exe' : 'inso',
+        platform === 'win32' ? `rl-windows-${version}.zip` : `rl-linux-${process.arch}-${version}.tar.xz`,
+        platform === 'win32' ? 'rl.exe' : 'rl',
       ],
       { cwd, shell: platform === 'win32' },
     );

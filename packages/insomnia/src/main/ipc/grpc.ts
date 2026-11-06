@@ -33,7 +33,7 @@ import { services } from 'insomnia-data';
 import { invariant } from '~/common/utils/invariant';
 import { createReflectionClient } from '~/main/grpc-reflection-client';
 
-import { version } from '../../../package.json';
+import { getUserAgent } from '../../common/constants';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file.node';
 import { mockRequestMethods } from './automock';
@@ -188,7 +188,7 @@ const getMethodsFromReflectionServer = async (
   const getFileDescriptorSetMethod = FileDescriptorSetService.method.getFileDescriptorSet;
   invariant(getFileDescriptorSetMethod.methodKind === 'unary', 'GetFileDescriptorSet must be a unary method');
   const headers: HeadersInit = {
-    ...(disableUserAgentHeader ? {} : { 'User-Agent': `insomnia/${version}` }),
+    ...(disableUserAgentHeader ? {} : { 'User-Agent': getUserAgent() }),
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {

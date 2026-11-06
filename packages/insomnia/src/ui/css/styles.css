@@ -100,6 +100,11 @@ html {
   padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
 }
 
+/* A drag region swallows clicks, so an open menu could not be closed by clicking the empty title bar */
+.app-titlebar:has([role='menubar'] [aria-expanded='true']) {
+  -webkit-app-region: no-drag;
+}
+
 .app-titlebar a,
 .app-titlebar button,
 .app-titlebar [role='button'],

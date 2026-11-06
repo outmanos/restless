@@ -2,7 +2,7 @@ import type { RequestHeader } from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import { getAppVersion } from '~/common/constants';
+import { getUserAgent } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
@@ -25,12 +25,12 @@ export const readOnlyWebsocketPairs = [
   { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', canDisable: false },
   { name: 'Sec-WebSocket-Version', value: '13', canDisable: false },
   { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', canDisable: false },
-  { name: 'User-Agent', value: 'insomnia/' + getAppVersion(), canDisable: true },
+  { name: 'User-Agent', value: getUserAgent(), canDisable: true },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 export const readOnlyHttpPairs = [
   { name: 'Accept', value: '*/*', canDisable: false },
   { name: 'Host', value: '<calculated at runtime>', canDisable: false },
-  { name: 'User-Agent', value: 'insomnia/' + getAppVersion(), canDisable: true },
+  { name: 'User-Agent', value: getUserAgent(), canDisable: true },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
 export const RequestHeadersEditor: FC<Props> = ({
@@ -58,7 +58,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       const hadUserAgent = headers.some(h => h.name.toLowerCase() === 'user-agent');
       const hasUserAgent = newHeaders.some(h => h.name.toLowerCase() === 'user-agent');
       // If the user just removed their last User-Agent header, default the read-only row to
-      // disabled rather than letting it silently start sending `insomnia/<version>`.
+      // disabled rather than letting it silently start sending `restless/<version>`.
       if (!isRequestGroup && hadUserAgent && !hasUserAgent) {
         patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
       } else {
