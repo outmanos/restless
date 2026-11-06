@@ -14,24 +14,24 @@ const clean = (label: string) => label.replace('&', '').replace(/^(Enable|Disabl
 const flatten = (items: MenuItem[]): MenuItem[] => items.flatMap(item => [item, ...flatten(item.submenu ?? [])]);
 
 test.describe('help menu', () => {
-  test('groups help, updates, troubleshooting and legal', async ({ page }) => {
+  test('groups help, troubleshooting, legal and updates', async ({ page }) => {
     const menu = await readMenu(page);
     const help = menu.find(item => clean(item.label) === 'Help');
     const labels = (help?.submenu ?? []).map(item => (item.type === 'separator' ? '---' : clean(item.label)));
 
     // On macOS, About, updates and the changelog live in the application menu instead
-    const updates = process.platform === 'darwin' ? [] : ['Check for Updates', 'Changelog', 'About', '---'];
+    const updates = process.platform === 'darwin' ? [] : ['---', 'Check for Updates', 'Changelog', 'About'];
     expect.soft(labels).toEqual([
       'Help and Support',
       'Keyboard Shortcuts',
       '---',
-      ...updates,
       'Show App Data Folder',
       'Show App Logs Folder',
       'Debug Mode',
       '---',
       'Show Software License',
       'Show Software Bill of Materials',
+      ...updates,
     ]);
 
     if (process.platform === 'darwin') {

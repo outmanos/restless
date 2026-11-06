@@ -3,10 +3,9 @@ import React, { type FC, memo, useState } from 'react';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { docsBase } from '../../../common/documentation';
+import { openSettings } from '../../settings-navigation';
 import { Link } from '../base/link';
-import { showModal } from '../modals/index';
 import { MCPCertificatesModal } from '../modals/mcp-certificates-modal';
-import { SettingsModal } from '../modals/settings-modal';
 
 interface Props {
   error: string;
@@ -30,7 +29,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
             // for mcp request, open manage certificates modal
             setCertificatesModalOpen(true);
           } else {
-            showModal(SettingsModal);
+            openSettings();
           }
         }}
       >
@@ -39,7 +38,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
     );
   } else if (error?.toLowerCase().indexOf('getaddrinfo') !== -1) {
     msg = (
-      <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
+      <button className="btn btn--clicky" onClick={() => openSettings()}>
         Setup Network Proxy
       </button>
     );

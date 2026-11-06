@@ -14,7 +14,7 @@ import { Link } from 'react-aria-components';
 import { RenderError } from '~/common/templating/render-error';
 import { encodeProtectedUrl, protectMask, restoreMask } from '~/common/utils/url/confidential-mask';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { openSettings } from '~/ui/settings-navigation';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
@@ -151,7 +151,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         {hasLink && (
           <Link
             className="cursor-pointer text-(--color-surprise)"
-            onPress={() => showSettingsModal({ tab: 'security' })}
+            onPress={() => openSettings({ tab: 'security' })}
           >
             {linkText}
           </Link>

@@ -6,7 +6,7 @@ import { PreferencesDataTab } from './data-tab';
 type PreferencesTab = 'Data' | 'General' | 'Themes' | 'Credentials' | 'Plugins' | 'Other';
 
 /**
- * Page Object for **Restless Preferences** modal.
+ * Page Object for the **Restless Preferences** tab.
  *
  * Composes preference tabs:
  * - Data tab (import/export)
@@ -27,9 +27,9 @@ export class PreferencesPage {
     this.credentialsTab = new PreferencesCredentialsTab(page, app);
   }
 
-  /** The root preferences dialog. */
+  /** The Preferences page. */
   get root(): Locator {
-    return this.page.getByTestId('preference-modal');
+    return this.page.getByTestId('preferences');
   }
 
   // ===========================================================================
@@ -45,10 +45,10 @@ export class PreferencesPage {
   }
 
   /**
-   * Closes the preferences modal.
+   * Closes the Preferences tab.
    */
   async closePreferences(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Modal Close Button' }).click();
+    await this.page.keyboard.press('Escape');
     await this.root.waitFor({ state: 'hidden' });
   }
 }

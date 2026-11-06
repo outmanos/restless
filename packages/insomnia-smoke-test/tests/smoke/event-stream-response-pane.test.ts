@@ -18,7 +18,7 @@ test('Event Stream: an HTTP response is not re-read as an event log after flippi
 
   // Compact single-line JSON: a pretty-printed body would fail to parse line by line, hiding the bug.
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
-  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
   await page.getByRole('dialog').locator('.CodeMirror textarea').fill('curl --url http://127.0.0.1:4010/pets/1');
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -53,7 +53,7 @@ test('Event Stream: connecting shows the received events in the events view', as
   const requestPane = page.getByTestId('request-pane');
 
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
-  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
   await page
     .getByRole('dialog')

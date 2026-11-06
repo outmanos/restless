@@ -398,7 +398,7 @@ describe('secrets', () => {
     ]);
     expect(entries[0].detail).toContain('API_KEY, TOKEN');
     expect(entries[1].detail).toContain('DB_PASSWORD');
-    expect(entries[0].detail).toContain('Preferences > Privacy & Security');
+    expect(entries[0].detail).toContain('Preferences > Security');
   });
 
   it('shortens a long list of names', async () => {

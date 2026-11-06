@@ -9,6 +9,7 @@ test.describe('runner features tests', () => {
   test.beforeEach(async ({ page, insomnia }) => {
     await insomnia.projectPage.importFixture('runner-collection.yaml');
     await insomnia.statusbar.openPreferences();
+    await page.getByRole('tab', { name: 'Appearance' }).click();
     await page.getByText('Use vertical layout').click();
     await page.locator('.app').press('Escape');
   });

@@ -51,7 +51,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       });
 
       await services.workspace.create({
-        name: 'My first collection',
+        name: 'My First Collection',
         scope: 'collection',
         parentId: project._id,
       });

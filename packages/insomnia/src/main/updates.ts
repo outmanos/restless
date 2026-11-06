@@ -50,6 +50,7 @@ const CHECK_INTERVALS_MS: Record<UpdateCheckInterval, number> = {
   [UpdateCheckInterval.sixHours]: 6 * 60 * 60 * 1000,
   [UpdateCheckInterval.daily]: 24 * 60 * 60 * 1000,
   [UpdateCheckInterval.weekly]: 7 * 24 * 60 * 60 * 1000,
+  [UpdateCheckInterval.monthly]: 30 * 24 * 60 * 60 * 1000,
 };
 
 export const getCheckIntervalMs = (interval: UpdateCheckInterval) =>

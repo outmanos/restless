@@ -553,7 +553,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                         openTopResultWhenReady.current = { withTab };
                       }
                     }}
-                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
+                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) outline-hidden transition-none group-data-open:rounded-b-none"
                   />
                 </>
             </Label>

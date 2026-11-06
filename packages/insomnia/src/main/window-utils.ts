@@ -33,6 +33,22 @@ export function getMainWindow(): ElectronBrowserWindow | null {
 let hiddenWindowIsBusy = false;
 
 // Every open window has its own copy of the menu, so keep them all in sync with the Debug Mode setting.
+// DevTools open docked at the bottom the first time. After that they open wherever the user left them.
+const toggleDevTools = (window: ElectronBrowserWindow | null) => {
+  if (!window) {
+    return;
+  }
+  const { webContents } = window;
+  if (webContents.isDevToolsOpened()) {
+    webContents.closeDevTools();
+    return;
+  }
+  const storage = getElectronStorage();
+  const hasChosenDock = storage.getItem('devToolsOpenedBefore', false);
+  webContents.openDevTools(hasChosenDock ? undefined : { mode: 'bottom' });
+  storage.setItem('devToolsOpenedBefore', true);
+};
+
 const debugModeMenuItems = new Set<MenuItem>();
 let isWatchingDebugMode = false;
 
@@ -502,14 +518,16 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
-        accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          if (window) {
-            // @ts-expect-error -- TSCONVERSION needs global module augmentation
-            window.toggleDevTools();
-          }
-        },
+        // The same keys as Chromium: Ctrl+Shift+I, or Cmd+Option+I on macOS
+        accelerator: isMac ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+        click: () => toggleDevTools(BrowserWindow.getFocusedWindow()),
+      },
+      {
+        // Chromium also opens DevTools with F12. Hidden, so the menu shows one shortcut.
+        label: 'Toggle DevTools (F12)',
+        accelerator: 'F12',
+        visible: false,
+        click: () => toggleDevTools(BrowserWindow.getFocusedWindow()),
       },
     ],
   };
@@ -577,20 +595,6 @@ export function createWindow(): ElectronBrowserWindow {
       {
         type: 'separator',
       },
-      // On macOS these live in the application menu, where that platform expects them
-      ...(isMac
-        ? []
-        : [
-            checkForUpdatesItem,
-            changelogItem,
-            {
-              label: `${MNEMONIC_SYM}About`,
-              click: aboutMenuClickHandler,
-            },
-            {
-              type: 'separator' as const,
-            },
-          ]),
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
@@ -631,6 +635,20 @@ export function createWindow(): ElectronBrowserWindow {
           );
         },
       },
+      // On macOS these live in the application menu, where that platform expects them
+      ...(isMac
+        ? []
+        : [
+            {
+              type: 'separator' as const,
+            },
+            checkForUpdatesItem,
+            changelogItem,
+            {
+              label: `${MNEMONIC_SYM}About`,
+              click: aboutMenuClickHandler,
+            },
+          ]),
     ],
   };
 

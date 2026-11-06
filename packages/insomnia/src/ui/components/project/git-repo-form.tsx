@@ -26,7 +26,7 @@ import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { openSettings } from '~/ui/settings-navigation';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
@@ -222,7 +222,7 @@ export const GitRepoForm: FC<Props> = ({
                 <Button
                   onPress={() => {
                     setIsCredentialSelectOpen(false);
-                    showSettingsModal({ tab: 'credentials' });
+                    openSettings({ tab: 'credentials' });
                   }}
                   className="underline"
                 >

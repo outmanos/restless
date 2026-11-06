@@ -8,6 +8,7 @@ import type { PluginTheme } from '~/common/plugins/bridge-types';
 import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
+import { ACCENT_PRESETS } from './accent-presets';
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   <svg
@@ -74,17 +75,6 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   </svg>
 );
 
-const ACCENT_PRESETS = [
-  { name: 'Violet', color: '#7c6cf0' },
-  { name: 'Blue', color: '#2f7ff0' },
-  { name: 'Teal', color: '#14a8a0' },
-  { name: 'Green', color: '#3fa34d' },
-  { name: 'Amber', color: '#e0a100' },
-  { name: 'Orange', color: '#ea6a1f' },
-  { name: 'Red', color: '#e5484d' },
-  { name: 'Pink', color: '#e0489d' },
-];
-
 const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange: (color: string) => void }> = ({
   accentColor,
   themeAccent,
@@ -106,6 +96,17 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span>Accent color</span>
+      <span title="Use the theme's own color" className="flex">
+        <Button
+          aria-label="Theme color"
+          aria-pressed={!draft}
+          onPress={() => setDraft('')}
+          style={{ backgroundColor: themeAccent }}
+          className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
+        >
+          <span className="sr-only">Use the theme&apos;s own color</span>
+        </Button>
+      </span>
       {ACCENT_PRESETS.map(({ name, color }) => (
         <Button
           key={color}
@@ -125,11 +126,6 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
         />
         Custom
       </Label>
-      {draft && (
-        <Button onPress={() => setDraft('')} className="text-sm underline">
-          Use theme color
-        </Button>
-      )}
     </div>
   );
 };
@@ -192,7 +188,7 @@ export const ThemePanel: FC = () => {
                     }}
                     style={
                       {
-                        '--color-surprise': theme.theme.background?.surprise,
+                        '--color-surprise': accentColor || theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
                     className="flex items-center justify-center group-data-active-light-theme:bg-(--hl-lg) group-data-active-light-theme:text-(--color-surprise) hover:bg-(--hl-md) focus:bg-(--hl-md)"
@@ -205,7 +201,7 @@ export const ThemePanel: FC = () => {
                     }}
                     style={
                       {
-                        '--color-surprise': theme.theme.background?.surprise,
+                        '--color-surprise': accentColor || theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
                     className="flex items-center justify-center group-data-active-dark-theme:bg-(--hl-md) group-data-active-dark-theme:text-(--color-surprise) hover:bg-(--hl-md) focus:bg-(--hl-md)"

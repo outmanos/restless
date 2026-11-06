@@ -259,6 +259,8 @@ test.describe('Variable source and live preview across environment levels', () =
       await page.getByText('Body', { exact: true }).click();
 
       await enableShowVariableSourceAndValue(page);
+      // Preferences is its own tab, so the request pane starts over when it closes
+      await page.getByText('Body', { exact: true }).click();
 
       // The chip itself now shows the value and its source
       const variableChip = page.locator(`[data-template*="${scenario.varSnippet}"]`);

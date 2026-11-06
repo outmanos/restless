@@ -8,7 +8,7 @@ import * as templating from '~/ui/templating/renderer-safe';
 import { dispatchEditorUndo } from './components/.client/codemirror/editor-undo';
 import { MigrationModal } from './components/migration/migration-modal';
 import { showModal } from './components/modals';
-import { SettingsModal } from './components/modals/settings-modal';
+import { openSettings } from './settings-navigation';
 
 // Edit-menu Undo/Redo route here so one handler reconciles CodeMirror's history
 // with the native undo stack based on what's focused (see editor-undo.ts).
@@ -16,11 +16,11 @@ window.main.on('edit:undo', () => dispatchEditorUndo('undo'));
 window.main.on('edit:redo', () => dispatchEditorUndo('redo'));
 
 window.main.on('toggle-preferences', () => {
-  showModal(SettingsModal);
+  openSettings();
 });
 
 window.main.on('show-about', () => {
-  showModal(SettingsModal, { tab: 'about' });
+  openSettings({ tab: 'about' });
 });
 
 window.main.on('open-migration', () => {
@@ -36,7 +36,7 @@ window.main.on('reload-plugins', async () => {
 });
 
 window.main.on('toggle-preferences-shortcuts', () => {
-  showModal(SettingsModal, { tab: 'keyboard' });
+  openSettings({ tab: 'keyboard' });
 });
 
 window.main.on('show-toast', (_, options: { content: RAToastContent; options?: { timeout?: number } }) => {
