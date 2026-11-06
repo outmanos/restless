@@ -21,4 +21,5 @@ Why things are the way they are.
 
 ## Open questions
 
-- Store history, cookies and tokens in the app, or on disk too.
+- Which YAML schema is native: Insomnia's `collection.insomnia.rest/5.0`, or [OpenCollection](https://spec.opencollection.com). OpenCollection is a vendor-neutral spec with a JSON Schema, a place for extensions and one file per request, but Bruno maintains it, it's at v1.0.0, and its repository has no license file yet. Insomnia's format is documented only by its code, and it keeps a collection in one file.
+- Store history, cookies and tokens in the app, or on disk too. If on disk, use HAR for history and a standard cookie format, and keep tokens in the OS keychain.

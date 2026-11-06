@@ -78,10 +78,12 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P0 | L | Store collections as readable files, one per request |
 | [ ] | P0 | M | Watch the folder and reload on external edits |
 | [ ] | P0 | M | Open any folder as a collection |
+| [ ] | P0 | M | Settings as a plain JSON file, with export and import. Preferences, themes and shortcuts included |
 | [ ] | P0 | L | Migrate from NeDB, with a backup |
 | [ ] | P1 | L | Read and write `.bru` and Bruno's YAML, using `bruno-lang` and `bruno-filestore` |
 | [ ] | P1 | M | Workspaces that group collections and environments on disk |
 | [ ] | P1 | M | `.env` file support and editor |
+| [ ] | P1 | S | Audit every format restless writes. Use an open spec where one exists, and publish the schema for any that remains |
 | [ ] | P2 | S | Single-file YAML and ZIP export |
 
 ## 0.4.0: Daily workflow
