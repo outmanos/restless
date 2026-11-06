@@ -4,11 +4,11 @@ import {
   getAppDefaultTheme,
   HttpVersions,
   newDefaultRegistry,
+  NewRequestCollection,
   ProxyScopes,
   type Settings as BaseSettings,
   UpdateChannel,
   UpdateCheckInterval,
-  NewRequestCollection,
 } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
