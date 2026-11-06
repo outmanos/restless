@@ -17,6 +17,8 @@ for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It 
 This fork was inspired by the original Insomnium, which was unfortunately nuked. You can read
 [its backstory here](docs/insomnium/README.md).
 
+Read about the story behind restless [here](https://blog.outmanos.com/posts/the-api-client-cycle/).
+
 With restless you can:
 
 - **Work offline** with every core feature and no login.
