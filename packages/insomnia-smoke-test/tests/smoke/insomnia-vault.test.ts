@@ -12,7 +12,7 @@ test('Check vault key generation', async ({ page }) => {
   await page.getByTestId('settings-button').click();
   await page.getByTestId('preferences').waitFor();
   // generate vault key
-  await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+  await page.getByRole('tab', { name: 'Security' }).click();
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
   const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
   expect.soft(vaultKeyValue.length).toBeGreaterThan(0);
@@ -31,7 +31,7 @@ test.describe('Check vault used in environment', () => {
 
   test('global private sub environment to store vaults', async ({ page, app, insomnia }) => {
     await page.getByTestId('settings-button').click();
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     await page.getByTestId('dataFolders').fill(getFixturePath('vault-collection.yaml'));
     await page.getByTestId('dataFolders-btn').click();
     await page.locator('.app').press('Escape');
@@ -116,7 +116,7 @@ test.describe('Check vault used in environment', () => {
 
     // secret values are masked in the console by default; turn it off so the test can verify the decrypted values
     await insomnia.statusbar.openPreferences();
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' }).first();
     await hideSecretsCheckbox.click();
     await expect.soft(hideSecretsCheckbox).not.toBeChecked();

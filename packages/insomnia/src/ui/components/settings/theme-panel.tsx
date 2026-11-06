@@ -9,7 +9,7 @@ import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
-const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
+const ThemePreview: FC<{ theme: PluginTheme; accentColor?: string }> = ({ theme, accentColor }) => (
   <svg
     className="theme-preview"
     width="100%"
@@ -22,7 +22,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
         '--color-info': theme.theme.background?.info,
         '--color-warning': theme.theme.background?.warning,
         '--color-danger': theme.theme.background?.danger,
-        '--color-surprise': theme.theme.background?.surprise,
+        '--color-surprise': accentColor || theme.theme.background?.surprise,
       } as React.CSSProperties
     }
   >
@@ -192,7 +192,7 @@ export const ThemePanel: FC = () => {
                     }}
                     style={
                       {
-                        '--color-surprise': theme.theme.background?.surprise,
+                        '--color-surprise': accentColor || theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
                     className="flex items-center justify-center group-data-active-light-theme:bg-(--hl-lg) group-data-active-light-theme:text-(--color-surprise) hover:bg-(--hl-md) focus:bg-(--hl-md)"
@@ -205,7 +205,7 @@ export const ThemePanel: FC = () => {
                     }}
                     style={
                       {
-                        '--color-surprise': theme.theme.background?.surprise,
+                        '--color-surprise': accentColor || theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
                     className="flex items-center justify-center group-data-active-dark-theme:bg-(--hl-md) group-data-active-dark-theme:text-(--color-surprise) hover:bg-(--hl-md) focus:bg-(--hl-md)"
@@ -219,7 +219,7 @@ export const ThemePanel: FC = () => {
                   activate(theme.name, 'default');
                 }}
               >
-                <ThemePreview theme={theme} />
+                <ThemePreview theme={theme} accentColor={accentColor} />
               </Button>
             </div>
           </div>

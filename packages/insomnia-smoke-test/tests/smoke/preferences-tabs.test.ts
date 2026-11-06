@@ -7,7 +7,7 @@ const TABS = [
   'Editor',
   'Keyboard',
   'Requests',
-  'Privacy & Security',
+  'Security',
   'Data',
   'Plugins',
   'Credentials',
@@ -41,8 +41,9 @@ test('Settings live in the tab that matches their name', async ({ page }) => {
     ['Editor', 'Autocomplete popup delay (ms)'],
     ['Keyboard', 'Key map'],
     ['Requests', 'Enable proxy'],
-    ['Privacy & Security', 'Reveal passwords'],
+    ['Security', 'Reveal passwords'],
     ['Plugins', 'Additional plugin path'],
+    ['Plugins', 'Open Insomnia web links'],
     ['Scripting', 'Show legacy unit tests'],
   ];
   for (const [tab, setting] of placements) {

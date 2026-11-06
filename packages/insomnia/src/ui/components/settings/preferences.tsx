@@ -12,8 +12,8 @@ import { Editor } from './editor';
 import { ImportExport } from './import-export';
 import { Keyboard } from './keyboard';
 import { Plugins } from './plugins';
-import { PrivacySecurity } from './privacy-security';
 import { Requests } from './requests';
+import { Security } from './security';
 import { settingsTabIcons } from './settings-tab-icons';
 import { TextSetting } from './text-setting';
 
@@ -37,7 +37,7 @@ const TABS: { id: SettingsTabKey; label: string; icon: keyof typeof settingsTabI
   { id: 'editor', label: 'Editor', icon: 'editor' },
   { id: 'keyboard', label: 'Keyboard', icon: 'keyboard' },
   { id: 'requests', label: 'Requests', icon: 'requests' },
-  { id: 'security', label: 'Privacy & Security', icon: 'security' },
+  { id: 'security', label: 'Security', icon: 'security' },
   { id: 'data', label: 'Data', icon: 'data' },
   { id: 'plugins', label: 'Plugins', icon: 'plugins' },
   { id: 'credentials', label: 'Credentials', icon: 'credentials' },
@@ -107,7 +107,7 @@ export const Preferences: FC<{
         </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="security">
           <div className="max-w-4xl">
-            <PrivacySecurity />
+            <Security />
           </div>
         </TabPanel>
         <TabPanel className={PANEL_CLASS_NAME} id="data">
@@ -123,6 +123,11 @@ export const Preferences: FC<{
                 setting="pluginPath"
                 help="Add a custom path to direct Restless to a different plugin directory."
                 placeholder="~/.insomnia:/other/path"
+              />
+              <BooleanSetting
+                label="Open Insomnia web links"
+                setting="handleInsomniaLinks"
+                help="Opens insomnia:// plugin, theme and import links here. Turn this off if you also use Insomnia. Takes effect after a restart."
               />
             </div>
             <Plugins />

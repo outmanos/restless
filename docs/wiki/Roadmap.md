@@ -112,7 +112,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | M | Collection and folder docs as Markdown |
 | [ ] | P1 | M | In-app help links open the matching wiki page, not the README. About 27 links. Write the pages that are missing: scripting, template tags, keyboard shortcuts, design documents |
 | [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
-| [x] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Privacy and Security, Data, Plugins and About, with every setting where you would look for it |
+| [x] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Security, Data, Plugins and About, with every setting where you would look for it |
 | [x] | P1 | M | Preferences opens as a tab with its sections down the left, not as a modal |
 | [ ] | P1 | M | Searchable settings: a search box that jumps to the setting |
 | [ ] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |

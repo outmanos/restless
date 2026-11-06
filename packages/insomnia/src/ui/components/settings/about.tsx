@@ -4,7 +4,7 @@ import React, { type FC } from 'react';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import appConfig from '../../../../config/config.json';
-import { getAppVersion, getProductName, type UpdateUnsupportedReason } from '../../../common/constants';
+import { getAppVersion, type UpdateUnsupportedReason } from '../../../common/constants';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { showToast } from '../toast-notification';
@@ -26,9 +26,9 @@ const links = [
 const unsupportedText: Record<UpdateUnsupportedReason, string> = {
   'package-manager':
     'This build does not update itself. Update it with your package manager, or download a new release. The AppImage updates itself.',
-  portable: 'The portable Windows build does not update itself. Download a new release to update.',
-  development: 'Updates are off in development builds.',
-  disabled: 'Updates were turned off with the INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable.',
+  'portable': 'The portable Windows build does not update itself. Download a new release to update.',
+  'development': 'Updates are off in development builds.',
+  'disabled': 'Updates were turned off with the INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable.',
 };
 
 const Updates: FC = () => {
@@ -99,9 +99,18 @@ export const About: FC = () => {
   return (
     <div>
       <SettingsHeading first>
-        {getProductName()} {getAppVersion()}
+        <span className="flex items-center gap-3">
+          restless
+          <span
+            data-testid="about-version"
+            className="rounded-md bg-[rgba(var(--color-surprise-rgb),0.5)] px-2 py-0.5 text-sm font-normal text-(--color-font-surprise)"
+          >
+            v{getAppVersion()}
+          </span>
+        </span>
       </SettingsHeading>
-      <p className="faint">An offline-first API client. No account, no telemetry. Based on Insomnia.</p>
+      <p>Thank you for using restless!</p>
+      <p className="faint">restless is an offline-first API client. No account, no telemetry. Based on Insomnia.</p>
 
       <SettingsHeading>Updates</SettingsHeading>
       <Updates />

@@ -251,7 +251,7 @@ test.describe('pre-request features tests', () => {
 
   test('send request with content type', async ({ page, insomnia }) => {
     await page.getByTestId('settings-button').click();
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     await page.getByTestId('dataFolders').click();
     await page.getByTestId('dataFolders').fill(process.cwd());
     await page.getByTestId('dataFolders-btn').click();
@@ -430,12 +430,12 @@ test.describe('pre-request features tests', () => {
     const appCwd = await app.evaluate(() => process.cwd());
 
     await page.getByTestId('settings-button').click();
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('fake.pfx')).toBeVisible();
 
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText(appCwd)).toBeVisible();
@@ -473,7 +473,7 @@ test.describe('pre-request features tests', () => {
     // so allow-list that directory rather than the file's own (non-existent) name
     const appCwd = await app.evaluate(() => process.cwd());
     await page.getByTestId('settings-button').click();
-    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+    await page.getByRole('tab', { name: 'Security' }).click();
     await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText(appCwd)).toBeVisible();
