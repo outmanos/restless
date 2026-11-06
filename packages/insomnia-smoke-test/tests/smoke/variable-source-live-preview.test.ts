@@ -81,6 +81,7 @@ async function openVariableModal(page: Page, templateSnippet: string) {
 
 async function enableShowVariableSourceAndValue(page: Page) {
   await page.getByTestId('settings-button').click();
+  await page.getByRole('tab', { name: 'Editor' }).click();
   const checkbox = page.getByRole('checkbox', { name: 'Template tags show variable source and value' });
   await checkbox.click();
   await expect.soft(checkbox).toBeChecked();

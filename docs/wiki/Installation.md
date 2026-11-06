@@ -36,3 +36,9 @@ cd "$(mktemp -d)" && curl -fsSLO https://github.com/outmanos/restless/releases/l
 | Linux | `~/.config/Restless` |
 | macOS | `~/Library/Application Support/Restless` |
 | Windows | `%APPDATA%\Restless` |
+
+## Updating
+
+Windows, macOS and the Linux AppImage can update themselves. Open `Preferences > About` to check by hand, or turn on **Automatic updates**. Then restless also checks when it starts (you can turn that off) and again every day, or every 6 hours or week if you prefer.
+
+The deb, rpm, tar.gz and distro packages do not update themselves. Update those with your package manager or download a new release. `Preferences > About` says so when your build is one of them.

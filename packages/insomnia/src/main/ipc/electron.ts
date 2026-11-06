@@ -21,6 +21,7 @@ import { getElectronStorage } from '~/main/electron-storage';
 import { findAppMenuItem, getAppMenu, hasTitleBarOverlay, serializeAppMenu } from '~/main/title-bar';
 
 import { fnOrString } from '../../common/misc';
+import { getAboutDetails } from '../about';
 
 export type HandleChannels =
   | 'run-tests'
@@ -236,7 +237,9 @@ export type MainOnChannels =
   | 'curl.closeAll'
   | 'getAppPath'
   | 'getPath'
+  | 'getAboutDetails'
   | 'getUpdateStatus'
+  | 'getUpdateSupport'
   | 'grpc.cancel'
   | 'grpc.closeAll'
   | 'grpc.commit'
@@ -302,6 +305,7 @@ export type RendererOnChannels =
   | 'sync.merge-conflicts'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
+  | 'show-about'
   | 'open-migration'
   | 'toggle-sidebar'
   | 'update-status-changed'
@@ -513,6 +517,10 @@ export function registerElectronHandlers() {
 
   ipcMainOn('getAppPath', event => {
     event.returnValue = app.getAppPath();
+  });
+
+  ipcMainOn('getAboutDetails', event => {
+    event.returnValue = getAboutDetails();
   });
 
   ipcMainOn(

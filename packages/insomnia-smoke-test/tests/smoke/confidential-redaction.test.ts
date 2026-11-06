@@ -155,6 +155,7 @@ test.describe('confidential value redaction', () => {
     // click + poll rather than uncheck(): the checkbox is controlled by the root loader's
     // settings, so it only flips once the patch has round-tripped. uncheck() verifies the
     // state immediately after its click and fails on that gap.
+    await page.getByRole('tab', { name: 'Privacy & Security' }).click();
     const hideSecretValues = page.getByLabel('Hide Confidential values in Preview/Console');
     await hideSecretValues.click();
     await expect.soft(hideSecretValues).not.toBeChecked();

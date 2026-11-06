@@ -3,9 +3,7 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
-  isLinux,
   isMac,
-  isWindows,
   METHOD_GET,
   platform,
 } from 'insomnia-data/common';
@@ -47,19 +45,9 @@ export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
 // Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
-export function updatesSupported() {
-  // Updates are not supported on Linux
-  if (isLinux) {
-    return false;
-  }
-
-  // Updates are not supported for Windows portable binaries
-  if (isWindows && env.PORTABLE_EXECUTABLE_DIR) {
-    return false;
-  }
-
-  return true;
-}
+// Why this build cannot update itself. The main process decides, the settings page explains.
+export type UpdateUnsupportedReason = 'development' | 'disabled' | 'package-manager' | 'portable';
+export type UpdateSupport = { supported: true } | { supported: false; reason: UpdateUnsupportedReason };
 
 export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
 

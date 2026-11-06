@@ -91,7 +91,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       className="cursor-pointer text-(--color-surprise)"
                       onPress={() => {
                         close();
-                        showSettingsModal({ tab: 'general' });
+                        showSettingsModal({ tab: 'security' });
                       }}
                     >
                       {linkText}
