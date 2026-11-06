@@ -70,11 +70,12 @@ log.info(`Running version ${getAppVersion()}`);
 global.window = global.window || undefined;
 
 // setup right click menu
+// "Search with Google" is left out: one accidental click would send the selected text to a third party
 app.on('web-contents-created', (_, contents) => {
   if (contents.getType() === 'webview') {
-    contextMenu({ window: contents });
+    contextMenu({ window: contents, showSearchWithGoogle: false });
   } else {
-    contextMenu();
+    contextMenu({ showSearchWithGoogle: false });
   }
 });
 
