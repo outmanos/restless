@@ -52,6 +52,7 @@ There are no dates. Milestones ship in order, once their P0 tasks are done.
 | [ ] | P1 | S | Check title bar, menus and shortcuts on Windows and macOS |
 | [ ] | P1 | S | Fix the remaining audit findings |
 | [ ] | P1 | S | Enable the AUR job once registration reopens |
+| [ ] | P2 | S | Homebrew tap for macOS: a small `outmanos/homebrew-tap` repo with a cask that the release workflow keeps current, so `brew install --cask outmanos/tap/restless` works. Homebrew will not install a cask from a plain URL. The build is unsigned, so Gatekeeper still asks on first launch. Needs a Mac to test it |
 
 ## 0.2.0: Migration
 
