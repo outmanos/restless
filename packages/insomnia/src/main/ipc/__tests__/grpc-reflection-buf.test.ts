@@ -117,7 +117,7 @@ describe('loadMethodsFromReflection (buf reflection api)', () => {
 
       await expect(loadBuf()).rejects.toBeDefined();
 
-      expect(headersOf(unary).get('User-Agent')).toBe(`insomnia/${version}`);
+      expect(headersOf(unary).get('User-Agent')).toBe(`restless/${version}`);
       expect(headersOf(unary).get('Authorization')).toBe('Bearer TEST_KEY');
     });
 
