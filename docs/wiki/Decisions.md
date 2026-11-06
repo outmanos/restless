@@ -17,9 +17,10 @@ Why things are the way they are.
 | Native window controls on Linux | They match the desktop. The app sets the theme early and dims them with dialogs |
 | Bundled fonts | Nothing downloads at runtime |
 | Native file format is YAML. `.bru` is read and written for Bruno collections | YAML is what Git sync already stores, and `.bru` keeps Bruno collections portable |
+| The native YAML schema is Insomnia's `collection.insomnia.rest/5.0` | It's what Git sync already writes, and it keeps existing Insomnia repositories working. OpenCollection was considered and rejected |
+| Files keep the plain `.yaml` extension | A custom extension would be an invented file type, and `.rl` already belongs to Ragel. A file is recognized by its `type` field, as an OpenAPI file is by `openapi` |
 | Keep Nunjucks for templates | Template tags, plugins and existing collections depend on it, and it has filters and logic. Bruno's `{{var}}` becomes `{{ _.var }}` on import, and should convert back on `.bru` export |
 
 ## Open questions
 
-- Which YAML schema is native: Insomnia's `collection.insomnia.rest/5.0`, or [OpenCollection](https://spec.opencollection.com). OpenCollection is a vendor-neutral spec with a JSON Schema, a place for extensions and one file per request, but Bruno maintains it, it's at v1.0.0, and its repository has no license file yet. Insomnia's format is documented only by its code, and it keeps a collection in one file.
 - Store history, cookies and tokens in the app, or on disk too. If on disk, use HAR for history and a standard cookie format, and keep tokens in the OS keychain.
