@@ -15,11 +15,7 @@ This is Insomnia's shared component library (React Aria + Tailwind). See the des
   `theme--link`, …) on the matching component root — they are the per-component theming contract
   (`src/ui/plugins/misc.ts`). Dropping them silently breaks user theme customization.
 
-## When you add or change a component → update its docs
+## When you add or change a component → document it in the code
 
-Docs live in the Docusaurus site at `packages/insomnia-component-docs` (one MDX per component).
-Use the **`component-docs` skill** to create/update the doc. Don't forget to register the component
-in `src/theme/ReactLiveScope/index.ts` or its live examples won't compile.
-
-A component is "done" only when its doc + ReactLiveScope entry are in place and the docs site builds
-(`cd packages/insomnia-component-docs && npm run build`).
+There is no separate docs site. Describe props and variants in the component's TypeScript types and
+doc comments, and keep this folder's README accurate.

@@ -540,6 +540,18 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
 
+  const aboutMenuClickHandler = () => {
+    const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+    window.webContents?.send('show-about');
+  };
+
+  const checkForUpdatesItem: MenuItemConstructorOptions = {
+    label: `Check for ${MNEMONIC_SYM}Updates`,
+    click: () => {
+      ipcMain.emit('manualUpdateCheck');
+    },
+  };
+
   const helpMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Help`,
     role: 'help',
@@ -555,7 +567,6 @@ export function createWindow(): ElectronBrowserWindow {
           }
         },
       },
-      changelogItem,
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
@@ -566,6 +577,20 @@ export function createWindow(): ElectronBrowserWindow {
       {
         type: 'separator',
       },
+      // On macOS these live in the application menu, where that platform expects them
+      ...(isMac
+        ? []
+        : [
+            checkForUpdatesItem,
+            changelogItem,
+            {
+              label: `${MNEMONIC_SYM}About`,
+              click: aboutMenuClickHandler,
+            },
+            {
+              type: 'separator' as const,
+            },
+          ]),
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
@@ -592,23 +617,21 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: 'Show Software Bill of Materials',
+        label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://github.com/Kong/insomnia/releases');
+          shell.openExternal(`https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/blob/main/LICENSE`);
         },
       },
       {
-        label: 'Show Software License',
+        // The lockfile lists every package and its exact version
+        label: 'Show Software Bill of Materials',
         click: () => {
-          shell.openExternal('https://github.com/outmanos/restless/blob/main/LICENSE');
+          shell.openExternal(
+            `https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/blob/main/package-lock.json`,
+          );
         },
       },
     ],
-  };
-
-  const aboutMenuClickHandler = () => {
-    const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
-    window.webContents?.send('show-about');
   };
 
   if (isMac) {
@@ -618,31 +641,10 @@ export function createWindow(): ElectronBrowserWindow {
         label: `A${MNEMONIC_SYM}bout ${getProductName()}`,
         click: aboutMenuClickHandler,
       },
-      {
-        label: 'Check for updates',
-        click: () => {
-          ipcMain.emit('manualUpdateCheck');
-        },
-      },
+      checkForUpdatesItem,
+      changelogItem,
       {
         type: 'separator',
-      },
-    );
-  } else {
-    // @ts-expect-error -- TSCONVERSION type splitting
-    helpMenu.submenu?.push(
-      {
-        type: 'separator',
-      },
-      {
-        label: 'Check for updates',
-        click: () => {
-          ipcMain.emit('manualUpdateCheck');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}About`,
-        click: aboutMenuClickHandler,
       },
     );
   }

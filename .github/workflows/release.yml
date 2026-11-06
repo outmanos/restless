@@ -88,10 +88,24 @@ jobs:
     if: ${{ !cancelled() && needs.build.result == 'success' && needs.version.outputs.release == 'true' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
+      # In its own folder, since checkout would delete other content in the workspace
+      - uses: actions/checkout@v4
+        with:
+          path: source
+          sparse-checkout: |
+            packaging/aur
+            packages/insomnia/src/icons/icon.svg
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
+      # A fixed name, so github.com/outmanos/restless/releases/latest/download/PKGBUILD is always the newest
+      - name: Write the Arch PKGBUILD for this release
+        run: |
+          bash source/packaging/aur/release-pkgbuild.sh "$VERSION" "dist/Restless-$VERSION.tar.gz" source/packages/insomnia/src/icons/icon.svg > dist/PKGBUILD
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
       - name: Publish the platforms that built
         run: |
           test -n "$(ls dist)"
