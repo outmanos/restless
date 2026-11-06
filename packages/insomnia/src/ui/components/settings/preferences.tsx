@@ -5,7 +5,6 @@ import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
-import { getAppVersion, getProductName } from '../../../common/constants';
 import { About } from './about';
 import { Appearance } from './appearance';
 import { BooleanSetting } from './boolean-setting';
@@ -64,10 +63,6 @@ export const Preferences: FC<{
   workspaceId?: string;
 }> = ({ selectedTab, onSelectTab, onClose, projectId, workspaceId }) => (
   <div className="flex min-h-0 w-full flex-1 flex-col bg-(--color-bg) text-(--color-font)" data-testid="preferences">
-    <h1 className="shrink-0 border-b border-solid border-(--hl-md) px-6 py-3 text-lg font-bold">
-      {getProductName()} Preferences
-      <span className="faint txt-sm font-normal">&nbsp;&nbsp;–&nbsp; v{getAppVersion()}</span>
-    </h1>
     <Tabs
       orientation="vertical"
       selectedKey={selectedTab}

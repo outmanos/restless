@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import path from 'node:path';
 
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
@@ -17,7 +17,21 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // Preferences returns to the page it was opened from, so let the import finish opening its collection first
+    await page.waitForURL(/\/workspace\//);
   });
+
+  // Preferences is its own tab, so the project sidebar starts collapsed again when it closes
+  const expandWorkspaceAfterPreferences = async (insomnia: {
+    navigationSidebar: { workspaceRow: (name: string) => Locator };
+  }) => {
+    const row = insomnia.navigationSidebar.workspaceRow('Pre-request Scripts');
+    await row.getByLabel(/^(Expand|Collapse) Pre-request Scripts$/).waitFor();
+    const expand = row.getByLabel('Expand Pre-request Scripts');
+    if (await expand.count()) {
+      await expand.click();
+    }
+  };
 
   const testCases = [
     {
@@ -242,6 +256,7 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('dataFolders').fill(process.cwd());
     await page.getByTestId('dataFolders-btn').click();
     await page.keyboard.press('Escape');
+    await expandWorkspaceAfterPreferences(insomnia);
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
@@ -385,7 +400,7 @@ test.describe('pre-request features tests', () => {
 
     // update proxy configuration
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Restless Preferences').first().click();
+    await page.getByTestId('preferences').waitFor();
 
     await page.getByRole('tab', { name: 'Requests' }).click();
     await page.getByLabel('Request timeout (ms)').fill('5000');
@@ -394,6 +409,7 @@ test.describe('pre-request features tests', () => {
     await page.locator('[name="httpsProxy"]').fill('localhost:2222');
     await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
     await page.locator('.app').press('Escape');
+    await expandWorkspaceAfterPreferences(insomnia);
 
     await insomnia.navigationSidebar.clickRequestOrFolder('test proxies manipulation');
     await page.getByRole('tab', { name: 'Body' }).click();
@@ -425,6 +441,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(page.getByText(appCwd)).toBeVisible();
 
     await page.locator('.app').press('Escape');
+    await expandWorkspaceAfterPreferences(insomnia);
 
     // update proxy configuration
     await page.getByRole('button', { name: 'Add Certificates' }).click();
@@ -461,6 +478,7 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText(appCwd)).toBeVisible();
     await page.locator('.app').press('Escape');
+    await expandWorkspaceAfterPreferences(insomnia);
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -772,7 +790,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Scopes" blocked roots group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Restless Preferences').first().click();
+    await page.getByTestId('preferences').waitFor();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const scopesSwitch = page.locator('div:has(> h4:has-text("Scopes")) label[data-react-aria-pressable]');
     await scopesSwitch.scrollIntoViewIfNeeded();
@@ -809,7 +827,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Prototype Mutation" blocked properties group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Restless Preferences').first().click();
+    await page.getByTestId('preferences').waitFor();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const protoMutationSwitch = page.locator(
       'div:has(> h4:has-text("Prototype Mutation")) label[data-react-aria-pressable]',
@@ -846,7 +864,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Runtime APIs" mask group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Restless Preferences').first().click();
+    await page.getByTestId('preferences').waitFor();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const runtimeApisSwitch = page.locator('div:has(> h4:has-text("Runtime APIs")) label[data-react-aria-pressable]');
     await runtimeApisSwitch.scrollIntoViewIfNeeded();
@@ -880,7 +898,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable only the "Node.js Internals" BLOCKED ROOTS group.
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Restless Preferences').first().click();
+    await page.getByTestId('preferences').waitFor();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const nodeInternalsSwitch = page.locator(
       'xpath=//h4[normalize-space(text())="Node.js Internals"]/following-sibling::div[1]//label[@data-react-aria-pressable]',

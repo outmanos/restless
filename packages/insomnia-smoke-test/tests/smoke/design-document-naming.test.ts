@@ -6,6 +6,8 @@ test.describe('design document operations', () => {
     await page.locator('body').click();
     await page.getByPlaceholder('Enter a name for your API Collection').fill('jurassic park');
     await page.getByPlaceholder('Enter a name for your API Collection').press('Enter');
+    // Preferences returns to the page it was opened from, so wait for this one to open first
+    await page.waitForURL(/\/workspace\//);
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Files').getByLabel('jurassic park').click();
   });

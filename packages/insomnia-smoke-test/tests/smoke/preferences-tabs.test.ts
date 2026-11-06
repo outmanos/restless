@@ -19,7 +19,7 @@ const TABS = [
 test('Preferences lists the sections down the left, with About last', async ({ page }) => {
   await page.getByTestId('settings-button').click();
   const modal = page.getByTestId('preferences');
-  await modal.getByText('Restless Preferences').first().click();
+  await modal.waitFor();
 
   const tabs = modal.getByRole('tab');
   await expect.soft(tabs).toHaveText(TABS);
@@ -34,7 +34,7 @@ test('Preferences lists the sections down the left, with About last', async ({ p
 test('Settings live in the tab that matches their name', async ({ page }) => {
   await page.getByTestId('settings-button').click();
   const modal = page.getByTestId('preferences');
-  await modal.getByText('Restless Preferences').first().click();
+  await modal.waitFor();
 
   const placements: [string, string][] = [
     ['Appearance', 'Interface font'],
@@ -77,6 +77,8 @@ test('Preferences opens as a tab in the tab strip and Escape closes it', async (
   await page.getByTestId('settings-button').click();
   await expect.soft(page.getByTestId('preferences')).toBeVisible();
   await expect.soft(preferencesTab).toBeVisible();
+  // It is a tab like any other, so the rest of the app stays around it
+  await expect.soft(page.getByRole('grid', { name: 'Project Navigation Tree' })).toBeVisible();
 
   // Opening it again reuses the same tab
   await page.getByTestId('settings-button').click();

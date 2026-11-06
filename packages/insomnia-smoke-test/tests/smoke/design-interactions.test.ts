@@ -14,6 +14,8 @@ test.describe('Design interactions', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // Preferences returns to the page it was opened from, so wait for this one to open first
+    await page.waitForURL(/\/workspace\//);
     // Show test suite in settings
     await insomnia.statusbar.openPreferences();
     await page.getByRole('tab', { name: 'Scripting' }).click();

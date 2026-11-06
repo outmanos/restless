@@ -8,7 +8,7 @@ import { buildSettingsUrl, SETTINGS_TAB_ID } from '~/ui/hooks/use-insomnia-tab';
 // Where the user is right now, so the Data section can act on that project and collection.
 const getCurrentContext = () => {
   const { pathname, search } = window.location;
-  if (matchPath('/organization/:organizationId/settings', pathname)) {
+  if (matchPath('/organization/:organizationId/project/settings', pathname)) {
     const params = new URLSearchParams(search);
     return { projectId: params.get('project'), workspaceId: params.get('workspace') };
   }
@@ -39,7 +39,7 @@ export const SettingsOpener = () => {
         const section =
           tab ?? (existing ? new URL(existing.url, window.location.origin).searchParams.get('tab') : null);
         // Remember the page Preferences was opened from, so closing it goes back there
-        const onSettings = !!matchPath('/organization/:organizationId/settings', window.location.pathname);
+        const onSettings = !!matchPath('/organization/:organizationId/project/settings', window.location.pathname);
         const from = onSettings ? window.history.state?.usr?.from : window.location.pathname + window.location.search;
         navigate(buildSettingsUrl(organizationId, section, getCurrentContext()), { state: { from } });
       }),

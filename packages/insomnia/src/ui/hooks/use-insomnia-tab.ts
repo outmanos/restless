@@ -86,7 +86,7 @@ export const buildSettingsUrl = (organizationId: string, section?: string | null
   if (context.projectId) params.set('project', context.projectId);
   if (context.workspaceId) params.set('workspace', context.workspaceId);
   const search = params.toString();
-  return `/organization/${organizationId}/settings${search ? `?${search}` : ''}`;
+  return `/organization/${organizationId}/project/settings${search ? `?${search}` : ''}`;
 };
 
 export const buildSettingsTab = (
@@ -364,7 +364,7 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     const isStale = () => cancelled || window.location.pathname + window.location.search !== routeAtStart;
 
     // Preferences is not a resource: it keeps one permanent tab of its own
-    if (matchPath('/organization/:organizationId/settings', pathname)) {
+    if (matchPath('/organization/:organizationId/project/settings', pathname)) {
       const currentOrgTab = appTabsRef?.current?.[organizationId];
       if (!currentOrgTab?.tabList.some(tab => tab.id === SETTINGS_TAB_ID)) {
         const search = new URLSearchParams(window.location.search);
