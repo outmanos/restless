@@ -10,7 +10,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { ACCENT_PRESETS } from './accent-presets';
 
-const ThemePreview: FC<{ theme: PluginTheme; accentColor?: string }> = ({ theme, accentColor }) => (
+const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   <svg
     className="theme-preview"
     width="100%"
@@ -23,7 +23,7 @@ const ThemePreview: FC<{ theme: PluginTheme; accentColor?: string }> = ({ theme,
         '--color-info': theme.theme.background?.info,
         '--color-warning': theme.theme.background?.warning,
         '--color-danger': theme.theme.background?.danger,
-        '--color-surprise': accentColor || theme.theme.background?.surprise,
+        '--color-surprise': theme.theme.background?.surprise,
       } as React.CSSProperties
     }
   >
@@ -96,6 +96,17 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span>Accent color</span>
+      <span title="Use the theme's own color" className="flex">
+        <Button
+          aria-label="Theme color"
+          aria-pressed={!draft}
+          onPress={() => setDraft('')}
+          style={{ backgroundColor: themeAccent }}
+          className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
+        >
+          <span className="sr-only">Use the theme&apos;s own color</span>
+        </Button>
+      </span>
       {ACCENT_PRESETS.map(({ name, color }) => (
         <Button
           key={color}
@@ -115,11 +126,6 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
         />
         Custom
       </Label>
-      {draft && (
-        <Button onPress={() => setDraft('')} className="text-sm underline">
-          Use theme color
-        </Button>
-      )}
     </div>
   );
 };
@@ -209,7 +215,7 @@ export const ThemePanel: FC = () => {
                   activate(theme.name, 'default');
                 }}
               >
-                <ThemePreview theme={theme} accentColor={accentColor} />
+                <ThemePreview theme={theme} />
               </Button>
             </div>
           </div>
