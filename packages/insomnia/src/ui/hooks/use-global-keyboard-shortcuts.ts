@@ -3,8 +3,7 @@ import { plugins } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
 
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal } from '../components/modals';
-import { SettingsModal } from '../components/modals/settings-modal';
+import { openSettings } from '../settings-navigation';
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
@@ -22,7 +21,7 @@ export const useGlobalKeyboardShortcuts = () => {
     environment_showVariableSourceAndValue: () =>
       patchSettings({ showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
     // TODO: move this to organization route
-    preferences_showGeneral: () => showModal(SettingsModal),
-    preferences_showKeyboardShortcuts: () => showModal(SettingsModal, { tab: 'keyboard' }),
+    preferences_showGeneral: () => openSettings(),
+    preferences_showKeyboardShortcuts: () => openSettings({ tab: 'keyboard' }),
   });
 };

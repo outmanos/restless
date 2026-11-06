@@ -3,11 +3,12 @@ import { expect } from '@playwright/test';
 import { test } from '../../playwright/test';
 
 const TABS = [
+  'General',
   'Appearance',
   'Editor',
   'Keyboard',
   'Requests',
-  'Privacy & Security',
+  'Security',
   'Data',
   'Plugins',
   'Credentials',
@@ -16,32 +17,37 @@ const TABS = [
   'About',
 ];
 
-test('Preferences lists the tabs in order, with About on the far right', async ({ page }) => {
+test('Preferences lists the sections down the left, with About last', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  const modal = page.getByTestId('preference-modal');
-  await modal.getByText('Restless Preferences').first().click();
+  const modal = page.getByTestId('preferences');
+  await modal.waitFor();
 
   const tabs = modal.getByRole('tab');
   await expect.soft(tabs).toHaveText(TABS);
 
-  const about = await modal.getByRole('tab', { name: 'About' }).boundingBox();
-  const modalBox = await modal.boundingBox();
-  expect.soft(about!.x + about!.width).toBeGreaterThan(modalBox!.x + modalBox!.width - 60);
+  // The sections stack vertically on the left, About at the bottom
+  const first = await tabs.first().boundingBox();
+  const last = await tabs.last().boundingBox();
+  expect.soft(last!.y).toBeGreaterThan(first!.y);
+  expect.soft(last!.x).toBe(first!.x);
 });
 
 test('Settings live in the tab that matches their name', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  const modal = page.getByTestId('preference-modal');
-  await modal.getByText('Restless Preferences').first().click();
+  const modal = page.getByTestId('preferences');
+  await modal.waitFor();
 
   const placements: [string, string][] = [
+    ['General', 'Default collection for new requests'],
+    ['General', 'Sidebar focus for collections'],
+    ['General', 'Show legacy unit tests'],
+    ['General', 'Open Insomnia web links'],
     ['Appearance', 'Interface font'],
     ['Editor', 'Autocomplete popup delay (ms)'],
     ['Keyboard', 'Key map'],
     ['Requests', 'Enable proxy'],
-    ['Privacy & Security', 'Reveal passwords'],
+    ['Security', 'Reveal passwords'],
     ['Plugins', 'Additional plugin path'],
-    ['Scripting', 'Show legacy unit tests'],
   ];
   for (const [tab, setting] of placements) {
     await modal.getByRole('tab', { name: tab }).click();
@@ -52,7 +58,7 @@ test('Settings live in the tab that matches their name', async ({ page }) => {
 test('About shows the build, the update settings and copies the details', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }) => clipboard.writeText(''));
   await page.getByTestId('settings-button').click();
-  const modal = page.getByTestId('preference-modal');
+  const modal = page.getByTestId('preferences');
   await modal.getByRole('tab', { name: 'About' }).click();
 
   await expect.soft(modal.getByTestId('about-details')).toContainText('Electron');
@@ -66,6 +72,29 @@ test('About shows the build, the update settings and copies the details', async 
 test('Help, About opens the About tab instead of a native box', async ({ page }) => {
   await page.getByRole('button', { name: 'Help' }).click();
   await page.getByRole('menuitem', { name: /^About/ }).click();
-  const modal = page.getByTestId('preference-modal');
+  const modal = page.getByTestId('preferences');
   await expect.soft(modal.getByRole('tab', { name: 'About' })).toHaveAttribute('aria-selected', 'true');
+});
+
+test('Preferences opens as a tab in the tab strip and Escape closes it', async ({ page }) => {
+  const preferencesTab = page.getByTestId('tab-title').filter({ hasText: 'Preferences' });
+  await page.getByTestId('settings-button').click();
+  await expect.soft(page.getByTestId('preferences')).toBeVisible();
+  await expect.soft(preferencesTab).toBeVisible();
+  // It is a tab like any other, so the rest of the app stays around it
+  await expect.soft(page.getByRole('grid', { name: 'Project Navigation Tree' })).toBeVisible();
+
+  // Opening it again reuses the same tab
+  await page.getByTestId('settings-button').click();
+  await expect.soft(preferencesTab).toHaveCount(1);
+
+  await page.keyboard.press('Escape');
+  await expect.soft(page.getByTestId('preferences')).toBeHidden();
+  await expect.soft(preferencesTab).toBeHidden();
+});
+
+test('The section is kept in the address so a link can open it', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('preferences').getByRole('tab', { name: 'Requests' }).click();
+  await expect.soft(page).toHaveURL(/settings\?tab=requests/);
 });

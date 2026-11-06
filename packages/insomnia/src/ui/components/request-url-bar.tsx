@@ -15,9 +15,9 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { openSettings } from '~/ui/settings-navigation';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
@@ -91,7 +91,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       className="cursor-pointer text-(--color-surprise)"
                       onPress={() => {
                         close();
-                        showSettingsModal({ tab: 'security' });
+                        openSettings({ tab: 'security' });
                       }}
                     >
                       {linkText}

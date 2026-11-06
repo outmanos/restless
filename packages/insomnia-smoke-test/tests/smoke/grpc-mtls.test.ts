@@ -28,7 +28,7 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
 
   // add the path to allowed data folder list
   await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Privacy & Security' }).click();
+  await page.getByRole('tab', { name: 'Security' }).click();
   await page.getByTestId('dataFolders').fill(getFixturePath('certificates'));
   await page.getByTestId('dataFolders-btn').click();
   await page.locator('.app').press('Escape');

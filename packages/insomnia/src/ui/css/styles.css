@@ -369,6 +369,14 @@ body {
     outline-offset: 1px;
   }
 
+  /* Text fields draw their focus ring over their own border. Outside the border it is cut off by any
+     parent that clips its content, so only the corners of the field showed the accent color. */
+  input:not([type='checkbox'], [type='radio'], [type='color'], [type='range']):focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-offset: -1px;
+  }
+
   [role='tab'][aria-selected='true'] {
     background-color: transparent !important;
     color: var(--color-font) !important;

@@ -45,13 +45,15 @@ There are no dates. Milestones ship in order, once their P0 tasks are done.
 | [x] | P1 | M | Custom title bar and themed menus on Windows and Linux |
 | [ ] | P0 | S | Confirm the Windows and macOS builds pass in CI |
 | [ ] | P0 | S | Test the updater against a real release |
-| [ ] | P1 | S | Updates settings: "Automatic updates" is one toggle, and "Check for updates" stays available either way |
-| [ ] | P1 | S | When automatic updates are on, show "Check at startup" (on by default) and "Check every" (daily by default) |
-| [ ] | P1 | S | Say when a build cannot update itself (deb, rpm, tar.gz, unpacked), in settings and once in the log, and point to the package manager or the AppImage |
-| [ ] | P1 | S | Automatic checks stay quiet unless an update is found or the check fails, and only the manual check says "Up to date" |
+| [x] | P1 | S | Updates settings: "Automatic updates" is one toggle, and "Check for updates" stays available either way |
+| [x] | P1 | S | When automatic updates are on, show "Check at startup" (on by default) and "Check every" (daily by default) |
+| [x] | P1 | S | Say when a build cannot update itself (deb, rpm, tar.gz, unpacked), in settings and once in the log, and point to the package manager or the AppImage |
+| [x] | P1 | S | Automatic checks stay quiet unless an update is found, and only the manual check says "Up to date" or reports a failure |
 | [ ] | P1 | S | Check title bar, menus and shortcuts on Windows and macOS |
 | [ ] | P1 | S | Fix the remaining audit findings |
 | [ ] | P1 | S | Enable the AUR job once registration reopens |
+| [ ] | P2 | S | Homebrew tap for macOS: a small `outmanos/homebrew-tap` repo with a cask that the release workflow keeps current, so `brew install --cask outmanos/tap/restless` works. Homebrew will not install a cask from a plain URL. The build is unsigned, so Gatekeeper still asks on first launch. Needs a Mac to test it |
+| [ ] | P2 | L | Publish pre-releases from `develop`, such as `0.2.4-beta.1`, marked as GitHub pre-releases so the Pre-releases update channel receives them. Build on a schedule or on demand to keep the cost down, and run CI on `develop` pushes. Until then the Pre-releases channel finds nothing newer than stable |
 
 ## 0.2.0: Migration
 
@@ -112,10 +114,11 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | M | Collection and folder docs as Markdown |
 | [ ] | P1 | M | In-app help links open the matching wiki page, not the README. About 27 links. Write the pages that are missing: scripting, template tags, keyboard shortcuts, design documents |
 | [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
-| [ ] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Privacy and Security, Data, Plugins and About, with every setting where you would look for it |
+| [x] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Security, Data, Plugins and About, with every setting where you would look for it |
+| [x] | P1 | M | Preferences opens as a tab with its sections down the left, not as a modal |
 | [ ] | P1 | M | Searchable settings: a search box that jumps to the setting |
 | [ ] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |
-| [ ] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
+| [x] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
 | [ ] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
@@ -123,7 +126,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P2 | S | Environment color on request tabs |
 | [ ] | P2 | S | Response layout toggle |
 | [ ] | P2 | M | Visual diff for request changes |
-| [ ] | P2 | S | A themed SVG icon for each settings tab |
+| [x] | P2 | S | A themed SVG icon for each settings tab |
 
 ## 0.5.0: Testing
 

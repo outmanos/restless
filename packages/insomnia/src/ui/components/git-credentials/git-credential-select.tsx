@@ -4,7 +4,7 @@ import { Button, Label, ListBox, ListBoxItem, Popover, Select, Separator } from 
 
 import { Icon } from '~/basic-components/icon';
 import type { GitProviderOption } from '~/sync/git/providers/types';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { openSettings } from '~/ui/settings-navigation';
 
 interface Props {
   credentials: GitCredentials[];
@@ -86,7 +86,7 @@ export const GitCredentialSelect: FC<Props> = ({
           <Button
             onPress={() => {
               setIsOpen(false);
-              showSettingsModal({ tab: 'credentials' });
+              openSettings({ tab: 'credentials' });
             }}
             className="underline"
           >

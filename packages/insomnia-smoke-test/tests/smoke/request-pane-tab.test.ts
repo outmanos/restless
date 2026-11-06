@@ -23,7 +23,7 @@ test('WS tabs', async ({ page, insomnia }) => {
   // Create new collection
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My First Collection');
   await page.getByRole('menuitemradio', { name: 'WebSocket Request' }).click();
   // ensure that the websocket request is created
   await insomnia.navigationSidebar.clickRequestOrFolder('New WebSocket Request');

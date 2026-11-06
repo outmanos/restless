@@ -1,5 +1,6 @@
 import type { BaseModel, MockRoute, Request } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { NewRequestCollection } from 'insomnia-data/common';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -17,6 +18,7 @@ import { useParams } from 'react-router';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
@@ -42,6 +44,54 @@ export const enum TAB_CONTEXT_MENU_COMMAND {
   CLOSE_OTHERS = 'Close Other Tabs',
 }
 
+const LAST_USED_COLLECTION_KEY = 'last-used-collection';
+
+interface CollectionTarget {
+  projectId: string;
+  workspaceId: string;
+}
+
+const readLastUsedCollection = (organizationId: string): CollectionTarget | undefined => {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_USED_COLLECTION_KEY) || '{}')[organizationId];
+  } catch {
+    return undefined;
+  }
+};
+
+const rememberLastUsedCollection = (organizationId: string, target: CollectionTarget) => {
+  try {
+    const all = JSON.parse(localStorage.getItem(LAST_USED_COLLECTION_KEY) || '{}');
+    localStorage.setItem(LAST_USED_COLLECTION_KEY, JSON.stringify({ ...all, [organizationId]: target }));
+  } catch {
+    // Remembering is a convenience, so a blocked or full storage is fine
+  }
+};
+
+// The collection the + button adds to when no collection is open: the last one used, or the first one there is
+const findDefaultCollection = async (
+  organizationId: string,
+  preference: NewRequestCollection,
+): Promise<CollectionTarget | null> => {
+  if (preference === NewRequestCollection.lastUsed) {
+    const lastUsed = readLastUsedCollection(organizationId);
+    const workspace = lastUsed && (await services.workspace.getById(lastUsed.workspaceId));
+    if (lastUsed && workspace?.scope === 'collection') {
+      return { projectId: workspace.parentId, workspaceId: workspace._id };
+    }
+  }
+  const projects = models.project.sortProjects(await services.project.listByOrganizationIds(organizationId));
+  for (const project of projects) {
+    const collection = (await services.workspace.listByParentId(project._id)).find(
+      workspace => workspace.scope === 'collection',
+    );
+    if (collection) {
+      return { projectId: project._id, workspaceId: collection._id };
+    }
+  }
+  return null;
+};
+
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
@@ -51,6 +101,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
   const gitFileIssues = useGitFileIssues();
+  const { settings } = useRootLoaderData()!;
 
   useInsomniaTab({ organizationId: organizationId || '' });
 
@@ -215,7 +266,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,
-              url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
+              url: `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
           } else if (isRequestGroup(doc)) {
             const folderEntities = await database.getWithDescendants(doc, [
@@ -232,8 +283,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
                   workspaceId: workspace._id,
                   workspaceName: workspace.name,
                   url: isRequestGroup(entity)
-                    ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
-                    : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
+                    ? `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
+                    : `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/debug/request/${entity._id}`,
                 },
               };
             });
@@ -242,7 +293,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         }
       }
     },
-    [organizationId, projectId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
+    [organizationId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
   );
 
   useEffect(() => {
@@ -266,18 +317,36 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     };
   }, [handleDelete, handleUpdate]);
 
-  const addRequest = () => {
-    const currentTab = tabList.find(tab => tab.id === activeTabId);
-    if (currentTab) {
-      const { organizationId, projectId, workspaceId } = currentTab;
-      newRequestFetcher.submit({
-        organizationId,
-        projectId,
-        workspaceId,
-        requestType: 'HTTP',
-        parentId: workspaceId,
+  // Remember where the user last worked, for the + button
+  useEffect(() => {
+    const activeTab = tabList.find(tab => tab.id === activeTabId);
+    if (organizationId && activeTab?.projectId && activeTab.workspaceId) {
+      rememberLastUsedCollection(organizationId, {
+        projectId: activeTab.projectId,
+        workspaceId: activeTab.workspaceId,
       });
     }
+  }, [activeTabId, organizationId, tabList]);
+
+  const addRequest = async () => {
+    const currentTab = tabList.find(tab => tab.id === activeTabId);
+    // On a collection page, add to that collection. Anywhere else, add to the default one.
+    const target: CollectionTarget | null =
+      currentPage === 'debug' && currentTab?.workspaceId
+        ? { projectId: currentTab.projectId, workspaceId: currentTab.workspaceId }
+        : await findDefaultCollection(organizationId || '', settings.newRequestCollection);
+    if (!target) {
+      // No collection exists yet, so let the user pick or create one
+      setShowAddRequestModal(true);
+      return;
+    }
+    newRequestFetcher.submit({
+      organizationId: organizationId || '',
+      projectId: target.projectId,
+      workspaceId: target.workspaceId,
+      requestType: 'HTTP',
+      parentId: target.workspaceId,
+    });
   };
 
   const addRequestToCollection = () => {
@@ -426,23 +495,22 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         <Icon icon="chevron-right" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
       <div className="flex shrink-0 grow items-center justify-start border-b border-solid border-(--hl-sm)">
+        <Button
+          aria-label="Tab Plus"
+          onPress={addRequest}
+          className="ml-[10px] h-[20px] w-[20px] text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
+        >
+          <Icon icon="plus" className="cursor-pointer" />
+        </Button>
         <MenuTrigger>
           <Button
-            aria-label="Tab Plus"
-            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
+            aria-label="More ways to add a request"
+            className="mr-[10px] h-[20px] w-[14px] text-center text-xs hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
           >
-            <Icon icon="plus" className="cursor-pointer" />
+            <Icon icon="chevron-down" className="cursor-pointer" />
           </Button>
           <Popover>
             <Menu className="max-h-[85vh] max-w-lg overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden">
-              {currentPage === 'debug' && (
-                <MenuItem
-                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
-                  onAction={addRequest}
-                >
-                  Add request to current collection
-                </MenuItem>
-              )}
               <MenuItem
                 className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
                 onAction={addRequestToCollection}
