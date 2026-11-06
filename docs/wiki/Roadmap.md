@@ -95,6 +95,10 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P0 | L | Every core action reachable with the keyboard alone, with visible focus and a logical tab order |
 | [ ] | P1 | M | Transient requests, savable later |
 | [ ] | P1 | M | Preview tabs and pinned tabs |
+| [ ] | P1 | M | Drag a request from the sidebar into the tab bar to open it, and drag tabs to reorder them, as in a browser |
+| [ ] | P1 | M | Select several tabs at once (Ctrl and Shift click) to close, pin or move them together, and reopen closed tabs |
+| [ ] | P1 | S | Double click a request to open it as a tab, while one click only previews it. Only clicking a project opens that project, not clicking a request inside it |
+| [ ] | P1 | S | Remember the collection picked for new requests on the home screen, with a setting to pick a fixed one instead of the first in the list |
 | [ ] | P1 | S | Autosave setting |
 | [ ] | P1 | S | Set a variable from a response value in one click |
 | [ ] | P1 | S | Unresolved variable warnings |
