@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "restless-cli",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Restless",
   "author": "Outman",
