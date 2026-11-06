@@ -541,72 +541,6 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
 
-  const helpMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Help`,
-    role: 'help',
-    id: 'help',
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}Help and Support`,
-        ...(isMac ? {} : { accelerator: 'F1' }),
-        click: () => {
-          const { protocol } = new URL(docsBase);
-          if (protocol === 'http:' || protocol === 'https:') {
-            shell.openExternal(docsBase);
-          }
-        },
-      },
-      changelogItem,
-      {
-        label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
-        accelerator: 'CmdOrCtrl+Shift+?',
-        click: () => {
-          mainBrowserWindow.webContents.send('toggle-preferences-shortcuts');
-        },
-      },
-      {
-        type: 'separator',
-      },
-      {
-        label: `Show App ${MNEMONIC_SYM}Data Folder`,
-        click: () => {
-          const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
-          shell.showItemInFolder(directory);
-        },
-      },
-      {
-        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
-        click: () => {
-          const directory = getLogDirectory();
-          shell.showItemInFolder(directory);
-        },
-      },
-      {
-        id: 'toggle-debug-mode',
-        label: getDebugModeLabel(false),
-        click: async () => {
-          const { debugMode } = await services.settings.get();
-          await services.settings.patch({ debugMode: !debugMode });
-        },
-      },
-      {
-        type: 'separator',
-      },
-      {
-        label: 'Show Software Bill of Materials',
-        click: () => {
-          shell.openExternal('https://github.com/Kong/insomnia/releases');
-        },
-      },
-      {
-        label: 'Show Software License',
-        click: () => {
-          shell.openExternal('https://github.com/outmanos/restless/blob/main/LICENSE');
-        },
-      },
-    ],
-  };
-
   const aboutMenuClickHandler = async () => {
     const copy = 'Copy';
     const ok = 'OK';
@@ -638,6 +572,95 @@ export function createWindow(): ElectronBrowserWindow {
     }
   };
 
+  const checkForUpdatesItem: MenuItemConstructorOptions = {
+    label: `Check for ${MNEMONIC_SYM}Updates`,
+    click: () => {
+      ipcMain.emit('manualUpdateCheck');
+    },
+  };
+
+  const helpMenu: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Help`,
+    role: 'help',
+    id: 'help',
+    submenu: [
+      {
+        label: `${MNEMONIC_SYM}Help and Support`,
+        ...(isMac ? {} : { accelerator: 'F1' }),
+        click: () => {
+          const { protocol } = new URL(docsBase);
+          if (protocol === 'http:' || protocol === 'https:') {
+            shell.openExternal(docsBase);
+          }
+        },
+      },
+      {
+        label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
+        accelerator: 'CmdOrCtrl+Shift+?',
+        click: () => {
+          mainBrowserWindow.webContents.send('toggle-preferences-shortcuts');
+        },
+      },
+      {
+        type: 'separator',
+      },
+      // On macOS these live in the application menu, where that platform expects them
+      ...(isMac
+        ? []
+        : [
+            checkForUpdatesItem,
+            changelogItem,
+            {
+              label: `${MNEMONIC_SYM}About`,
+              click: aboutMenuClickHandler,
+            },
+            {
+              type: 'separator' as const,
+            },
+          ]),
+      {
+        label: `Show App ${MNEMONIC_SYM}Data Folder`,
+        click: () => {
+          const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+          shell.showItemInFolder(directory);
+        },
+      },
+      {
+        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        click: () => {
+          const directory = getLogDirectory();
+          shell.showItemInFolder(directory);
+        },
+      },
+      {
+        id: 'toggle-debug-mode',
+        label: getDebugModeLabel(false),
+        click: async () => {
+          const { debugMode } = await services.settings.get();
+          await services.settings.patch({ debugMode: !debugMode });
+        },
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: 'Show Software License',
+        click: () => {
+          shell.openExternal(`https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/blob/main/LICENSE`);
+        },
+      },
+      {
+        // The lockfile lists every package and its exact version
+        label: 'Show Software Bill of Materials',
+        click: () => {
+          shell.openExternal(
+            `https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/blob/main/package-lock.json`,
+          );
+        },
+      },
+    ],
+  };
+
   if (isMac) {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
@@ -645,31 +668,10 @@ export function createWindow(): ElectronBrowserWindow {
         label: `A${MNEMONIC_SYM}bout ${getProductName()}`,
         click: aboutMenuClickHandler,
       },
-      {
-        label: 'Check for updates',
-        click: () => {
-          ipcMain.emit('manualUpdateCheck');
-        },
-      },
+      checkForUpdatesItem,
+      changelogItem,
       {
         type: 'separator',
-      },
-    );
-  } else {
-    // @ts-expect-error -- TSCONVERSION type splitting
-    helpMenu.submenu?.push(
-      {
-        type: 'separator',
-      },
-      {
-        label: 'Check for updates',
-        click: () => {
-          ipcMain.emit('manualUpdateCheck');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}About`,
-        click: aboutMenuClickHandler,
       },
     );
   }
