@@ -1,4 +1,3 @@
-import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
@@ -11,15 +10,17 @@ import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { About } from '../settings/about';
+import { Appearance } from '../settings/appearance';
 import { BooleanSetting } from '../settings/boolean-setting';
-import { EnumSetting } from '../settings/enum-setting';
-import { General } from '../settings/general';
+import { Editor } from '../settings/editor';
 import { ImportExport } from '../settings/import-export';
-import { MaskedSetting } from '../settings/masked-setting';
+import { Keyboard } from '../settings/keyboard';
 import { Plugins } from '../settings/plugins';
-import { Shortcuts } from '../settings/shortcuts';
+import { PrivacySecurity } from '../settings/privacy-security';
+import { Requests } from '../settings/requests';
+import { settingsTabIcons } from '../settings/settings-tab-icons';
 import { TextSetting } from '../settings/text-setting';
-import { ThemePanel } from '../settings/theme-panel';
 import { showModal } from './index';
 
 export interface SettingsModalHandle {
@@ -27,20 +28,41 @@ export interface SettingsModalHandle {
   show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-type SettingsModalTabKey =
-  | 'data'
+export type SettingsModalTabKey =
+  | 'appearance'
+  | 'editor'
   | 'keyboard'
-  | 'themes'
+  | 'requests'
+  | 'security'
+  | 'data'
   | 'plugins'
-  | 'general'
-  | 'proxy'
   | 'credentials'
+  | 'scripting'
   | 'ai'
-  | 'scripting';
+  | 'about';
+
+const DEFAULT_TAB: SettingsModalTabKey = 'appearance';
+
+const TAB_CLASS_NAME =
+  'flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)';
+
+const TABS: { id: SettingsModalTabKey; label: string; icon: keyof typeof settingsTabIcons }[] = [
+  { id: 'appearance', label: 'Appearance', icon: 'appearance' },
+  { id: 'editor', label: 'Editor', icon: 'editor' },
+  { id: 'keyboard', label: 'Keyboard', icon: 'keyboard' },
+  { id: 'requests', label: 'Requests', icon: 'requests' },
+  { id: 'security', label: 'Privacy & Security', icon: 'security' },
+  { id: 'data', label: 'Data', icon: 'data' },
+  { id: 'plugins', label: 'Plugins', icon: 'plugins' },
+  { id: 'credentials', label: 'Credentials', icon: 'credentials' },
+  { id: 'scripting', label: 'Scripting', icon: 'scripting' },
+  { id: 'ai', label: 'AI', icon: 'ai' },
+  { id: 'about', label: 'About', icon: 'about' },
+];
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
-  const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { userSession, settings } = useRootLoaderData()!;
+  const [selectedTabKey, setSelectedTabKey] = useState<string>(DEFAULT_TAB);
+  const { userSession } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
 
@@ -51,7 +73,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         modalRef.current?.hide();
       },
       show: options => {
-        setDefaultTabKey(options?.tab || 'general');
+        setSelectedTabKey(options?.tab || DEFAULT_TAB);
         modalRef.current?.show();
       },
     }),
@@ -76,117 +98,41 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       </ModalHeader>
       <ModalBody noScroll>
         <Tabs
-          selectedKey={defaultTabKey}
+          selectedKey={selectedTabKey}
           onSelectionChange={key => {
-            setDefaultTabKey(key.toString());
+            setSelectedTabKey(key.toString());
           }}
           aria-label="Settings"
           className="flex h-full w-full flex-1 flex-col"
         >
           <TabList
             className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
-            aria-label="Request pane tabs"
+            aria-label="Settings tabs"
           >
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="general"
-            >
-              General
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="proxy"
-            >
-              Proxy
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="data"
-            >
-              Data
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="themes"
-            >
-              Themes
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="keyboard"
-            >
-              Keyboard
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="plugins"
-            >
-              Plugins
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="credentials"
-            >
-              Credentials
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="scripting"
-            >
-              Scripting
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="ai"
-            >
-              AI
-            </Tab>
+            {TABS.map(({ id, label, icon }) => {
+              const TabIcon = settingsTabIcons[icon];
+              return (
+                <Tab key={id} id={id} className={`${TAB_CLASS_NAME} ${id === 'about' ? 'ml-auto' : ''}`}>
+                  <TabIcon className="shrink-0" />
+                  {label}
+                </Tab>
+              );
+            })}
           </TabList>
-          <TabPanel className="h-full w-full overflow-y-auto" id="general">
-            <General />
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="appearance">
+            <Appearance />
           </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="proxy">
-            <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">Network Proxy</h2>
-
-            <BooleanSetting
-              label="Enable proxy"
-              setting="proxyEnabled"
-              help="If checked, enables a global network proxy on all requests sent through Restless. This proxy supports Basic Auth, digest, and NTLM authentication."
-            />
-
-            <div className="pt-4">
-              <EnumSetting<ProxyScope>
-                label="Use proxy for"
-                setting="proxyScope"
-                disabled={!settings.proxyEnabled}
-                values={[
-                  { value: ProxyScopes.requests, name: 'Only when sending requests in Restless' },
-                  { value: ProxyScopes.all, name: 'All traffic sent by Restless' },
-                ]}
-                help="When All traffic is selected, Restless uses the configured proxy for all calls, including login, git, auto-updates, etc."
-              />
-            </div>
-
-            <div className="form-row pad-top-sm">
-              <MaskedSetting
-                label="Proxy for HTTP"
-                setting="httpProxy"
-                help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
-                placeholder="localhost:8005"
-              />
-              <MaskedSetting
-                label="Proxy for HTTPS"
-                setting="httpsProxy"
-                help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
-                placeholder="localhost:8005"
-              />
-              <TextSetting
-                label="No proxy"
-                setting="noProxy"
-                help="Enter a comma-separated list of hostnames that do not require a proxy. To include all subdomains of a domain, prefix it with a dot (e.g., .example.com)."
-                placeholder="localhost,127.0.0.1"
-              />
-            </div>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="editor">
+            <Editor />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="keyboard">
+            <Keyboard />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="requests">
+            <Requests />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="security">
+            <PrivacySecurity />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="data">
             <ImportExport
@@ -194,23 +140,35 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               onModalChange={(isOpen: boolean) => setKeyboardClosable(!isOpen)}
             />
           </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="themes">
-            <ThemePanel />
-          </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="keyboard">
-            <Shortcuts />
-          </TabPanel>
           <TabPanel className="h-full w-full overflow-x-hidden overflow-y-auto p-4" id="plugins">
+            <div className="pb-4">
+              <TextSetting
+                label="Additional plugin path"
+                setting="pluginPath"
+                help="Add a custom path to direct Restless to a different plugin directory."
+                placeholder="~/.insomnia:/other/path"
+              />
+            </div>
             <Plugins />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
             <CredentialsSettings />
           </TabPanel>
           <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="scripting">
+            <div className="pb-4">
+              <BooleanSetting
+                label="Show legacy unit tests"
+                setting="enableLegacyUnitTests"
+                help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
+              />
+            </div>
             <ScriptingSettings />
           </TabPanel>
           <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
             <AISettings />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="about">
+            <About />
           </TabPanel>
         </Tabs>
       </ModalBody>

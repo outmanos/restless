@@ -460,7 +460,7 @@ const Root = () => {
               });
               await plugins.reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: 'themes' });
+              showModal(SettingsModal, { tab: 'appearance' });
             }
           },
         });

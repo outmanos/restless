@@ -152,7 +152,7 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
-export const SECURITY_SETTINGS_PATH_LABEL = 'Restless Preferences → General → Security';
+export const SECURITY_SETTINGS_PATH_LABEL = 'Restless Preferences → Privacy & Security → Access';
 
 export function cannotAccessPathError(accessingPath: string): string {
   return __IS_RENDERER__

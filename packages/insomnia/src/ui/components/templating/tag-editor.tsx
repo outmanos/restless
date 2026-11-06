@@ -316,7 +316,7 @@ export const TagEditor: FC<Props> = props => {
           className="cursor-pointer text-(--color-surprise)"
           onPress={() => {
             props.close();
-            showSettingsModal({ tab: 'general' });
+            showSettingsModal({ tab: 'security' });
           }}
         >
           {linkText}

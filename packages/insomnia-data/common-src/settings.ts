@@ -88,6 +88,13 @@ export enum UpdateChannel {
   beta = 'beta',
 }
 
+// How often the app looks for a new version by itself, once automatic updates are on.
+export enum UpdateCheckInterval {
+  sixHours = 'sixHours',
+  daily = 'daily',
+  weekly = 'weekly',
+}
+
 // How far the configured HTTP/HTTPS proxy reaches.
 export const ProxyScopes = {
   // Only requests sent from collections use the proxy (default, matches pre-13.1 behavior).
@@ -182,6 +189,9 @@ export interface Settings {
   timeout: number;
   updateAutomatically: boolean;
   updateChannel: UpdateChannel;
+  /** With automatic updates on, also look for a new version each time the app starts. */
+  updateCheckOnStartup: boolean;
+  updateCheckInterval: UpdateCheckInterval;
   useBulkHeaderEditor: boolean;
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;

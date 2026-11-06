@@ -11,10 +11,8 @@ provides=('restless')
 conflicts=('restless')
 options=('!strip')
 source=("Restless-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/Restless-${pkgver}.tar.gz"
-        'restless.desktop'
         "restless-${pkgver}.svg::https://raw.githubusercontent.com/outmanos/restless/v${pkgver}/packages/insomnia/src/icons/icon.svg")
 sha256sums=('SKIP'
-            'SKIP'
             'SKIP')
 
 package() {
@@ -22,6 +20,18 @@ package() {
   cp -a "Restless-${pkgver}/." "${pkgdir}/opt/restless/"
   ln -s /opt/restless/restless "${pkgdir}/usr/bin/restless"
 
-  install -Dm644 restless.desktop "${pkgdir}/usr/share/applications/restless.desktop"
+  install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/restless.desktop" <<'EOF'
+[Desktop Entry]
+Name=Restless
+Comment=The local-first API client
+Exec=restless %U
+Terminal=false
+Type=Application
+Icon=restless
+Categories=Development;
+MimeType=x-scheme-handler/restless;x-scheme-handler/insomnia;
+Keywords=GraphQL;REST;gRPC;SOAP;openAPI;GitOps;
+StartupWMClass=Restless
+EOF
   install -Dm644 "restless-${pkgver}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/restless.svg"
 }

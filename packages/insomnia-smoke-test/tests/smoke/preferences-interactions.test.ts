@@ -33,6 +33,7 @@ test('Check filter responses by environment preference', async ({ app, page, ins
   // Set filter responses by environment
   await page.getByTestId('settings-button').click();
   await page.locator('text=Restless Preferences').first().click();
+  await page.getByRole('tab', { name: 'Requests' }).click();
   await page.locator('text=Filter responses by environment').click();
   await page.locator('.app').press('Escape');
 
@@ -47,9 +48,9 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
 
   await page.getByTestId('settings-button').click();
   await page.locator('text=Restless Preferences').first().click();
+  await page.getByRole('tab', { name: 'Requests' }).click();
   await page.locator('[name="timeout"]').fill('1000');
 
-  await page.getByRole('tab', { name: 'Proxy' }).click();
   await page.locator('text=Enable proxy').click();
   await page.locator('[name="httpProxy"]').fill('127.0.0.1:1111');
   await page.locator('[name="httpsProxy"]').fill('127.0.0.1:2222');

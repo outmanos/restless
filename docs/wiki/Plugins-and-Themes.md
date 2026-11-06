@@ -12,17 +12,17 @@ Plugins run code on your machine, so only install ones you trust.
 
 restless opens `insomnia://` links for plugin installs, theme installs and imports. Every other `insomnia://` link is ignored.
 
-This is on by default. Turn off **Open Insomnia web links** in `Preferences > General` if you also use Insomnia. The change applies after a restart.
+This is on by default. Turn off **Open Insomnia web links** in `Preferences > Privacy & Security` if you also use Insomnia. The change applies after a restart.
 
 ## Themes
 
-Choose a theme in `Preferences > Themes`. Turn on **Use OS color scheme** to pick separate light and dark themes that follow your system.
+Choose a theme in `Preferences > Appearance`. Turn on **Use OS color scheme** to pick separate light and dark themes that follow your system.
 
 ![The One Light theme](images/light-theme.png)
 
 ## Accent color
 
-Pick an accent in `Preferences > Themes`, from the presets or **Custom**. It replaces the accent of every theme, and text on it switches to black or white to stay readable. **Use theme color** undoes it.
+Pick an accent in `Preferences > Appearance`, from the presets or **Custom**. It replaces the accent of every theme, and text on it switches to black or white to stay readable. **Use theme color** undoes it.
 
 ![A custom accent color](images/accent-color.png)
 

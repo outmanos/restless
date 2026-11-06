@@ -6,10 +6,11 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import type { Settings } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { UpdateCheckInterval } from 'insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';
-import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment, type UpdateStatus } from '../common/constants';
+import { isDevelopment, type UpdateStatus, type UpdateSupport } from '../common/constants';
 import { backup } from './backup';
 import { ipcMainOn } from './ipc/electron';
 
@@ -25,19 +26,41 @@ const showUpdateStatusToast = (title: string, description?: string) => {
   }
 };
 
-const isUpdateSupported = () => {
+export const getUpdateSupport = (): UpdateSupport => {
   if (process.env['ALLOW_UPDATES_IN_DEV']) {
-    return true;
+    return { supported: true };
   }
-  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES || isDevelopment() || !app.isPackaged) {
-    return false;
+  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
+    return { supported: false, reason: 'disabled' };
+  }
+  if (isDevelopment() || !app.isPackaged) {
+    return { supported: false, reason: 'development' };
   }
   // Only AppImage can replace itself on Linux; distro packages are updated by the package manager.
   if (process.platform === 'linux' && !process.env.APPIMAGE) {
-    return false;
+    return { supported: false, reason: 'package-manager' };
   }
-  return !(process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']);
+  if (process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']) {
+    return { supported: false, reason: 'portable' };
+  }
+  return { supported: true };
 };
+
+const CHECK_INTERVALS_MS: Record<UpdateCheckInterval, number> = {
+  [UpdateCheckInterval.sixHours]: 6 * 60 * 60 * 1000,
+  [UpdateCheckInterval.daily]: 24 * 60 * 60 * 1000,
+  [UpdateCheckInterval.weekly]: 7 * 24 * 60 * 60 * 1000,
+};
+
+export const getCheckIntervalMs = (interval: UpdateCheckInterval) =>
+  CHECK_INTERVALS_MS[interval] ?? CHECK_INTERVALS_MS[UpdateCheckInterval.daily];
+
+// The scheduler wakes up often and asks this, so a changed frequency applies without a restart.
+export const isCheckDue = (
+  settings: Pick<Settings, 'updateAutomatically' | 'updateCheckInterval'>,
+  lastCheckAt: number,
+  now: number,
+) => settings.updateAutomatically && now - lastCheckAt >= getCheckIntervalMs(settings.updateCheckInterval);
 
 export const allowsAutomaticUpdates = (installerInfo: string) => {
   try {
@@ -61,6 +84,8 @@ const applyInstallerUpdateChoice = async (settings: Settings) => {
   });
 };
 
+const SCHEDULER_TICK_MS = 10 * 60 * 1000;
+
 let currentUpdateStatus: UpdateStatus = 'idle';
 
 const sendUpdateStatus = (status: UpdateStatus) => {
@@ -70,14 +95,21 @@ const sendUpdateStatus = (status: UpdateStatus) => {
   }
 };
 
-const checkForUpdates = async (settings: Settings) => {
+// Only a check the user asked for reports "up to date" or a failure. Automatic checks stay quiet,
+// since the app may be offline on purpose.
+let currentCheckIsManual = false;
+
+const checkForUpdates = async (settings: Settings, { manual }: { manual: boolean }) => {
+  currentCheckIsManual = manual;
   try {
     autoUpdater.allowPrerelease = settings.updateChannel === 'beta';
     await autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
     sendUpdateStatus('idle');
-    showUpdateStatusToast('Update Error', err.message);
+    if (manual) {
+      showUpdateStatusToast('Update Error', err.message);
+    }
   }
 };
 
@@ -85,11 +117,15 @@ const createListeners = () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     sendUpdateStatus('idle');
-    showUpdateStatusToast('Update Error', error.message);
+    if (currentCheckIsManual) {
+      showUpdateStatusToast('Update Error', error.message);
+    }
   });
   autoUpdater.on('update-not-available', () => {
     sendUpdateStatus('idle');
-    showUpdateStatusToast('Up to Date', packageJSON.version);
+    if (currentCheckIsManual) {
+      showUpdateStatusToast('Up to Date', packageJSON.version);
+    }
   });
   autoUpdater.on('update-available', () => {
     sendUpdateStatus('downloading');
@@ -118,20 +154,27 @@ export const init = async () => {
   autoUpdater.setFeedURL({ provider: 'github', owner: appConfig.githubOrg, repo: appConfig.githubRepo });
   createListeners();
 
-  const updateSupported = isUpdateSupported();
+  const support = getUpdateSupport();
   const settings = await applyInstallerUpdateChoice(await services.settings.get());
-  if (updateSupported) {
-    if (settings.updateAutomatically) {
-      checkForUpdates(settings);
+  let lastCheckAt = Date.now();
+  if (support.supported) {
+    if (settings.updateAutomatically && settings.updateCheckOnStartup) {
+      checkForUpdates(settings, { manual: false });
     }
     setInterval(async () => {
-      const settings = await services.settings.get();
-      if (settings.updateAutomatically) {
-        checkForUpdates(settings);
+      const latest = await services.settings.get();
+      if (isCheckDue(latest, lastCheckAt, Date.now())) {
+        lastCheckAt = Date.now();
+        checkForUpdates(latest, { manual: false });
       }
-    }, CHECK_FOR_UPDATES_INTERVAL);
+    }, SCHEDULER_TICK_MS);
+  } else {
+    console.log(`[updater] This build does not update itself (${support.reason})`);
   }
 
+  ipcMainOn('getUpdateSupport', event => {
+    event.returnValue = support;
+  });
   ipcMainOn('getUpdateStatus', event => {
     event.returnValue = currentUpdateStatus;
   });
@@ -141,12 +184,13 @@ export const init = async () => {
     }
   });
   ipcMainOn('manualUpdateCheck', async () => {
-    if (!updateSupported) {
+    if (!support.supported) {
       showUpdateStatusToast('Updates are not available for this build');
       return;
     }
     sendUpdateStatus('checking');
     showUpdateStatusToast('Checking for updates...');
-    checkForUpdates(await services.settings.get());
+    lastCheckAt = Date.now();
+    checkForUpdates(await services.settings.get(), { manual: true });
   });
 };

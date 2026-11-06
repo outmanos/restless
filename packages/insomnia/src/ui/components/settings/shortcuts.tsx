@@ -60,9 +60,11 @@ export const Shortcuts: FC = () => {
                 <td className="text-right">
                   {keyCombosForThisPlatform.map(keyComb => {
                     return (
-                      <code key={keyComb.id} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
-                        <Hotkey keyCombination={keyComb} />
-                      </code>
+                      <Hotkey
+                        key={keyComb.id}
+                        keyCombination={keyComb}
+                        className="ml-1 inline-block items-center rounded-md bg-(--hl-xs) px-2 py-0.5 text-center font-sans text-sm font-normal text-(--hl) shadow-xs"
+                      />
                     );
                   })}
                 </td>
