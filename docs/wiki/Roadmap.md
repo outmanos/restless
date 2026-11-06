@@ -173,7 +173,7 @@ AI stays off by default.
 | [ ] | P1 | M | Light theme matching the dark palette |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
-| [ ] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release |
+| [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (Arch badge follows the first release that carries the PKGBUILD) |
 
 ## Baseline
 
