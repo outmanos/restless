@@ -40,7 +40,9 @@ const Updates: FC = () => {
       <div>
         <p className="faint">{unsupportedText[support.reason]}</p>
         <p className="pad-top-sm">
-          <Link href={`${repo}/releases/latest`}>Latest release</Link>
+          <Link className="text-(--color-surprise) hover:underline" href={`${repo}/releases/latest`}>
+            Latest release
+          </Link>
         </p>
       </div>
     );
@@ -129,7 +131,9 @@ export const About: FC = () => {
       <ul className="flex flex-col gap-1">
         {links.map(({ label, href }) => (
           <li key={href}>
-            <Link href={href}>{label}</Link>
+            <Link className="text-(--color-surprise) hover:underline" href={href}>
+              {label}
+            </Link>
           </li>
         ))}
       </ul>

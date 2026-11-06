@@ -74,6 +74,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const closedTabsRef = useRef<Record<string, BaseTab[]>>({});
 
   const navigate = useNavigate();
+  // Preferences is a tab without a project, so there may be no project in the URL to go back to
+  const dashboardUrl = projectId ? `/organization/${organizationId}/project/${projectId}` : `/organization/${organizationId}`;
 
   const updateInsomniaTabs = useCallback(
     ({ organizationId, tabList, activeTabId }: UpdateInsomniaTabParams) => {
@@ -208,7 +210,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       // fallback (e.g. the parent folder/collection) or the project dashboard
       if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
         
-          navigate(options.fallbackUrl || `/organization/${organizationId}/project/${projectId}`);
+          navigate(options.fallbackUrl || dashboardUrl);
         updateInsomniaTabs({
           organizationId,
           tabList: [],
@@ -250,7 +252,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
     },
-    [addClosedTabs, navigate, organizationId, projectId, removeClosedTabsByIds, updateInsomniaTabs],
+    [addClosedTabs, dashboardUrl, navigate, organizationId, removeClosedTabsByIds, updateInsomniaTabs],
   );
 
   const batchCloseTabs = useCallback(
@@ -271,7 +273,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
         if (options.navigateOnAllClose !== false && true) {
-          navigate(`/organization/${organizationId}/project/${projectId}`);
+          navigate(dashboardUrl);
         }
         updateInsomniaTabs({
           organizationId,
@@ -298,7 +300,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       });
       uiEventBus.emit('CLOSE_TAB', organizationId, deleteIds);
     },
-    [addClosedTabs, navigate, organizationId, projectId, removeClosedTabsByIds, updateInsomniaTabs],
+    [addClosedTabs, dashboardUrl, navigate, organizationId, removeClosedTabsByIds, updateInsomniaTabs],
   );
 
   const changeActiveTab = useCallback(

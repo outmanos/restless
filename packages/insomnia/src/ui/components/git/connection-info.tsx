@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button, Separator } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { openSettings } from '~/ui/settings-navigation';
 
 export const GitConnectionInfo = ({
   gitRepository,
@@ -73,7 +73,7 @@ export const GitConnectionInfo = ({
               <span>{providerInfo?.displayName}</span>
               <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
               <span className="truncate">{authorName}</span>
-              <Button className="text-(--color-surprise)" onPress={() => showSettingsModal({ tab: 'credentials' })}>
+              <Button className="text-(--color-surprise)" onPress={() => openSettings({ tab: 'credentials' })}>
                 View Credential
               </Button>
             </div>

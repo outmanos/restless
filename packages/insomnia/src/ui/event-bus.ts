@@ -10,6 +10,8 @@ export const KONNECT_SYNC_TRIGGER = 'KONNECT_SYNC_TRIGGER';
 // dialog) with an environment preselected. Emitted from editors whose "open variable
 // source" action targets a collection environment of the workspace they belong to.
 export const OPEN_ENVIRONMENTS_MODAL = 'OPEN_ENVIRONMENTS_MODAL';
+// Asks the organization layout to open Preferences as a tab, optionally on a given section.
+export const OPEN_SETTINGS = 'OPEN_SETTINGS';
 
 type UIEventType =
   | 'CLOSE_TAB'
@@ -17,7 +19,8 @@ type UIEventType =
   | typeof CLOUD_SYNC_FILE_CHANGE
   | typeof OAUTH2_AUTHORIZATION_STATUS_CHANGE
   | typeof KONNECT_SYNC_TRIGGER
-  | typeof OPEN_ENVIRONMENTS_MODAL;
+  | typeof OPEN_ENVIRONMENTS_MODAL
+  | typeof OPEN_SETTINGS;
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
@@ -26,6 +29,7 @@ class EventBus {
     [OAUTH2_AUTHORIZATION_STATUS_CHANGE]: [],
     [KONNECT_SYNC_TRIGGER]: [],
     [OPEN_ENVIRONMENTS_MODAL]: [],
+    [OPEN_SETTINGS]: [],
   };
 
   // Subscribe to event, returns unsubscribe function
