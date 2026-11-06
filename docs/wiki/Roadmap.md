@@ -74,14 +74,16 @@ The largest change. Later features build on this storage model, so it goes early
 |---|---|---|---|
 | [x] | P0 | M | Keep Git collections as YAML in a chosen folder |
 | [x] | P0 | S | GitHub and GitLab sign-in off by default |
-| [ ] | P0 | S | Decide the native format (see [Decisions](Decisions)) |
-| [ ] | P0 | L | Store collections as readable files, one per request |
+| [x] | P0 | S | Decide the native format (see [Decisions](Decisions)) |
+| [ ] | P0 | L | Store collections as readable files, one YAML file per collection |
 | [ ] | P0 | M | Watch the folder and reload on external edits |
 | [ ] | P0 | M | Open any folder as a collection |
+| [ ] | P0 | M | Settings as a plain JSON file, with export and import. Preferences, themes and shortcuts included |
 | [ ] | P0 | L | Migrate from NeDB, with a backup |
 | [ ] | P1 | L | Read and write `.bru` and Bruno's YAML, using `bruno-lang` and `bruno-filestore` |
 | [ ] | P1 | M | Workspaces that group collections and environments on disk |
 | [ ] | P1 | M | `.env` file support and editor |
+| [ ] | P1 | S | Audit every format restless writes. Use an open spec where one exists, and publish the schema for any that remains |
 | [ ] | P2 | S | Single-file YAML and ZIP export |
 
 ## 0.4.0: Daily workflow
@@ -92,19 +94,32 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P0 | M | Inherited auth and settings at collection and folder level |
 | [ ] | P0 | M | Restore open tabs and sidebar state per collection |
 | [ ] | P0 | M | Large response protection |
+| [ ] | P0 | L | Every core action reachable with the keyboard alone, with visible focus and a logical tab order |
 | [ ] | P1 | M | Transient requests, savable later |
 | [ ] | P1 | M | Preview tabs and pinned tabs |
+| [ ] | P1 | M | Drag a request from the sidebar into the tab bar to open it, and drag tabs to reorder them, as in a browser |
+| [ ] | P1 | M | Select several tabs at once (Ctrl and Shift click) to close, pin or move them together, and reopen closed tabs |
+| [ ] | P1 | S | Double click a request to open it as a tab, while one click only previews it. Only clicking a project opens that project, not clicking a request inside it |
+| [ ] | P1 | S | Remember the collection picked for new requests on the home screen, with a setting to pick a fixed one instead of the first in the list |
 | [ ] | P1 | S | Autosave setting |
 | [ ] | P1 | S | Set a variable from a response value in one click |
 | [ ] | P1 | S | Unresolved variable warnings |
 | [ ] | P1 | M | Saved response examples, usable in docs and mocks |
 | [ ] | P1 | M | Collection and folder docs as Markdown |
+| [ ] | P1 | M | In-app help links open the matching wiki page, not the README. About 27 links. Write the pages that are missing: scripting, template tags, keyboard shortcuts, design documents |
+| [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
+| [ ] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Privacy and Security, Data, Plugins and About, with every setting where you would look for it |
+| [ ] | P1 | M | Searchable settings: a search box that jumps to the setting |
+| [ ] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |
+| [ ] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
+| [ ] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |
 | [ ] | P2 | S | Environment color on request tabs |
 | [ ] | P2 | S | Response layout toggle |
 | [ ] | P2 | M | Visual diff for request changes |
+| [ ] | P2 | S | A themed SVG icon for each settings tab |
 
 ## 0.5.0: Testing
 
@@ -167,13 +182,18 @@ AI stays off by default.
 | [ ] | P0 | S | npm: `restless-cli` |
 | [ ] | P1 | L | Replace leftover legacy components |
 | [ ] | P1 | M | Restyle the collection sidebar, response pane and empty states |
-| [ ] | P1 | M | Settings as a searchable tab, split by section |
 | [ ] | P1 | M | Command palette covers every action |
 | [ ] | P1 | S | Sidebar density and keyboard navigation |
 | [ ] | P1 | M | Light theme matching the dark palette |
+| [ ] | P1 | M | Arch and CachyOS: a pacman repository, so `pacman -Syu` updates restless. Each release ships a `PKGBUILD` until then |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
 | [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (Arch badge follows the first release that carries the PKGBUILD) |
+| [ ] | P2 | M | Publish a software bill of materials with each release. `npm sbom` needs the dependency tree fixed first |
+
+## Ideas, not scheduled
+
+- **Split collections.** A collection file that references its requests with `$ref`, each request in its own file next to it. Small diffs, and loose request files that can be opened alone and added to a collection later. It needs a document type that older clients refuse, in a namespace restless owns. See [the design](https://github.com/outmanos/restless/blob/main/docs/design/0.3.0-files-first.md).
 
 ## Baseline
 

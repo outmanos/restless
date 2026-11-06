@@ -1,6 +1,6 @@
 import type { CommandSearchResult } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations, isMac } from 'insomnia-data/common';
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
@@ -74,10 +74,7 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
         data-testid="quick-search"
         className="flex h-[26px] w-[min(600px,38vw)] shrink-0 items-center justify-between gap-2 rounded-md border border-solid border-(--hl-sm) bg-transparent px-[10px] text-[13px] text-(--color-font) opacity-80 ring-1 ring-transparent transition-all ring-inset hover:bg-(--hl-xs) hover:opacity-100 focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
-        <div>
-          <Icon icon="search" className="mr-2" />
-          Search..
-        </div>
+        <span>Search</span>
         {requestSwitchKeyCombination && (
           <Keyboard className="inline-block items-center space-x-0.5 rounded-md bg-(--hl-xs) px-2 py-0.5 text-center font-sans text-sm font-normal text-(--hl) shadow-xs">
             {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
@@ -118,6 +115,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     results: searchResults,
     isSearching,
     inputValue,
+    resultsFilter,
     search,
     abort,
   } = useCommandSearch({
@@ -445,6 +443,20 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     });
 
 
+  // Enter with nothing highlighted opens the top result. The list trails the typed text by the search debounce,
+  // so if Enter comes first, wait for the results of what was typed instead of opening a stale one.
+  const topResult = comboboxSections[0]?.children[0];
+  const resultsMatchInput = resultsFilter === inputValue && !isSearching;
+  const openTopResultWhenReady = useRef<{ withTab: boolean } | null>(null);
+
+  useEffect(() => {
+    if (openTopResultWhenReady.current && resultsMatchInput) {
+      const { withTab } = openTopResultWhenReady.current;
+      openTopResultWhenReady.current = null;
+      topResult?.action(withTab);
+    }
+  }, [resultsMatchInput, topResult]);
+
   // Close the dialog when the environment is set
   // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
   // The update env will run but the loaders on the page will not be revalidated. https://github.com/remix-run/remix/discussions/9020
@@ -469,7 +481,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       inputValue={inputValue}
       defaultFilter={() => true}
       allowsEmptyCollection
-      onInputChange={search}
+      onInputChange={value => {
+        openTopResultWhenReady.current = null;
+        search(value);
+      }}
       // By default, Escape would just clear the input field. We need to press twice to close the dialog.
       onKeyDown={e => {
         if (e.key === 'Escape') {
@@ -505,6 +520,39 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                   <Input
                     slot="input"
                     placeholder="Search and switch between requests, collections and documents"
+                    // Capture phase, so this runs before the combobox commits the text and clears the input,
+                    // and before the global Ctrl+Enter shortcut can send the request behind the dialog.
+                    // Enter opens the top result, and Ctrl+Enter (Cmd on macOS) opens it in a new tab.
+                    onKeyDownCapture={e => {
+                      if (e.key !== 'Enter' || e.nativeEvent.isComposing) {
+                        return;
+                      }
+                      const withTab = isMac ? e.metaKey : e.ctrlKey;
+                      const highlightedId = e.currentTarget.getAttribute('aria-activedescendant');
+                      if (highlightedId) {
+                        // A result is highlighted, and the combobox opens it on a plain Enter
+                        const key = highlightedId.slice(highlightedId.indexOf('-option-') + '-option-'.length);
+                        const highlighted = comboboxSections
+                          .flatMap(section => section.children)
+                          .find(item => item.id.replace(/\s+/g, '') === key);
+                        if (withTab && highlighted) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          highlighted.action(true);
+                        }
+                        return;
+                      }
+                      if (!inputValue.trim()) {
+                        return;
+                      }
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (resultsMatchInput) {
+                        topResult?.action(withTab);
+                      } else {
+                        openTopResultWhenReady.current = { withTab };
+                      }
+                    }}
                     className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   />
                 </>

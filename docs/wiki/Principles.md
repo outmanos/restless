@@ -6,8 +6,9 @@ These decide what gets built.
 2. **Your data stays yours.** Network calls happen only when you send a request, sync Git, check for updates, or use something you turned on.
 3. **Optional means off.** Sign-ins, AI and other outside services stay off until you enable them.
 4. **Files are the source of truth.** Git works with plain tools, outside the app.
-5. **No feature gates.** Nothing is paid or held back. A feature that needs a remote service lets you bring your own.
-6. **Compact and fast.** Interface space goes to your work.
+5. **Open formats only.** Use an existing open format or standard, and invent none. That covers collections, history and preferences, and preferences export as JSON.
+6. **No feature gates.** Nothing is paid or held back. A feature that needs a remote service lets you bring your own.
+7. **Compact and fast.** Interface space goes to your work.
 
 ## Licensing
 
