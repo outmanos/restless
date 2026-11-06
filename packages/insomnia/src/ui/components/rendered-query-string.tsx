@@ -151,7 +151,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         {hasLink && (
           <Link
             className="cursor-pointer text-(--color-surprise)"
-            onPress={() => showSettingsModal({ tab: 'general' })}
+            onPress={() => showSettingsModal({ tab: 'security' })}
           >
             {linkText}
           </Link>

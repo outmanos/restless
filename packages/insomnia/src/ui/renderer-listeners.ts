@@ -19,6 +19,10 @@ window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
 });
 
+window.main.on('show-about', () => {
+  showModal(SettingsModal, { tab: 'about' });
+});
+
 window.main.on('open-migration', () => {
   showModal(MigrationModal);
 });

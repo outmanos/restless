@@ -24,7 +24,7 @@ import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import * as crypt from '~/common/account/crypt';
-import type { UpdateStatus } from '~/common/constants';
+import type { UpdateStatus, UpdateSupport } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
@@ -35,6 +35,7 @@ import type {
 } from '~/common/plugins/types';
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
+import type { AboutDetail } from '~/main/about';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import {
   exportHarCurrentRequest,
@@ -226,6 +227,8 @@ export interface RendererToMainBridgeAPI extends MigrationBridgeAPI {
   manualUpdateCheck: () => void;
   applyUpdateAndRestart: () => void;
   getUpdateStatus: () => UpdateStatus;
+  getUpdateSupport: () => UpdateSupport;
+  getAboutDetails: () => AboutDetail[];
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
   authorizeUserInWindow: typeof authorizeUserInWindow;

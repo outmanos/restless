@@ -7,6 +7,7 @@ import {
   ProxyScopes,
   type Settings as BaseSettings,
   UpdateChannel,
+  UpdateCheckInterval,
 } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
@@ -83,6 +84,8 @@ export function init(): BaseSettings {
     timeout: 30_000,
     updateAutomatically: false,
     updateChannel: UpdateChannel.stable,
+    updateCheckOnStartup: true,
+    updateCheckInterval: UpdateCheckInterval.daily,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
     validateAuthSSL: true,

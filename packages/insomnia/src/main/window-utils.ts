@@ -1,15 +1,14 @@
 import fs from 'node:fs';
-import * as os from 'node:os';
 import path from 'node:path';
 
-import { app, BrowserWindow, type BrowserWindow as ElectronBrowserWindow, clipboard, dialog, ipcMain, Menu, type MenuItem, type MenuItemConstructorOptions, MessageChannelMain, nativeTheme, screen, shell } from 'electron';
+import { app, BrowserWindow, type BrowserWindow as ElectronBrowserWindow, dialog, ipcMain, Menu, type MenuItem, type MenuItemConstructorOptions, MessageChannelMain, nativeTheme, screen, shell } from 'electron';
 import { models, services } from 'insomnia-data';
-import { isLinux, isMac } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
 
 import appConfig from '../../config/config.json';
-import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
+import { getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
@@ -607,35 +606,9 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
 
-  const aboutMenuClickHandler = async () => {
-    const copy = 'Copy';
-    const ok = 'OK';
-    const buttons = isLinux ? [copy, ok] : [ok, copy];
-    const detail = [
-      `Version: ${getProductName()} ${getAppVersion()}`,
-      `Build date: ${getAppBuildDate()}`,
-      `OS: ${os.type()} ${os.arch()} ${os.release()}`,
-      `Electron: ${process.versions.electron}`,
-      `Node: ${process.versions.node}`,
-      `Node ABI: ${process.versions.modules}`,
-      `V8: ${process.versions.v8}`,
-      `Architecture: ${process.arch}`,
-    ].join('\n');
-
-    const msgBox = await dialog.showMessageBox({
-      type: 'info',
-      title: getProductName(),
-      message: getProductName(),
-      detail,
-      buttons,
-      defaultId: buttons.indexOf(ok),
-      cancelId: buttons.indexOf(ok),
-      noLink: true,
-    });
-
-    if (msgBox.response === buttons.indexOf(copy)) {
-      clipboard.writeText(detail);
-    }
+  const aboutMenuClickHandler = () => {
+    const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+    window.webContents?.send('show-about');
   };
 
   if (isMac) {

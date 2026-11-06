@@ -192,7 +192,7 @@ function secretsIssue(entry: Entry, name: string, names: string[]): ReportEntry 
     name,
     detail:
       `These values are encrypted with a key restless does not have, so they were left empty: ${shown}${more}. ` +
-      'Generate a vault key in Preferences > General, then enter them again.',
+      'Generate a vault key in Preferences > Privacy & Security, then enter them again.',
   };
 }
 

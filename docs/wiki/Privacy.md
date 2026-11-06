@@ -8,7 +8,7 @@ restless has no accounts and no telemetry.
 |---|---|
 | Sending a request | The server you chose |
 | Git fetch, pull or push | Your Git remote |
-| Update check | GitHub Releases, only if you turn on **Allow Automatic Updates** or check by hand |
+| Update check | GitHub Releases, only if you turn on **Automatic updates** or check by hand |
 | Installing a plugin | npm |
 | Sign-in, AI and secret managers | The provider you set up, only after you turn them on |
 
