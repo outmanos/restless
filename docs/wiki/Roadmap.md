@@ -52,7 +52,7 @@ There are no dates. Milestones ship in order, once their P0 tasks are done.
 | [ ] | P1 | S | Check title bar, menus and shortcuts on Windows and macOS |
 | [ ] | P1 | S | Fix the remaining audit findings |
 | [ ] | P1 | S | Enable the AUR job once registration reopens |
-| [ ] | P2 | L | Publish pre-releases from `develop`, such as `0.2.4-beta.1`, marked as GitHub pre-releases so the Early access update channel receives them. Build on a schedule or on demand to keep the cost down, and run CI on `develop` pushes. Until then the channel finds nothing newer than stable |
+| [ ] | P2 | L | Publish pre-releases from `develop`, such as `0.2.4-beta.1`, marked as GitHub pre-releases so the Pre-releases update channel receives them. Build on a schedule or on demand to keep the cost down, and run CI on `develop` pushes. Until then the Pre-releases channel finds nothing newer than stable |
 
 ## 0.2.0: Migration
 
