@@ -13,7 +13,6 @@ restless is an Electron app, written in TypeScript with React and React Router.
 | `packages/insomnia-testing` | Test generation and runner |
 | `packages/insomnia-smoke-test` | End-to-end tests |
 | `packages/restless-plugin-secret-managers` | Secret manager plugin |
-| `packages/insomnia-component-docs` | Component library docs |
 
 Internal folders keep their `insomnia` names on purpose. It keeps future merges from Insomnia practical. See [Decisions](Decisions).
 
