@@ -13,6 +13,8 @@ interface UseCommandSearchReturn {
   results: CommandSearchResult | null;
   isSearching: boolean;
   inputValue: string;
+  // The text the current results were searched for. It trails inputValue until the debounced search returns.
+  resultsFilter: string | null;
   search: (filter?: string) => void;
   abort: () => void;
 }
@@ -29,6 +31,7 @@ export function useCommandSearch({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasReceivedResultsRef = useRef(false);
   const [results, setResults] = useState<CommandSearchResult | null>(null);
+  const [resultsFilter, setResultsFilter] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
@@ -57,6 +60,7 @@ export function useCommandSearch({
         });
         if (result.requestId === currentRequestIdRef.current) {
           setResults(result);
+          setResultsFilter(filter ?? '');
           setIsSearching(false);
           hasReceivedResultsRef.current = true;
         } else if (!hasReceivedResultsRef.current) {
@@ -122,5 +126,5 @@ export function useCommandSearch({
     };
   }, [runSearch]);
 
-  return { results, isSearching, inputValue, search, abort };
+  return { results, isSearching, inputValue, resultsFilter, search, abort };
 }
