@@ -38,6 +38,8 @@ describe('isCheckDue', () => {
     expect(isCheckDue(on, 0, 24 * hour)).toBe(true);
     expect(isCheckDue({ ...on, updateCheckInterval: UpdateCheckInterval.sixHours }, 0, 6 * hour)).toBe(true);
     expect(isCheckDue({ ...on, updateCheckInterval: UpdateCheckInterval.weekly }, 0, 24 * hour)).toBe(false);
+    expect(isCheckDue({ ...on, updateCheckInterval: UpdateCheckInterval.monthly }, 0, 29 * 24 * hour)).toBe(false);
+    expect(isCheckDue({ ...on, updateCheckInterval: UpdateCheckInterval.monthly }, 0, 30 * 24 * hour)).toBe(true);
   });
 
   it('falls back to daily for an unknown interval', () => {

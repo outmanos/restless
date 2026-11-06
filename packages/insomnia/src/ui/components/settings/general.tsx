@@ -12,7 +12,7 @@ export const General: FC = () => (
       label="Default collection for new requests"
       setting="newRequestCollection"
       values={[
-        { value: NewRequestCollection.lastUsed, name: 'The last one I used' },
+        { value: NewRequestCollection.lastUsed, name: 'The last one used' },
         { value: NewRequestCollection.first, name: 'The first one in the list' },
       ]}
       help="Where the + button in the tab bar adds a request when no collection is open. In a collection, it adds to that collection."

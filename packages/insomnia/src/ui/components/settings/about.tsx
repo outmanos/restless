@@ -71,7 +71,7 @@ const Updates: FC = () => {
       {settings.updateAutomatically && (
         <div className="pad-top-sm">
           <BooleanSetting
-            label="Check when Restless starts"
+            label="Check for updates on startup"
             setting="updateCheckOnStartup"
             help="If checked, looks for a new version each time the app opens."
           />
@@ -83,6 +83,7 @@ const Updates: FC = () => {
                 { value: UpdateCheckInterval.sixHours, name: '6 hours' },
                 { value: UpdateCheckInterval.daily, name: 'Day' },
                 { value: UpdateCheckInterval.weekly, name: 'Week' },
+                { value: UpdateCheckInterval.monthly, name: 'Month' },
               ]}
               help="How often to look again while Restless stays open."
             />

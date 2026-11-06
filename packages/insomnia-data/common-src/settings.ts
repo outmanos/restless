@@ -99,6 +99,7 @@ export enum UpdateCheckInterval {
   sixHours = 'sixHours',
   daily = 'daily',
   weekly = 'weekly',
+  monthly = 'monthly',
 }
 
 // How far the configured HTTP/HTTPS proxy reaches.
