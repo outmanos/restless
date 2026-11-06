@@ -118,6 +118,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     results: searchResults,
     isSearching,
     inputValue,
+    resultsFilter,
     search,
     abort,
   } = useCommandSearch({
@@ -445,6 +446,19 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     });
 
 
+  // Enter with nothing highlighted opens the top result. The list trails the typed text by the search debounce,
+  // so if Enter comes first, wait for the results of what was typed instead of opening a stale one.
+  const topResult = comboboxSections[0]?.children[0];
+  const resultsMatchInput = resultsFilter === inputValue && !isSearching;
+  const openTopResultWhenReady = useRef(false);
+
+  useEffect(() => {
+    if (openTopResultWhenReady.current && resultsMatchInput) {
+      openTopResultWhenReady.current = false;
+      topResult?.action();
+    }
+  }, [resultsMatchInput, topResult]);
+
   // Close the dialog when the environment is set
   // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
   // The update env will run but the loaders on the page will not be revalidated. https://github.com/remix-run/remix/discussions/9020
@@ -469,7 +483,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       inputValue={inputValue}
       defaultFilter={() => true}
       allowsEmptyCollection
-      onInputChange={search}
+      onInputChange={value => {
+        openTopResultWhenReady.current = false;
+        search(value);
+      }}
       // By default, Escape would just clear the input field. We need to press twice to close the dialog.
       onKeyDown={e => {
         if (e.key === 'Escape') {
@@ -505,6 +522,20 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                   <Input
                     slot="input"
                     placeholder="Search and switch between requests, collections and documents"
+                    // Capture phase, so this runs before the combobox commits the text and clears the input
+                    onKeyDownCapture={e => {
+                      const nothingHighlighted = !e.currentTarget.getAttribute('aria-activedescendant');
+                      if (e.key !== 'Enter' || e.nativeEvent.isComposing || !nothingHighlighted || !inputValue.trim()) {
+                        return;
+                      }
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (resultsMatchInput) {
+                        topResult?.action();
+                      } else {
+                        openTopResultWhenReady.current = true;
+                      }
+                    }}
                     className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   />
                 </>
