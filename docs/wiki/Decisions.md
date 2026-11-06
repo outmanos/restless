@@ -16,9 +16,9 @@ Why things are the way they are.
 | Keep Electron 45 | Staying current matters more than the square Chromium window buttons, which Electron 43 drew on KDE |
 | Native window controls on Linux | They match the desktop. The app sets the theme early and dims them with dialogs |
 | Bundled fonts | Nothing downloads at runtime |
+| Native file format is YAML. `.bru` is read and written for Bruno collections | YAML is what Git sync already stores, and `.bru` keeps Bruno collections portable |
+| Keep Nunjucks for templates | Template tags, plugins and existing collections depend on it, and it has filters and logic. Bruno's `{{var}}` becomes `{{ _.var }}` on import, and should convert back on `.bru` export |
 
 ## Open questions
 
-- Native file format: `.bru`, Bruno's YAML, or both. YAML is the likely default, with `.bru` for import and export.
 - Store history, cookies and tokens in the app, or on disk too.
-- Keep Nunjucks, add Bruno's `{{var}}` rules, or support both per collection.

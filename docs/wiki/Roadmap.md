@@ -74,7 +74,7 @@ The largest change. Later features build on this storage model, so it goes early
 |---|---|---|---|
 | [x] | P0 | M | Keep Git collections as YAML in a chosen folder |
 | [x] | P0 | S | GitHub and GitLab sign-in off by default |
-| [ ] | P0 | S | Decide the native format (see [Decisions](Decisions)) |
+| [x] | P0 | S | Decide the native format (see [Decisions](Decisions)) |
 | [ ] | P0 | L | Store collections as readable files, one per request |
 | [ ] | P0 | M | Watch the folder and reload on external edits |
 | [ ] | P0 | M | Open any folder as a collection |
