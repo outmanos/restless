@@ -36,9 +36,22 @@ describe('buildPreferencesFile', () => {
       version: 1,
       exportedAt: '2026-11-07T00:00:00.000Z',
       app: '0.2.5',
+      complete: false,
       settings: { followRedirects: false, fontSize: 15 },
     });
     expect(JSON.stringify(file)).not.toContain('secret');
+  });
+
+  it('includes private and per-computer settings in a complete export, but never the install id', () => {
+    const file = buildPreferencesFile(
+      { fontSize: 15, httpProxy: 'http://user:secret@proxy', deviceId: 'abc', dataFolders: ['/home/me'] },
+      defaults,
+      '0.2.5',
+      new Date('2026-11-07T00:00:00Z'),
+      { complete: true },
+    );
+    expect(file.complete).toBe(true);
+    expect(file.settings).toEqual({ dataFolders: ['/home/me'], fontSize: 15, httpProxy: 'http://user:secret@proxy' });
   });
 });
 
@@ -63,10 +76,16 @@ describe('parsePreferencesFile', () => {
       settings: { followRedirects: true },
       skipped: [
         { key: 'fontSize', reason: 'the wrong kind of value' },
-        { key: 'httpProxy', reason: 'not a preference restless knows' },
+        { key: 'httpProxy', reason: 'private, and this file is not a complete export' },
         { key: 'mystery', reason: 'not a preference restless knows' },
       ],
     });
+  });
+
+  it('applies private settings only from a complete export', () => {
+    const settings = { httpProxy: 'http://proxy', dataFolders: ['/a'] };
+    expect(parsePreferencesFile(wrap(settings, { complete: true }), defaults)).toEqual({ settings, skipped: [] });
+    expect(parsePreferencesFile(wrap(settings), defaults)).toMatchObject({ settings: {}, skipped: [{}, {}] });
   });
 
   it('keeps only valid shortcuts', () => {

@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, stat } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import electron from 'electron';
@@ -30,7 +30,7 @@ export async function backup() {
   }
 }
 
-export async function restoreBackup(version: string) {
+export async function restoreBackup(version: string, keep?: number) {
   try {
     const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
     const backupsDir = path.join(dataPath, 'backups');
@@ -46,11 +46,16 @@ export async function restoreBackup(version: string) {
       console.log('[main] No backup found at:', versionPath);
       return;
     }
-    files.forEach(async (file: string) => {
-      if (file.endsWith('.db')) {
-        await copyFile(path.join(versionPath, file), path.join(dataPath, file));
-      }
-    });
+    // Keep what is there now, so a restore can be undone
+    await createBackup(new Date(), 'before-restore');
+    if (keep) {
+      await pruneBackups(keep, version);
+    }
+    await Promise.all(
+      files
+        .filter(file => file.endsWith('.db'))
+        .map(file => copyFile(path.join(versionPath, file), path.join(dataPath, file))),
+    );
     console.log('[main] Restored backup from:', versionPath);
   } catch (err) {
     console.log('[main] Error restoring backup:', err);
@@ -60,6 +65,9 @@ export async function restoreBackup(version: string) {
 }
 
 const getDataPath = () => process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+
+export const getDataFolder = getDataPath;
+export const getBackupsFolder = () => path.join(getDataPath(), 'backups');
 
 export interface BackupInfo {
   // The folder name, which is what restoreBackup takes
@@ -110,9 +118,9 @@ export async function listBackups(): Promise<BackupInfo[]> {
 const timestamp = (date: Date) => date.toISOString().replace(/[:T]/g, '-').slice(0, 19);
 
 // A backup the person asked for. Unlike the one made on each update, there can be many.
-export async function createBackup(now = new Date()): Promise<BackupInfo> {
+export async function createBackup(now = new Date(), prefix: string = version): Promise<BackupInfo> {
   const dataPath = getDataPath();
-  const name = `${version}-${timestamp(now)}`;
+  const name = `${prefix}-${timestamp(now)}`;
   const folder = path.join(dataPath, 'backups', name);
   await mkdir(folder, { recursive: true });
   const files = await dbFiles(dataPath);
@@ -122,17 +130,40 @@ export async function createBackup(now = new Date()): Promise<BackupInfo> {
   return { name, createdAt: Date.now(), files: files.length, sizeBytes: await sizeOf(folder, files) };
 }
 
-export interface DataFolderInfo {
-  path: string;
-  // The data files, which is what a backup holds
-  sizeBytes: number;
+const PREFERENCES_BACKUP_FOLDER = 'preferences';
+
+// Deletes the oldest backups beyond the newest `keep`. `protect` is one that must stay, such as the one being restored.
+export async function pruneBackups(keep: number, protect?: string): Promise<string[]> {
+  const limit = Math.max(1, Math.floor(keep));
+  const backupsDir = getBackupsFolder();
+  const removed: string[] = [];
+  const kept = (await listBackups()).filter(backup => backup.name !== protect);
+  for (const backup of kept.slice(Math.max(0, limit - (protect ? 1 : 0)))) {
+    await rm(path.join(backupsDir, backup.name), { recursive: true, force: true });
+    removed.push(backup.name);
+  }
+  // The copies of preferences made before an import are kept to the same number
+  try {
+    const folder = path.join(backupsDir, PREFERENCES_BACKUP_FOLDER);
+    const files = (await readdir(folder))
+      .filter(file => file.endsWith('.json'))
+      .sort()
+      .reverse();
+    for (const file of files.slice(limit)) {
+      await rm(path.join(folder, file), { force: true });
+    }
+  } catch {
+    // No preferences were backed up yet
+  }
+  return removed;
 }
 
-export async function getDataFolderInfo(): Promise<DataFolderInfo> {
-  const dataPath = getDataPath();
-  try {
-    return { path: dataPath, sizeBytes: await sizeOf(dataPath, await dbFiles(dataPath)) };
-  } catch {
-    return { path: dataPath, sizeBytes: 0 };
-  }
+// The preferences as they are right now, saved before an import replaces them
+export async function backupPreferences(json: string, keep: number, now = new Date()): Promise<string> {
+  const folder = path.join(getBackupsFolder(), PREFERENCES_BACKUP_FOLDER);
+  await mkdir(folder, { recursive: true });
+  const file = path.join(folder, `preferences-${timestamp(now)}.json`);
+  await writeFile(file, json);
+  await pruneBackups(keep);
+  return file;
 }

@@ -87,6 +87,7 @@ export function init(): BaseSettings {
     updateChannel: UpdateChannel.stable,
     updateCheckOnStartup: true,
     newRequestCollection: NewRequestCollection.lastUsed,
+    maxBackups: 10,
     updateCheckInterval: UpdateCheckInterval.daily,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,

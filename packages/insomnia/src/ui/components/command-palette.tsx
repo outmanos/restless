@@ -511,7 +511,7 @@ const CommandPaletteCombobox = ({ close, initialValue }: { close: () => void; in
       id: 'data',
       title: 'Export or import preferences, and manage backups',
       keywords: ['data', 'settings', 'json', 'backup', 'restore'],
-      run: () => openSettings({ tab: 'data' }),
+      run: () => openSettings({ tab: 'general' }),
     },
     {
       id: 'help',

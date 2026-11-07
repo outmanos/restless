@@ -596,17 +596,17 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Data Folder`,
+        label: `Open App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
           const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
-          shell.showItemInFolder(directory);
+          shell.openPath(directory);
         },
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        label: `Open App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
           const directory = getLogDirectory();
-          shell.showItemInFolder(directory);
+          shell.openPath(directory);
         },
       },
       {

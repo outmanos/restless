@@ -121,7 +121,8 @@ The largest change. Later features build on this storage model, so it goes early
 | [x] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
 | [x] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
 | [x] | P1 | S | Preferences exported to and imported from a JSON file, leaving out private and per-computer settings. Storing preferences as a file instead of in the database is part of 0.3.0 |
-| [ ] | P1 | M | Scheduled backups with settings for how often to back up (on each update, daily, weekly or monthly) and how many to keep. Today a copy is made only when the app updates, one folder per version |
+| [x] | P1 | S | Keep only the last N backups, set in General with 10 as the default, and save a safety copy before a restore or a preferences import |
+| [ ] | P1 | M | Scheduled backups: choose how often to back up (on each update, daily, weekly or monthly). Today a copy is made on each update and when asked |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |

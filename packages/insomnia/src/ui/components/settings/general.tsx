@@ -1,8 +1,10 @@
 import { NewRequestCollection } from 'insomnia-data/common';
 import React, { type FC } from 'react';
 
+import { BackupsSection } from './backups-section';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
+import { PreferencesFileSection } from './preferences-file-section';
 import { SettingsHeading } from './settings-section';
 
 export const General: FC = () => (
@@ -36,5 +38,11 @@ export const General: FC = () => (
       setting="handleInsomniaLinks"
       help="Opens insomnia:// plugin, theme and import links here. Turn this off if you also use Insomnia. Takes effect after a restart."
     />
+
+    <SettingsHeading>Preferences file</SettingsHeading>
+    <PreferencesFileSection />
+
+    <SettingsHeading>Backups</SettingsHeading>
+    <BackupsSection />
   </div>
 );

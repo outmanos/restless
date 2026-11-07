@@ -42,6 +42,8 @@ test('Settings live in the tab that matches their name', async ({ page }) => {
     ['General', 'Sidebar focus for collections'],
     ['General', 'Show legacy unit tests'],
     ['General', 'Open Insomnia web links'],
+    ['General', 'Backups to keep'],
+    ['General', 'Export preferences'],
     ['Appearance', 'Interface font'],
     ['Editor', 'Autocomplete popup delay (ms)'],
     ['Keyboard', 'Key map'],
@@ -160,13 +162,52 @@ test('Ctrl+P is still the plain search', async ({ page }) => {
   await expect.soft(page.getByPlaceholder('Search and switch between')).toBeVisible();
 });
 
-test('Data has the preferences file, backups and where the data lives', async ({ page }) => {
+test('General has the preferences file and backups, and Data has the folders', async ({ app, page }) => {
   await page.getByTestId('settings-button').click();
-  await page.getByTestId('preferences').getByRole('tab', { name: 'Data' }).click();
+  const preferences = page.getByTestId('preferences');
+
+  // Preferences file: a complete export is opt in
   await expect.soft(page.getByTestId('export-preferences')).toBeVisible();
   await expect.soft(page.getByTestId('import-preferences')).toBeVisible();
-  await expect.soft(page.getByTestId('data-folder-path')).not.toBeEmpty();
+  await expect.soft(page.getByTestId('export-complete').getByRole('checkbox')).not.toBeChecked();
 
+  // Backups: how many to keep, back up now, and pick one to restore
+  await expect.soft(page.locator('[name="maxBackups"]')).toHaveValue('10');
+  await expect.soft(page.getByTestId('restore-backup')).toBeVisible();
   await page.getByTestId('backup-now').click();
-  await expect.soft(page.getByTestId('backup-list').getByRole('listitem')).toHaveCount(1);
+  await expect.soft(page.getByTestId('backup-count')).toContainText('1 saved, keeping the last 10');
+
+  // Data: the folders open directly, not just show in the file manager
+  await app.evaluate(({ shell }) => {
+    const opened: string[] = [];
+    shell.openPath = async folder => {
+      opened.push(folder);
+      return '';
+    };
+    (globalThis as unknown as { __openedFolders: string[] }).__openedFolders = opened;
+  });
+  await preferences.getByRole('tab', { name: 'Data' }).click();
+  await page.getByTestId('open-data-folder').click();
+  await page.getByTestId('open-logs-folder').click();
+  await expect
+    .poll(() => app.evaluate(() => (globalThis as unknown as { __openedFolders: string[] }).__openedFolders.length))
+    .toBe(2);
+});
+
+test('Appearance has the accent color under its own heading, below the themes', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('preferences').getByRole('tab', { name: 'Appearance' }).click();
+  await expect.soft(page.getByRole('heading', { name: 'Accent color' })).toBeVisible();
+  const headings = await page.getByTestId('preferences').getByRole('heading', { level: 2 }).allTextContents();
+  expect.soft(headings.slice(0, 3)).toEqual(['Theme', 'Accent color', 'Fonts']);
+  await expect.soft(page.getByRole('button', { name: 'Violet' })).toBeVisible();
+});
+
+test('The plugins note is left aligned with a ! at the start', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('preferences').getByRole('tab', { name: 'Plugins' }).click();
+  const note = page.getByTestId('plugins-note');
+  await expect.soft(note).toContainText('Plugins are built and maintained by third-party developers');
+  await expect.soft(note).toHaveCSS('text-align', 'left');
+  await expect.soft(note.locator('[aria-hidden="true"]').first()).toHaveText('!');
 });

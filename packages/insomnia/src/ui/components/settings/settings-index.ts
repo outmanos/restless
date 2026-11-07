@@ -106,17 +106,20 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
   {
     key: 'export-preferences',
     label: 'Export preferences to a JSON file',
-    tab: 'data',
+    tab: 'general',
     keywords: ['save', 'settings', 'backup', 'json'],
   },
   {
     key: 'import-preferences',
     label: 'Import preferences from a JSON file',
-    tab: 'data',
+    tab: 'general',
     keywords: ['load', 'settings', 'restore', 'json'],
   },
-  { key: 'backup-now', label: 'Back up now', tab: 'data', keywords: ['backups', 'restore', 'copy'] },
-  { key: 'data-folder-path', label: 'Data folder location', tab: 'data', keywords: ['where', 'files', 'disk', 'size'] },
+  { key: 'backup-now', label: 'Back up now', tab: 'general', keywords: ['backups', 'restore', 'copy'] },
+  { key: 'maxBackups', label: 'Backups to keep', tab: 'general', keywords: ['delete old', 'limit', 'how many'] },
+  { key: 'restore-backup', label: 'Restore a backup', tab: 'general', keywords: ['backups', 'undo', 'recover'] },
+  { key: 'open-data-folder', label: 'Open data folder', tab: 'data', keywords: ['where', 'files', 'disk'] },
+  { key: 'open-logs-folder', label: 'Open logs folder', tab: 'data', keywords: ['debug', 'errors'] },
 
   { key: 'aiFeatures', label: 'Enable AI features', tab: 'ai', keywords: ['llm', 'claude', 'openai', 'gemini'] },
 

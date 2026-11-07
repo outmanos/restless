@@ -141,8 +141,8 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setPfxPath(window.webUtils.getPathForFile(file));
                           }}
                         >
-                          <Button className="flex h-full shrink-0 items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)">
-                            {!pfxPath && <Icon icon="plus" />}
+                          <Button className="group flex h-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:border-(--color-surprise) hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)">
+                            {!pfxPath && <Icon icon="plus" className="transition-colors group-hover:text-(--color-surprise)" />}
                             <span className="truncate" title={pfxPath}>
                               {pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}
                             </span>
@@ -168,9 +168,9 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button
                             data-test-id="add-client-certificate-file-chooser"
-                            className="flex h-full shrink-0 items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
+                            className="group flex h-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:border-(--color-surprise) hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
                           >
-                            {!certificatePath && <Icon icon="plus" />}
+                            {!certificatePath && <Icon icon="plus" className="transition-colors group-hover:text-(--color-surprise)" />}
                             <span className="truncate" title={certificatePath}>
                               {certificatePath ? certificatePath : 'Add certificate file'}
                             </span>
@@ -194,9 +194,9 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         >
                           <Button
                             data-test-id="add-client-certificate-key-file-chooser"
-                            className="flex h-full shrink-0 items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
+                            className="group flex h-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:border-(--color-surprise) hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
                           >
-                            {!keyPath && <Icon icon="plus" />}
+                            {!keyPath && <Icon icon="plus" className="transition-colors group-hover:text-(--color-surprise)" />}
                             <span className="truncate" title={keyPath}>
                               {keyPath ? keyPath : 'Add key file'}
                             </span>

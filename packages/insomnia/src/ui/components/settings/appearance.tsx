@@ -10,12 +10,15 @@ import { BooleanSetting } from './boolean-setting';
 import { NumberSetting } from './number-setting';
 import { SettingsHeading } from './settings-section';
 import { TextSetting } from './text-setting';
-import { ThemePanel } from './theme-panel';
+import { AccentSection, ThemePanel } from './theme-panel';
 
 export const Appearance: FC = () => (
   <div>
     <SettingsHeading first>Theme</SettingsHeading>
     <ThemePanel />
+
+    <SettingsHeading>Accent color</SettingsHeading>
+    <AccentSection />
 
     <SettingsHeading>Fonts</SettingsHeading>
     <div className="form-row">

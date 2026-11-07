@@ -95,7 +95,6 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span>Accent color</span>
       <Label className="flex items-center gap-2 text-sm">
         <Checkbox
           slot={null}
@@ -146,10 +145,7 @@ export const ThemePanel: FC = () => {
     isActiveLight,
     autoDetectColorScheme,
     accentColor,
-    changeAccentColor,
   } = useThemes();
-  const activeTheme = themes.find(theme => isActive(theme));
-  const themeAccent = Color(activeTheme?.theme.background?.surprise ?? '#7c6cf0').hex();
 
   return (
     <div className="flex flex-col gap-2">
@@ -173,8 +169,6 @@ export const ThemePanel: FC = () => {
           hover over a theme and select either light (sun) or dark (moon).
         </HelpTooltip>
       </Label>
-
-      <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />
 
       <ul className="grid grid-flow-row grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
         {themes.map(theme => (
@@ -229,4 +223,12 @@ export const ThemePanel: FC = () => {
       </ul>
     </div>
   );
+};
+
+// Its own section below the themes, so the accent controls do not crowd the theme list
+export const AccentSection: FC = () => {
+  const { themes, isActive, accentColor, changeAccentColor } = useThemes();
+  const activeTheme = themes.find(theme => isActive(theme));
+  const themeAccent = Color(activeTheme?.theme.background?.surprise ?? '#7c6cf0').hex();
+  return <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />;
 };
