@@ -7,9 +7,9 @@ import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { About } from './about';
 import { Appearance } from './appearance';
+import { Data } from './data';
 import { Editor } from './editor';
 import { General } from './general';
-import { ImportExport } from './import-export';
 import { Keyboard } from './keyboard';
 import { Plugins } from './plugins';
 import { Requests } from './requests';
@@ -162,7 +162,7 @@ export const Preferences: FC<{
           </TabPanel>
           <TabPanel className={PANEL_CLASS_NAME} id="data">
             <div className="max-w-4xl">
-              <ImportExport hideSettingsModal={onClose} projectId={projectId} workspaceId={workspaceId} />
+              <Data onClose={onClose} projectId={projectId} workspaceId={workspaceId} />
             </div>
           </TabPanel>
           <TabPanel className={PANEL_CLASS_NAME} id="plugins">

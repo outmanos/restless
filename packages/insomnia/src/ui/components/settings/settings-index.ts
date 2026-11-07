@@ -103,6 +103,21 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
 
   { key: 'scriptSandboxEnabled', label: 'Script sandbox', tab: 'scripting', keywords: ['security'] },
 
+  {
+    key: 'export-preferences',
+    label: 'Export preferences to a JSON file',
+    tab: 'data',
+    keywords: ['save', 'settings', 'backup', 'json'],
+  },
+  {
+    key: 'import-preferences',
+    label: 'Import preferences from a JSON file',
+    tab: 'data',
+    keywords: ['load', 'settings', 'restore', 'json'],
+  },
+  { key: 'backup-now', label: 'Back up now', tab: 'data', keywords: ['backups', 'restore', 'copy'] },
+  { key: 'data-folder-path', label: 'Data folder location', tab: 'data', keywords: ['where', 'files', 'disk', 'size'] },
+
   { key: 'aiFeatures', label: 'Enable AI features', tab: 'ai', keywords: ['llm', 'claude', 'openai', 'gemini'] },
 
   { key: 'updateAutomatically', label: 'Automatic updates', tab: 'about', keywords: ['update', 'download'] },

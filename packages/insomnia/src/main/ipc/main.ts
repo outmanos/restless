@@ -36,6 +36,7 @@ import type {
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import type { AboutDetail } from '~/main/about';
+import type { BackupInfo, DataFolderInfo } from '~/main/backup';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import {
   exportHarCurrentRequest,
@@ -65,7 +66,7 @@ import {
   onDefaultBrowserOAuthRedirect,
 } from '../authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '../authorize-user-in-window';
-import { backup, restoreBackup } from '../backup';
+import { backup, createBackup, getDataFolderInfo, listBackups, restoreBackup } from '../backup';
 import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
@@ -231,6 +232,9 @@ export interface RendererToMainBridgeAPI extends MigrationBridgeAPI {
   getAboutDetails: () => AboutDetail[];
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
+  listBackups: () => Promise<BackupInfo[]>;
+  createBackup: () => Promise<BackupInfo>;
+  getDataFolderInfo: () => Promise<DataFolderInfo>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
   onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
@@ -432,6 +436,9 @@ export function registerMainHandlers() {
   ipcMainHandle('restoreBackup', async (_, options: string) => {
     return restoreBackup(options);
   });
+  ipcMainHandle('listBackups', () => listBackups());
+  ipcMainHandle('createBackup', () => createBackup());
+  ipcMainHandle('getDataFolderInfo', () => getDataFolderInfo());
   ipcMainHandle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });

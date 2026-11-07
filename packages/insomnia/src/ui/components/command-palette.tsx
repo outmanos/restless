@@ -39,6 +39,7 @@ import { openSettings } from '../settings-navigation';
 import { commandQuery, isCommandInput, type PaletteCommand, searchCommands, settingsForQuery } from './command-mode';
 import { MigrationModal } from './migration/migration-modal';
 import { showModal } from './modals';
+import { showToast } from './toast-notification';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -492,6 +493,19 @@ const CommandPaletteCombobox = ({ close, initialValue }: { close: () => void; in
       title: 'Import a collection or file',
       keywords: ['postman', 'openapi', 'curl', 'har'],
       run: () => uiEventBus.emit(OPEN_IMPORT),
+    },
+    {
+      id: 'backup',
+      title: 'Back up your data now',
+      keywords: ['backups', 'copy', 'save'],
+      run: async () => {
+        try {
+          const made = await window.main.createBackup();
+          showToast({ title: 'Backup created', description: made.name, status: 'success' });
+        } catch (error) {
+          showToast({ title: 'Backup failed', description: String(error?.message ?? error), status: 'error' });
+        }
+      },
     },
     {
       id: 'data',
