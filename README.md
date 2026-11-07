@@ -7,6 +7,7 @@
 [![Windows installer](https://img.shields.io/badge/Windows-installer-7c6cf0)](https://github.com/outmanos/restless/releases/latest)
 [![macOS Apple Silicon, unsigned](https://img.shields.io/badge/macOS-Apple_Silicon,_unsigned-7c6cf0)](https://github.com/outmanos/restless/releases/latest)
 [![Linux AppImage, deb, rpm](https://img.shields.io/badge/Linux-AppImage,_deb,_rpm-7c6cf0)](https://github.com/outmanos/restless/releases/latest)
+[![Arch, CachyOS, Manjaro](https://img.shields.io/badge/Arch-PKGBUILD-7c6cf0)](https://github.com/outmanos/restless/wiki/Installation#arch-cachyos-and-manjaro)
 [![Command line rl](https://img.shields.io/badge/Command_line-rl-7c6cf0)](https://github.com/outmanos/restless/wiki/Command-Line)
 
 restless is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
