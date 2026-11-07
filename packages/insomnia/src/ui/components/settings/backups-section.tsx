@@ -81,7 +81,7 @@ export const BackupsSection: FC = () => {
         )}
       </p>
       <NumberSetting
-        label="Backups to keep"
+        label="Number of backups to keep"
         setting="maxBackups"
         min={1}
         max={100}

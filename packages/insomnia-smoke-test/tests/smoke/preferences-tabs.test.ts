@@ -42,7 +42,7 @@ test('Settings live in the tab that matches their name', async ({ page }) => {
     ['General', 'Sidebar focus for collections'],
     ['General', 'Show legacy unit tests'],
     ['General', 'Open Insomnia web links'],
-    ['General', 'Backups to keep'],
+    ['General', 'Number of backups to keep'],
     ['General', 'Export preferences'],
     ['Appearance', 'Interface font'],
     ['Editor', 'Autocomplete popup delay (ms)'],

@@ -116,7 +116,7 @@ export const SETTINGS_INDEX: SettingsIndexEntry[] = [
     keywords: ['load', 'settings', 'restore', 'json'],
   },
   { key: 'backup-now', label: 'Back up now', tab: 'general', keywords: ['backups', 'restore', 'copy'] },
-  { key: 'maxBackups', label: 'Backups to keep', tab: 'general', keywords: ['delete old', 'limit', 'how many'] },
+  { key: 'maxBackups', label: 'Number of backups to keep', tab: 'general', keywords: ['delete old', 'limit', 'how many'] },
   { key: 'restore-backup', label: 'Restore a backup', tab: 'general', keywords: ['backups', 'undo', 'recover'] },
   { key: 'open-data-folder', label: 'Open data folder', tab: 'data', keywords: ['where', 'files', 'disk'] },
   { key: 'open-logs-folder', label: 'Open logs folder', tab: 'data', keywords: ['debug', 'errors'] },
