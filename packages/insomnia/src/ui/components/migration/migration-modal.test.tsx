@@ -34,6 +34,7 @@ vi.mock('~/ui/templating/renderer-safe', () => ({ reload: vi.fn() }));
 
 const bridge = {
   migrationDetect: vi.fn(),
+  migrationDetectPostman: vi.fn(),
   migrationPlanInsomnia: vi.fn(),
   migrationPlanBruno: vi.fn(),
   migrationCommit: vi.fn(),
@@ -94,6 +95,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   Object.assign(window, { main: bridge, dialog: { showOpenDialog }, clipboard: { writeText } });
   bridge.migrationDetect.mockResolvedValue([]);
+  bridge.migrationDetectPostman.mockResolvedValue(null);
   bridge.migrationCommit.mockImplementation(async (plan: MigrationPlan) =>
     makeReport({ source: plan.source, imported: { Request: 1 } }),
   );
@@ -137,6 +139,26 @@ describe('opening', () => {
       '1 project, 2 collections, 10 requests, 1 environment',
     );
     expect(find('migration-source-insomnium')?.textContent).toContain('/x');
+  });
+
+  it('points a Postman user to Import, above the other sources', async () => {
+    bridge.migrationDetectPostman.mockResolvedValue({ path: '/home/me/.config/Postman' });
+    bridge.migrationDetect.mockResolvedValue([makeSource()]);
+    await open();
+    const postman = find('migration-postman');
+    expect(postman?.textContent).toContain('export your collections');
+    expect(postman?.textContent).toContain('Import');
+    // Postman comes first, then Insomnia, then Bruno
+    const order = [postman, find('migration-source-insomnia'), find('migration-bruno')];
+    expect(order.every(Boolean)).toBe(true);
+    for (let index = 1; index < order.length; index += 1) {
+      expect(order[index - 1]!.compareDocumentPosition(order[index]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it('shows no Postman hint when it is not installed', async () => {
+    await open();
+    expect(find('migration-postman')).toBeNull();
   });
 
   it('says so when nothing is found, and still offers Bruno', async () => {

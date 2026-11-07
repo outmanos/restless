@@ -276,6 +276,7 @@ const main: Window['main'] = {
   secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),
   parseImport: (...args) => invokeWithNormalizedError('parseImport', ...args),
   migrationDetect: () => invokeWithNormalizedError('migrationDetect'),
+  migrationDetectPostman: () => invokeWithNormalizedError('migrationDetectPostman'),
   migrationPlanInsomnia: source => invokeWithNormalizedError('migrationPlanInsomnia', source),
   migrationPlanBruno: folder => invokeWithNormalizedError('migrationPlanBruno', folder),
   migrationCommit: plan => invokeWithNormalizedError('migrationCommit', plan),

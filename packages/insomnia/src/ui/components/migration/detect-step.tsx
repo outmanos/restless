@@ -5,6 +5,7 @@ import type { FlowState } from './flow-state';
 import { sourceLabel } from './labels';
 import { Body, Footer, Notice, Spinner } from './parts';
 import { describeCounts } from './summary';
+import { usePostmanInstall } from './use-postman-install';
 
 const SourceCard = ({
   source,
@@ -75,6 +76,7 @@ export const DetectStep = ({
 }) => {
   const { detect, reading, readError } = state;
   const isBusy = reading !== null;
+  const postman = usePostmanInstall();
 
   return (
     <>
@@ -87,6 +89,19 @@ export const DetectStep = ({
           </p>
           {isOffer && <p>Later, find this under File &gt; Migrate from…</p>}
         </div>
+
+        {postman && (
+          <section
+            className="flex min-w-0 flex-col gap-0.5 rounded-md border border-dashed border-(--hl-md) p-3"
+            data-testid="migration-postman"
+          >
+            <span className="font-semibold">Postman</span>
+            <span className="text-sm text-(--hl)">
+              Postman is installed, but its data cannot be copied from here. In Postman, export your collections or a
+              full data dump, then bring them in with Import.
+            </span>
+          </section>
+        )}
 
         {detect.status === 'loading' && (
           <p className="flex items-center gap-2 text-sm" role="status" data-testid="migration-looking">
