@@ -143,7 +143,7 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'flex max-h-[50vh] flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
+          'group flex max-h-[50vh] cursor-pointer flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
           {
             'border-(--color-surprise)': isDropTarget,
             'border-(--hl-md)': !isDropTarget,
@@ -164,7 +164,7 @@ const FileField: FC = () => {
         ) : (
           <div className="flex w-full flex-col items-center justify-center gap-(--padding-sm) p-(--padding-md)">
             <div>
-              <i className="fa fa-upload fa-xl" />
+              <i className="fa fa-upload fa-xl transition-colors group-hover:text-(--color-surprise)" />
             </div>
             <div>
               Drag and Drop or <span className="text-(--color-surprise)">Choose Files</span> to import
