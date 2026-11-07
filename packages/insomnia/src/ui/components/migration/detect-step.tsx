@@ -66,6 +66,7 @@ export const DetectStep = ({
   onChooseBruno,
   onRetry,
   onClose,
+  onOpenImport,
 }: {
   state: FlowState;
   isOffer: boolean;
@@ -73,6 +74,8 @@ export const DetectStep = ({
   onChooseBruno: () => void;
   onRetry: () => void;
   onClose: () => void;
+  // Closes this window and opens the import window
+  onOpenImport: () => void;
 }) => {
   const { detect, reading, readError } = state;
   const isBusy = reading !== null;
@@ -98,7 +101,11 @@ export const DetectStep = ({
             <span className="font-semibold">Postman</span>
             <span className="text-sm text-(--hl)">
               Postman is installed, but its data cannot be copied from here. In Postman, export your collections or a
-              full data dump, then bring them in with Import.
+              full data dump, then bring them in with{' '}
+              <Button size="sm" data-testid="migration-open-import" onPress={onOpenImport}>
+                Import
+              </Button>
+              .
             </span>
           </section>
         )}

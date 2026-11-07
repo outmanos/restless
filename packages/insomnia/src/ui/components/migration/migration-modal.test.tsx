@@ -7,6 +7,7 @@ import type * as ReactRouter from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MigrationPlan } from '~/main/migration/types';
+import uiEventBus, { OPEN_IMPORT } from '~/ui/event-bus';
 
 import { MigrationModal, type MigrationModalHandle, type MigrationModalOptions } from './migration-modal';
 import { DASHES, makeEntry, makeItem, makePlan, makeReport, makeSource, NOTHING } from './test-fixtures';
@@ -154,6 +155,17 @@ describe('opening', () => {
     for (let index = 1; index < order.length; index += 1) {
       expect(order[index - 1]!.compareDocumentPosition(order[index]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+  });
+
+  it('opens the import window from the Postman hint and closes itself', async () => {
+    bridge.migrationDetectPostman.mockResolvedValue({ path: '/home/me/.config/Postman' });
+    const opened = vi.fn();
+    const unsubscribe = uiEventBus.on(OPEN_IMPORT, opened);
+    await open();
+    await click('migration-open-import');
+    expect(opened).toHaveBeenCalledTimes(1);
+    expect(find('migration-modal')).toBeNull();
+    unsubscribe();
   });
 
   it('shows no Postman hint when it is not installed', async () => {
