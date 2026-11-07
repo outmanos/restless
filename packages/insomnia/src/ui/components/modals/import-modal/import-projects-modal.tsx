@@ -175,7 +175,7 @@ const FileField = ({
           onChange(rootFolder);
         }}
         className={classnames(
-          'group flex max-h-[50vh] cursor-pointer flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
+          'group flex max-h-[50vh] cursor-pointer flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm) transition-colors hover:border-(--color-surprise) hover:bg-(--hl-sm)',
           {
             'border-(--color-surprise)': isDropTarget,
             'border-(--hl-md)': !isDropTarget,
