@@ -96,17 +96,23 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span>Accent color</span>
-      <span title="Use the theme's own color" className="flex">
-        <Button
-          aria-label="Theme color"
-          aria-pressed={!draft}
-          onPress={() => setDraft('')}
-          style={{ backgroundColor: themeAccent }}
-          className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
+      <Label className="flex items-center gap-2 text-sm">
+        <Checkbox
+          slot={null}
+          isSelected={!draft}
+          // Unchecking keeps the theme's accent, as a color you can then change
+          onChange={isSelected => setDraft(isSelected ? '' : themeAccent)}
+          className="group flex h-full items-center p-0"
         >
-          <span className="sr-only">Use the theme&apos;s own color</span>
-        </Button>
-      </span>
+          <div className="flex h-[14px] w-[14px] items-center justify-center rounded-[4px] border border-solid border-(--hl-lg) transition-colors group-data-selected:border-(--color-surprise) group-data-selected:bg-(--color-surprise)">
+            <Icon
+              icon="check"
+              className="h-[10px] w-[10px] text-(--color-font-surprise) opacity-0 group-data-selected:opacity-100"
+            />
+          </div>
+        </Checkbox>
+        Use theme color
+      </Label>
       {ACCENT_PRESETS.map(({ name, color }) => (
         <Button
           key={color}
