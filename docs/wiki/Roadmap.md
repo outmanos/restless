@@ -120,6 +120,7 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |
 | [x] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
 | [ ] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
+| [ ] | P1 | M | Scheduled backups with settings for how often to back up (on each update, daily, weekly or monthly) and how many to keep. Today a copy is made only when the app updates, one folder per version |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |
