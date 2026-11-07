@@ -98,3 +98,75 @@ test('The section is kept in the address so a link can open it', async ({ page }
   await page.getByTestId('preferences').getByRole('tab', { name: 'Requests' }).click();
   await expect.soft(page).toHaveURL(/settings\?tab=requests/);
 });
+
+test('Search finds a setting, opens its section and highlights it', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  const search = page.getByTestId('settings-search');
+  await search.fill('proxy');
+  await expect.soft(page.getByTestId('settings-search-result-httpProxy')).toBeVisible();
+  await page.getByTestId('settings-search-result-httpProxy').click();
+
+  const preferences = page.getByTestId('preferences');
+  await expect.soft(preferences.getByRole('tab', { name: 'Requests' })).toHaveAttribute('aria-selected', 'true');
+  await expect.soft(page.locator('[name="httpProxy"]')).toBeFocused();
+  await expect.soft(page.locator('.setting-found')).toHaveCount(1);
+  // The search box is cleared, and the address no longer asks for the setting
+  await expect.soft(search).toHaveValue('');
+  await expect.soft(page).not.toHaveURL(/setting=/);
+});
+
+test('Enter in the search box opens the best match, and Escape clears it without closing', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  const search = page.getByTestId('settings-search');
+  await search.fill('vim');
+  await search.press('Escape');
+  await expect.soft(search).toHaveValue('');
+  await expect.soft(page.getByTestId('preferences')).toBeVisible();
+
+  await search.fill('vim');
+  await search.press('Enter');
+  await expect
+    .soft(page.getByTestId('preferences').getByRole('tab', { name: 'Keyboard' }))
+    .toHaveAttribute('aria-selected', 'true');
+});
+
+test('Ctrl+Shift+P opens the palette in command mode and finds commands and settings', async ({ page }) => {
+  await page.locator('body').press('Control+Shift+P');
+  const input = page.getByPlaceholder('Type a command or the name of a setting');
+  await expect.soft(input).toHaveValue('>');
+  await expect.soft(page.getByRole('option', { name: /Open Preferences/ })).toBeVisible();
+
+  await input.fill('> keyboard');
+  await expect.soft(page.getByRole('option', { name: /Open Keyboard Shortcuts/ })).toBeVisible();
+  await input.press('Enter');
+  await expect
+    .soft(page.getByTestId('preferences').getByRole('tab', { name: 'Keyboard' }))
+    .toHaveAttribute('aria-selected', 'true');
+});
+
+test('A setting found in command mode opens at that setting', async ({ page }) => {
+  await page.locator('body').press('Control+Shift+P');
+  const input = page.getByPlaceholder('Type a command or the name of a setting');
+  await input.fill('> interface font');
+  await page.getByRole('option', { name: /Interface font$/ }).first().click();
+  await expect
+    .soft(page.getByTestId('preferences').getByRole('tab', { name: 'Appearance' }))
+    .toHaveAttribute('aria-selected', 'true');
+  await expect.soft(page.locator('[name="fontInterface"]')).toBeFocused();
+});
+
+test('Ctrl+P is still the plain search', async ({ page }) => {
+  await page.locator('body').press('Control+p');
+  await expect.soft(page.getByPlaceholder('Search and switch between')).toBeVisible();
+});
+
+test('Data has the preferences file, backups and where the data lives', async ({ page }) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('preferences').getByRole('tab', { name: 'Data' }).click();
+  await expect.soft(page.getByTestId('export-preferences')).toBeVisible();
+  await expect.soft(page.getByTestId('import-preferences')).toBeVisible();
+  await expect.soft(page.getByTestId('data-folder-path')).not.toBeEmpty();
+
+  await page.getByTestId('backup-now').click();
+  await expect.soft(page.getByTestId('backup-list').getByRole('listitem')).toHaveCount(1);
+});

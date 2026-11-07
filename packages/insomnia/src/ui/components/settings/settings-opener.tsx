@@ -33,7 +33,8 @@ export const SettingsOpener = () => {
 
   useEffect(
     () =>
-      uiEventBus.on(OPEN_SETTINGS, (tab?: string) => {
+      uiEventBus.on(OPEN_SETTINGS, (options?: { tab?: string; setting?: string }) => {
+        const tab = options?.tab;
         // Without a section, return to the one that was open last
         const existing = tabsRef.current.tabList.find(item => item.id === SETTINGS_TAB_ID);
         const section =
@@ -41,7 +42,7 @@ export const SettingsOpener = () => {
         // Remember the page Preferences was opened from, so closing it goes back there
         const onSettings = !!matchPath('/organization/:organizationId/project/settings', window.location.pathname);
         const from = onSettings ? window.history.state?.usr?.from : window.location.pathname + window.location.search;
-        navigate(buildSettingsUrl(organizationId, section, getCurrentContext()), { state: { from } });
+        navigate(buildSettingsUrl(organizationId, section, getCurrentContext(), options?.setting), { state: { from } });
       }),
     [navigate, organizationId],
   );
