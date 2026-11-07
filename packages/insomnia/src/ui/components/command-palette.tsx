@@ -33,15 +33,29 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
+import { docsBase } from '../../common/documentation';
+import uiEventBus, { OPEN_IMPORT } from '../event-bus';
+import { openSettings } from '../settings-navigation';
+import { commandQuery, isCommandInput, type PaletteCommand, searchCommands, settingsForQuery } from './command-mode';
+import { MigrationModal } from './migration/migration-modal';
+import { showModal } from './modals';
+
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
+  // What the box starts with: nothing for search, > for commands and settings
+  const [initialValue, setInitialValue] = useState('');
   const { settings } = useRootLoaderData()!;
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
+      setInitialValue('');
+      setIsOpen(true);
+    },
+    palette_commandMode: () => {
+      setInitialValue('>');
       setIsOpen(true);
     },
   });
@@ -87,7 +101,7 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
       >
         <Modal className="w-full max-w-3xl">
           <Dialog aria-label="Command palette dialog" className="outline-hidden">
-            {({ close }) => <CommandPaletteCombobox close={close} />}
+            {({ close }) => <CommandPaletteCombobox close={close} initialValue={initialValue} />}
           </Dialog>
         </Modal>
       </ModalOverlay>
@@ -95,7 +109,7 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
   );
 });
 
-const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
+const CommandPaletteCombobox = ({ close, initialValue }: { close: () => void; initialValue: string }) => {
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -109,7 +123,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const tabNavigate = useTabNavigate();
 
   const accountId = userSession.accountId;
-
 
   const {
     results: searchResults,
@@ -130,8 +143,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     close();
   }, [abort, close]);
 
+  // Opened with Ctrl+Shift+P, so start in command mode
+  useEffect(() => {
+    if (initialValue) {
+      search(initialValue);
+    }
+    // Only when the palette opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const isLoadingComboboxItems = isSearching;
+  const inCommandMode = isCommandInput(inputValue);
+
+  const isLoadingComboboxItems = isSearching && !inCommandMode;
 
   type CommandRequest = CommandSearchResult['current']['requests'][number];
 
@@ -442,11 +465,100 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       })),
     });
 
+  // Command mode: actions and settings instead of requests and collections
+  const paletteCommands: PaletteCommand[] = [
+    { id: 'preferences', title: 'Open Preferences', keywords: ['settings', 'options'], run: () => openSettings() },
+    {
+      id: 'shortcuts',
+      title: 'Open Keyboard Shortcuts',
+      keywords: ['hotkeys', 'keys', 'bindings'],
+      run: () => openSettings({ tab: 'keyboard' }),
+    },
+    { id: 'about', title: 'About restless', keywords: ['version', 'build'], run: () => openSettings({ tab: 'about' }) },
+    {
+      id: 'updates',
+      title: 'Check for updates',
+      keywords: ['upgrade', 'version', 'new release'],
+      run: () => window.main.manualUpdateCheck(),
+    },
+    {
+      id: 'migrate',
+      title: 'Migrate from another app',
+      keywords: ['insomnia', 'insomnium', 'bruno', 'import', 'copy'],
+      run: () => showModal(MigrationModal),
+    },
+    {
+      id: 'import',
+      title: 'Import a collection or file',
+      keywords: ['postman', 'openapi', 'curl', 'har'],
+      run: () => uiEventBus.emit(OPEN_IMPORT),
+    },
+    {
+      id: 'data',
+      title: 'Export or import preferences, and manage backups',
+      keywords: ['data', 'settings', 'json', 'backup', 'restore'],
+      run: () => openSettings({ tab: 'data' }),
+    },
+    {
+      id: 'help',
+      title: 'Open the documentation',
+      keywords: ['help', 'wiki', 'docs'],
+      run: () => window.main.openInBrowser(docsBase),
+    },
+  ];
+  const commandItems = (() => {
+    if (!inCommandMode) {
+      return [];
+    }
+    const typed = commandQuery(inputValue);
+    const run = (command: () => void) => () => {
+      closeWithAbort();
+      command();
+    };
+    const sections: typeof comboboxSections = [];
+    const matchingCommands = searchCommands(typed, paletteCommands);
+    if (matchingCommands.length) {
+      sections.push({
+        id: 'commands',
+        name: 'Commands',
+        children: matchingCommands.map(command => ({
+          id: `command:${command.id}`,
+          icon: <Icon icon="play" className="w-4" />,
+          name: command.title,
+          presence: [],
+          description: null,
+          textValue: command.title,
+          action: run(command.run),
+        })),
+      });
+    }
+    const matchingSettings = settingsForQuery(typed);
+    if (matchingSettings.length) {
+      sections.push({
+        id: 'settings',
+        name: 'Settings',
+        children: matchingSettings.map(entry => ({
+          id: `setting:${entry.key}`,
+          icon: <Icon icon="gear" className="w-4" />,
+          name: entry.label,
+          presence: [],
+          description: <span className="px-2 text-(--hl)">Preferences, {entry.tab}</span>,
+          textValue: entry.label,
+          action: run(() => openSettings({ tab: entry.tab, setting: entry.key })),
+        })),
+      });
+    }
+    return sections;
+  })();
+  if (inCommandMode) {
+    comboboxSections.length = 0;
+    comboboxSections.push(...commandItems);
+  }
 
   // Enter with nothing highlighted opens the top result. The list trails the typed text by the search debounce,
   // so if Enter comes first, wait for the results of what was typed instead of opening a stale one.
   const topResult = comboboxSections[0]?.children[0];
-  const resultsMatchInput = resultsFilter === inputValue && !isSearching;
+  const resultsMatchInput = inCommandMode || (resultsFilter === inputValue && !isSearching);
   const openTopResultWhenReady = useRef<{ withTab: boolean } | null>(null);
 
   useEffect(() => {
@@ -468,7 +580,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
   }, [closeWithAbort, setActiveEnvironmentFetcher.state]);
-
 
   return (
     <ComboBox
@@ -502,6 +613,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           ...currentEnvironments,
           ...otherRequests,
           ...otherFiles,
+          ...commandItems.flatMap(section => section.children),
         ].find(item => item.id === itemId);
 
         item?.action();
@@ -512,50 +624,54 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           <>
             <Label aria-label="Filter" className="group relative flex flex-1 items-center pt-0">
               <>
-                  {isLoadingComboboxItems ? (
-                    <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
-                  ) : (
-                    <Icon icon="search" className="absolute left-4 text-(--color-font)" />
-                  )}
-                  <Input
-                    slot="input"
-                    placeholder="Search and switch between requests, collections and documents"
-                    // Capture phase, so this runs before the combobox commits the text and clears the input,
-                    // and before the global Ctrl+Enter shortcut can send the request behind the dialog.
-                    // Enter opens the top result, and Ctrl+Enter (Cmd on macOS) opens it in a new tab.
-                    onKeyDownCapture={e => {
-                      if (e.key !== 'Enter' || e.nativeEvent.isComposing) {
-                        return;
+                {isLoadingComboboxItems ? (
+                  <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
+                ) : (
+                  <Icon icon="search" className="absolute left-4 text-(--color-font)" />
+                )}
+                <Input
+                  slot="input"
+                  placeholder={
+                    inCommandMode
+                      ? 'Type a command or the name of a setting'
+                      : 'Search and switch between requests, collections and documents'
+                  }
+                  // Capture phase, so this runs before the combobox commits the text and clears the input,
+                  // and before the global Ctrl+Enter shortcut can send the request behind the dialog.
+                  // Enter opens the top result, and Ctrl+Enter (Cmd on macOS) opens it in a new tab.
+                  onKeyDownCapture={e => {
+                    if (e.key !== 'Enter' || e.nativeEvent.isComposing) {
+                      return;
+                    }
+                    const withTab = isMac ? e.metaKey : e.ctrlKey;
+                    const highlightedId = e.currentTarget.getAttribute('aria-activedescendant');
+                    if (highlightedId) {
+                      // A result is highlighted, and the combobox opens it on a plain Enter
+                      const key = highlightedId.slice(highlightedId.indexOf('-option-') + '-option-'.length);
+                      const highlighted = comboboxSections
+                        .flatMap(section => section.children)
+                        .find(item => item.id.replace(/\s+/g, '') === key);
+                      if (withTab && highlighted) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        highlighted.action(true);
                       }
-                      const withTab = isMac ? e.metaKey : e.ctrlKey;
-                      const highlightedId = e.currentTarget.getAttribute('aria-activedescendant');
-                      if (highlightedId) {
-                        // A result is highlighted, and the combobox opens it on a plain Enter
-                        const key = highlightedId.slice(highlightedId.indexOf('-option-') + '-option-'.length);
-                        const highlighted = comboboxSections
-                          .flatMap(section => section.children)
-                          .find(item => item.id.replace(/\s+/g, '') === key);
-                        if (withTab && highlighted) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          highlighted.action(true);
-                        }
-                        return;
-                      }
-                      if (!inputValue.trim()) {
-                        return;
-                      }
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (resultsMatchInput) {
-                        topResult?.action(withTab);
-                      } else {
-                        openTopResultWhenReady.current = { withTab };
-                      }
-                    }}
-                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) outline-hidden transition-none group-data-open:rounded-b-none"
-                  />
-                </>
+                      return;
+                    }
+                    if (!inputValue.trim()) {
+                      return;
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (resultsMatchInput) {
+                      topResult?.action(withTab);
+                    } else {
+                      openTopResultWhenReady.current = { withTab };
+                    }
+                  }}
+                  className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) outline-hidden transition-none group-data-open:rounded-b-none"
+                />
+              </>
             </Label>
             <Popover
               offset={0}

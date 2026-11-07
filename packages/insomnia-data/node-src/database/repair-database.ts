@@ -1,8 +1,16 @@
 import type { CookieJar, Environment, GitRepository, Workspace } from 'insomnia-data';
 import { database, models } from 'insomnia-data';
+import {
+  type HotKeyRegistry,
+  keyboardKeys,
+  type KeyCombination,
+  newDefaultRegistry,
+  type PlatformKeyCombinations,
+} from 'insomnia-data/common';
 
 import * as apiSpecServices from '../services/api-spec';
 import * as projectServices from '../services/project';
+import * as settingsServices from '../services/settings';
 
 /**
  * Run various database repair scripts
@@ -25,6 +33,8 @@ export async function repairDatabase() {
   for (const gitRepository of await database.find<GitRepository>(models.gitRepository.type)) {
     await _fixOldGitURIs(gitRepository);
   }
+
+  await _repairHotKeyRegistry();
 }
 
 /**
@@ -139,3 +149,48 @@ async function _fixOldGitURIs(doc: GitRepository) {
   await database.update(doc);
   console.log(`[fix] Fixed git URI for ${doc._id}`);
 }
+
+// Keyboard shortcuts added after a person's preferences were first saved are missing from them, and a stored
+// shortcut that is still the old default for pinning (which command mode now uses) is moved to the new default.
+export const repairHotKeyRegistry = (
+  stored: Partial<HotKeyRegistry>,
+  defaults: HotKeyRegistry,
+): { registry: HotKeyRegistry; changed: boolean } => {
+  const registry = { ...stored } as HotKeyRegistry;
+  let changed = false;
+  for (const name of Object.keys(defaults) as (keyof HotKeyRegistry)[]) {
+    if (!stored[name]) {
+      registry[name] = defaults[name];
+      changed = true;
+    }
+  }
+  const pin = stored.request_togglePin;
+  if (pin && isOldPinDefault(pin)) {
+    registry.request_togglePin = defaults.request_togglePin;
+    changed = true;
+  }
+  return { registry, changed };
+};
+
+async function _repairHotKeyRegistry() {
+  const settings = await settingsServices.get();
+  const { registry, changed } = repairHotKeyRegistry(settings.hotKeyRegistry ?? {}, newDefaultRegistry());
+  if (changed) {
+    await settingsServices.patch({ hotKeyRegistry: registry });
+  }
+}
+
+const isOldPinDefault = (pin: PlatformKeyCombinations) => {
+  const only = (keys: KeyCombination[] | undefined, expected: Partial<KeyCombination>) =>
+    keys?.length === 1 &&
+    keys[0].keyCode === expected.keyCode &&
+    !!keys[0].shift === !!expected.shift &&
+    !!keys[0].ctrl === !!expected.ctrl &&
+    !!keys[0].meta === !!expected.meta &&
+    !keys[0].alt;
+  const p = keyboardKeys.p.keyCode;
+  return (
+    only(pin.macKeys, { shift: true, meta: true, keyCode: p }) &&
+    only(pin.winLinuxKeys, { shift: true, ctrl: true, keyCode: p })
+  );
+};
