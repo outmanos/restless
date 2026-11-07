@@ -196,7 +196,7 @@ AI stays off by default.
 | [ ] | P1 | M | Arch and CachyOS: a pacman repository, so `pacman -Syu` updates restless. Each release ships a `PKGBUILD` until then |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
-| [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (Arch badge follows the first release that carries the PKGBUILD) |
+| [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (the Arch badge links to the install command) |
 | [ ] | P2 | M | Publish a software bill of materials with each release. `npm sbom` needs the dependency tree fixed first |
 
 ## Ideas, not scheduled
