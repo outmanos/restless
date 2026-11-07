@@ -377,6 +377,13 @@ body {
     outline-offset: -1px;
   }
 
+  /* A setting that search just jumped to */
+  .setting-found {
+    outline: 2px solid var(--color-surprise);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
   [role='tab'][aria-selected='true'] {
     background-color: transparent !important;
     color: var(--color-font) !important;
