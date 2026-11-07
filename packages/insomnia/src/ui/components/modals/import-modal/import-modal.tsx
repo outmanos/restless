@@ -43,7 +43,7 @@ export const Radio: FC<{
 }> = ({ name, value, onChange, children, checked, defaultChecked }) => {
   const id = useId();
   return (
-    <div className="has-checked:bg-(--color-bg)">
+    <div className="rounded-md transition-colors has-checked:bg-(--color-bg) not-has-checked:hover:bg-(--hl-sm)">
       <input
         id={id}
         type="radio"
@@ -58,7 +58,7 @@ export const Radio: FC<{
         className="absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap"
       />
       <label
-        className="flex items-center gap-(--padding-sm) rounded-md p-(--padding-sm)"
+        className="flex cursor-pointer items-center gap-(--padding-sm) rounded-md p-(--padding-sm)"
         data-test-id={`import-from-${value}`}
         htmlFor={id}
       >
@@ -143,7 +143,7 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'flex max-h-[50vh] flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
+          'group flex max-h-[50vh] cursor-pointer flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm) transition-colors hover:border-(--color-surprise) hover:bg-(--hl-sm)',
           {
             'border-(--color-surprise)': isDropTarget,
             'border-(--hl-md)': !isDropTarget,
@@ -164,7 +164,7 @@ const FileField: FC = () => {
         ) : (
           <div className="flex w-full flex-col items-center justify-center gap-(--padding-sm) p-(--padding-md)">
             <div>
-              <i className="fa fa-upload fa-xl" />
+              <i className="fa fa-upload fa-xl transition-colors group-hover:text-(--color-surprise)" />
             </div>
             <div>
               Drag and Drop or <span className="text-(--color-surprise)">Choose Files</span> to import

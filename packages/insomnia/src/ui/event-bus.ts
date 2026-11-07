@@ -12,6 +12,8 @@ export const KONNECT_SYNC_TRIGGER = 'KONNECT_SYNC_TRIGGER';
 export const OPEN_ENVIRONMENTS_MODAL = 'OPEN_ENVIRONMENTS_MODAL';
 // Asks the organization layout to open Preferences as a tab, optionally on a given section.
 export const OPEN_SETTINGS = 'OPEN_SETTINGS';
+// Asks the app to open the import window on its file step, for example from the migration window.
+export const OPEN_IMPORT = 'OPEN_IMPORT';
 
 type UIEventType =
   | 'CLOSE_TAB'
@@ -20,7 +22,8 @@ type UIEventType =
   | typeof OAUTH2_AUTHORIZATION_STATUS_CHANGE
   | typeof KONNECT_SYNC_TRIGGER
   | typeof OPEN_ENVIRONMENTS_MODAL
-  | typeof OPEN_SETTINGS;
+  | typeof OPEN_SETTINGS
+  | typeof OPEN_IMPORT;
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
@@ -30,6 +33,7 @@ class EventBus {
     [KONNECT_SYNC_TRIGGER]: [],
     [OPEN_ENVIRONMENTS_MODAL]: [],
     [OPEN_SETTINGS]: [],
+    [OPEN_IMPORT]: [],
   };
 
   // Subscribe to event, returns unsubscribe function

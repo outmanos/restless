@@ -42,6 +42,7 @@ import { VariableSourceTooltipHost } from '~/ui/components/variable-source-toolt
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
+import uiEventBus, { OPEN_IMPORT } from '~/ui/event-bus';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
 import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
@@ -239,6 +240,13 @@ const Root = () => {
     source: ImportSource;
     workspaceId?: string;
   } | null>(null);
+
+  // Other windows can ask for the import window, for example the migration window's Postman hint
+  useEffect(
+    () =>
+      uiEventBus.on(OPEN_IMPORT, () => setImportTrigger({ source: { type: 'file', startedAt: Date.now() } })),
+    [],
+  );
 
   // INS-3544: pasting a cURL while no editable surface has focus starts the
   // import flow. Inside a workspace the current collection is offered as the

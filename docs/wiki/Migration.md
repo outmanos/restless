@@ -22,7 +22,7 @@ Bruno's workspace-level global environments aren't read.
 
 ## Postman
 
-Postman workspace dumps go through the import window, not the migration window: choose **Import**, then **From File**, and pick the `.zip` Postman exported.
+Postman workspace dumps go through the import window, not the migration window: choose **Import**, then **From File**, and pick the `.zip` Postman exported. If Postman is installed on this computer, the migration window says so at the top and points you here.
 
 Each collection and each environment in the dump becomes a workspace in the project you choose. Duplicate names stay as they are, and environments are separate workspaces, so pick the one with the variables you need before sending.
 

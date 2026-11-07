@@ -4,7 +4,14 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { appDataDir, describeSource, type DetectOptions, detectSources, detectSourcesIn } from './detect';
+import {
+  appDataDir,
+  describeSource,
+  type DetectOptions,
+  detectPostmanIn,
+  detectSources,
+  detectSourcesIn,
+} from './detect';
 import { setTimes, writeFixture, writeLog } from './insomnia/make-fixture';
 import { dbFileName } from './insomnia/models';
 import { expectUntouched, makeTempDir } from './insomnia/test-support';
@@ -365,5 +372,30 @@ describe('detectSources()', () => {
     vi.stubEnv('INSOMNIA_DATA_PATH', path.join(appData, 'Insomnia'));
 
     expect(await expectUntouched(home, detectSources)).toEqual([]);
+  });
+});
+
+describe('detectPostmanIn', () => {
+  it('finds a Postman folder in the app data folder', async () => {
+    const m = machine();
+    const folder = path.join(m.appData, 'Postman');
+    mkdirSync(folder, { recursive: true });
+    expect(await detectPostmanIn({ platform: 'linux', homedir: m.homedir, env: {}, ownFolders: [] })).toEqual({
+      path: folder,
+    });
+  });
+
+  it('finds the Flatpak install on Linux', async () => {
+    const m = machine();
+    const folder = path.join(m.homedir, '.var', 'app', 'com.getpostman.Postman', 'config', 'Postman');
+    mkdirSync(folder, { recursive: true });
+    expect(await detectPostmanIn({ platform: 'linux', homedir: m.homedir, env: {}, ownFolders: [] })).toEqual({
+      path: folder,
+    });
+  });
+
+  it('finds nothing on a machine without Postman', async () => {
+    const m = machine();
+    expect(await detectPostmanIn({ platform: 'linux', homedir: m.homedir, env: {}, ownFolders: [] })).toBeNull();
   });
 });

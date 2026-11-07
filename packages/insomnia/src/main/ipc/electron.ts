@@ -165,6 +165,7 @@ export type HandleChannels =
   | 'openPath'
   | 'parseImport'
   | 'migrationDetect'
+  | 'migrationDetectPostman'
   | 'migrationPlanInsomnia'
   | 'migrationPlanBruno'
   | 'migrationCommit'
