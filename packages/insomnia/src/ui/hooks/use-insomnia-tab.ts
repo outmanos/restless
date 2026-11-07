@@ -80,9 +80,16 @@ export interface SettingsContext {
   workspaceId?: string | null;
 }
 
-export const buildSettingsUrl = (organizationId: string, section?: string | null, context: SettingsContext = {}) => {
+export const buildSettingsUrl = (
+  organizationId: string,
+  section?: string | null,
+  context: SettingsContext = {},
+  // A setting to scroll to and highlight once the section shows
+  setting?: string | null,
+) => {
   const params = new URLSearchParams();
   if (section) params.set('tab', section);
+  if (setting) params.set('setting', setting);
   if (context.projectId) params.set('project', context.projectId);
   if (context.workspaceId) params.set('workspace', context.workspaceId);
   const search = params.toString();

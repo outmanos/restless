@@ -116,10 +116,12 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P1 | L | Overhaul the hotkey system: one registry, remappable keys, conflict warnings, and every shortcut listed in the command palette |
 | [x] | P1 | L | Reorganize Settings into Appearance, Editor, Keyboard, Requests, Security, Data, Plugins and About, with every setting where you would look for it |
 | [x] | P1 | M | Preferences opens as a tab with its sections down the left, not as a modal |
-| [ ] | P1 | M | Searchable settings: a search box that jumps to the setting |
-| [ ] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |
+| [x] | P1 | M | Searchable settings: a search box that jumps to the setting |
+| [x] | P1 | M | Ctrl+Shift+P command mode, as in VS Code: search settings, actions and admin tasks, while Ctrl+P stays for requests, collections and documents. It needs a new shortcut for toggle pin, which uses Ctrl+Shift+P today |
 | [x] | P1 | M | In-app About tab with version and system details, update settings and release notes, replacing the native About box |
-| [ ] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
+| [x] | P1 | M | Clearer Data tab: import, export, backups with restore, data folder location and size |
+| [x] | P1 | S | Preferences exported to and imported from a JSON file, leaving out private and per-computer settings. Storing preferences as a file instead of in the database is part of 0.3.0 |
+| [ ] | P1 | M | Scheduled backups with settings for how often to back up (on each update, daily, weekly or monthly) and how many to keep. Today a copy is made only when the app updates, one folder per version |
 | [ ] | P2 | S | Bulk edit for form fields |
 | [ ] | P2 | S | Request presets per collection |
 | [ ] | P2 | S | Prompted variables |
@@ -195,7 +197,7 @@ AI stays off by default.
 | [ ] | P1 | M | Arch and CachyOS: a pacman repository, so `pacman -Syu` updates restless. Each release ships a `PKGBUILD` until then |
 | [ ] | P2 | M | Nixpkgs, apt and dnf repositories, Scoop, Chocolatey |
 | [ ] | P2 | S | Move to `homebrew-cask` once eligible |
-| [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (Arch badge follows the first release that carries the PKGBUILD) |
+| [x] | P2 | S | README: a download badge for each platform or channel once its first build has passed, linking to the latest release (the Arch badge links to the install command) |
 | [ ] | P2 | M | Publish a software bill of materials with each release. `npm sbom` needs the dependency tree fixed first |
 
 ## Ideas, not scheduled

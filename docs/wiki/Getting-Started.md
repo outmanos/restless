@@ -33,6 +33,7 @@ Use `File > Open Folder…` to work from a folder on disk. See [Storage and Git]
 | Send request | `Ctrl+Enter` |
 | Focus URL | `Ctrl+L` |
 | Search | `Ctrl+P` |
+| Commands and settings | `Ctrl+Shift+P` |
 | Edit cookies | `Ctrl+K` |
 | Environments | `Ctrl+E` |
 | All shortcuts | `Ctrl+Shift+/` |

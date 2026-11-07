@@ -13,6 +13,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   preferences_showKeyboardShortcuts: 'Show Keyboard Shortcuts',
   preferences_showGeneral: 'Show App Preferences',
   request_quickSwitch: 'Quick search',
+  palette_commandMode: 'Commands and settings',
   plugin_reload: 'Reload Plugins',
   showAutocomplete: 'Show Autocomplete',
   request_send: 'Send Request',
@@ -68,6 +69,11 @@ const defaultRegistry: HotKeyRegistry = {
   request_quickSwitch: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.p.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.p.keyCode }],
+  },
+  // As in VS Code: Ctrl+P finds requests and collections, Ctrl+Shift+P finds commands and settings
+  palette_commandMode: {
+    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.p.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode }],
   },
   plugin_reload: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.r.keyCode }],
@@ -162,8 +168,8 @@ const defaultRegistry: HotKeyRegistry = {
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.d.keyCode }],
   },
   request_togglePin: {
-    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.p.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode }],
+    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.p.keyCode }],
+    winLinuxKeys: [{ alt: true, ctrl: true, keyCode: keyboardKeys.p.keyCode }],
   },
   environment_showVariableSourceAndValue: {
     macKeys: [{ alt: true, shift: true, keyCode: keyboardKeys.u.keyCode }],

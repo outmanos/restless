@@ -11,6 +11,7 @@ import {
 import { Modal } from '~/basic-components';
 import type { DetectedSource } from '~/main/migration/types';
 import type { ModalProps } from '~/ui/components/base/modal';
+import uiEventBus, { OPEN_IMPORT } from '~/ui/event-bus';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
@@ -81,6 +82,10 @@ const MigrationDialog = ({
             onChooseBruno={flow.chooseBrunoFolder}
             onRetry={flow.detect}
             onClose={onClose}
+            onOpenImport={() => {
+              onClose();
+              uiEventBus.emit(OPEN_IMPORT);
+            }}
           />
         )}
         {state.step === 'review' && (

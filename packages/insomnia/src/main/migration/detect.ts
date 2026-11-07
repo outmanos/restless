@@ -243,6 +243,37 @@ export async function detectSourcesIn(options: DetectOptions): Promise<DetectedS
   return sources;
 }
 
+// Where Postman keeps its data. It is only looked for, never read: restless cannot copy from Postman, so finding
+// it just lets the migration window point the user to Import.
+function postmanFolders({ platform, homedir, env }: DetectOptions) {
+  const folders = [path.join(appDataDir({ platform, homedir, env }), 'Postman')];
+  if (platform === 'linux') {
+    folders.push(
+      path.join(homedir, '.config', 'Postman'),
+      path.join(homedir, '.var', 'app', 'com.getpostman.Postman', 'config', 'Postman'),
+      path.join(homedir, 'snap', 'postman', 'current', '.config', 'Postman'),
+    );
+  }
+  return folders;
+}
+
+export async function detectPostmanIn(options: DetectOptions): Promise<{ path: string } | null> {
+  for (const folder of postmanFolders(options)) {
+    try {
+      if ((await stat(folder)).isDirectory()) {
+        return { path: folder };
+      }
+    } catch {
+      // Not installed here
+    }
+  }
+  return null;
+}
+
+export async function detectPostman(): Promise<{ path: string } | null> {
+  return detectPostmanIn(defaultDetectOptions());
+}
+
 export async function detectSources(): Promise<DetectedSource[]> {
   return detectSourcesIn(defaultDetectOptions());
 }
