@@ -11,6 +11,7 @@ import type { MarkerRange } from 'codemirror';
 import {
   app,
   BrowserWindow,
+  dialog,
   type IpcRendererEvent,
   type MenuItemConstructorOptions,
   shell,
@@ -36,7 +37,7 @@ import type {
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import type { AboutDetail } from '~/main/about';
-import type { BackupInfo, DataFolderInfo } from '~/main/backup';
+import type { BackupInfo } from '~/main/backup';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import {
   exportHarCurrentRequest,
@@ -66,10 +67,20 @@ import {
   onDefaultBrowserOAuthRedirect,
 } from '../authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '../authorize-user-in-window';
-import { backup, createBackup, getDataFolderInfo, listBackups, restoreBackup } from '../backup';
+import {
+  backup,
+  backupPreferences,
+  createBackup,
+  getBackupsFolder,
+  getDataPath,
+  listBackups,
+  pruneBackups,
+  restoreBackup,
+} from '../backup';
 import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
+import { getLogDirectory } from '../log';
 import type { MigrationBridgeAPI } from '../migration/ipc';
 import type { CurlBridgeAPI } from '../network/curl';
 import { getAuthHeader as getAuthHeaderInMain } from '../network/get-auth-header';
@@ -234,7 +245,10 @@ export interface RendererToMainBridgeAPI extends MigrationBridgeAPI {
   restoreBackup: (version: string) => Promise<void>;
   listBackups: () => Promise<BackupInfo[]>;
   createBackup: () => Promise<BackupInfo>;
-  getDataFolderInfo: () => Promise<DataFolderInfo>;
+  // Opens a window at the backups folder to pick one. Returns its name, or null if none was picked.
+  chooseBackup: () => Promise<string | null>;
+  backupPreferences: (json: string) => Promise<string>;
+  openAppFolder: (kind: 'data' | 'logs' | 'backups') => Promise<void>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
   onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
@@ -434,11 +448,58 @@ export function registerMainHandlers() {
     return backup();
   });
   ipcMainHandle('restoreBackup', async (_, options: string) => {
-    return restoreBackup(options);
+    const { maxBackups } = await services.settings.get();
+    return restoreBackup(options, maxBackups);
   });
   ipcMainHandle('listBackups', () => listBackups());
-  ipcMainHandle('createBackup', () => createBackup());
-  ipcMainHandle('getDataFolderInfo', () => getDataFolderInfo());
+  ipcMainHandle('createBackup', async () => {
+    const made = await createBackup();
+    await pruneBackups((await services.settings.get()).maxBackups);
+    return made;
+  });
+  ipcMainHandle('backupPreferences', async (_, json: string) =>
+    backupPreferences(json, (await services.settings.get()).maxBackups),
+  );
+  ipcMainHandle('chooseBackup', async event => {
+    const backupsDir = getBackupsFolder();
+    await fs.promises.mkdir(backupsDir, { recursive: true });
+    const window = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+    const options: Electron.OpenDialogOptions = {
+      title: 'Choose a backup to restore',
+      buttonLabel: 'Restore',
+      defaultPath: backupsDir,
+      properties: ['openDirectory'],
+    };
+    const { canceled, filePaths } = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options);
+    const [chosen] = filePaths;
+    if (canceled || !chosen) {
+      return null;
+    }
+    // Windows and macOS file systems ignore case, and the dialog can spell the path differently
+    const normal = (target: string) => {
+      const resolved = path.resolve(target);
+      return process.platform === 'win32' || process.platform === 'darwin' ? resolved.toLowerCase() : resolved;
+    };
+    if (normal(path.dirname(chosen)) !== normal(backupsDir)) {
+      throw new Error('Pick one of the folders inside the backups folder.');
+    }
+    const holdsData = (await fs.promises.readdir(chosen)).some(file => file.endsWith('.db'));
+    if (!holdsData) {
+      throw new Error('That folder does not hold a backup of your data.');
+    }
+    return path.basename(chosen);
+  });
+  ipcMainHandle('openAppFolder', async (_, kind: 'data' | 'logs' | 'backups') => {
+    const folder = kind === 'logs' ? getLogDirectory() : kind === 'backups' ? getBackupsFolder() : getDataPath();
+    if (kind === 'backups') {
+      await fs.promises.mkdir(folder, { recursive: true });
+    }
+    // openPath returns an error message instead of throwing
+    const failure = await shell.openPath(folder);
+    if (failure) {
+      throw new Error(failure);
+    }
+  });
   ipcMainHandle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });

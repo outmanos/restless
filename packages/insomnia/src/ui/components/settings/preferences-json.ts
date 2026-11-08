@@ -2,9 +2,8 @@
 export const PREFERENCES_FORMAT = 'restless-preferences';
 const PREFERENCES_VERSION = 1;
 
-// What stays out of the file. Some of it is private (proxy addresses can carry a password, plugin settings can hold
-// tokens), some belongs to this computer (folders, device id), and some is only a record of what was shown here.
-const LEFT_OUT = new Set([
+// Never in the file: the database's own fields, and the id of this install.
+const NEVER = new Set([
   '_id',
   'type',
   'parentId',
@@ -14,6 +13,11 @@ const LEFT_OUT = new Set([
   'isPrivate',
   'metaSortKey',
   'deviceId',
+]);
+
+// Only in a complete file, for reinstalling. Some of it is private (proxy addresses can carry a password, plugin
+// settings can hold tokens), some belongs to this computer (folders), and some is a record of what was shown here.
+const PRIVATE_OR_LOCAL = new Set([
   'hasReadInstallerUpdateChoice',
   'hasSeenSidebarFocusOnboarding',
   'hasSeenMigrationOffer',
@@ -35,6 +39,8 @@ export interface PreferencesFile {
   exportedAt: string;
   // The app version that wrote it, for anyone reading the file
   app: string;
+  // Whether private and per-computer settings are in it
+  complete: boolean;
   settings: Record<string, unknown>;
 }
 
@@ -43,14 +49,19 @@ export const buildPreferencesFile = (
   defaults: Record<string, unknown>,
   appVersion: string,
   now = new Date(),
+  { complete = false }: { complete?: boolean } = {},
 ): PreferencesFile => ({
   format: PREFERENCES_FORMAT,
   version: PREFERENCES_VERSION,
   exportedAt: now.toISOString(),
   app: appVersion,
+  complete,
   settings: Object.fromEntries(
     Object.keys(defaults)
-      .filter(key => !LEFT_OUT.has(key) && key in settings && settings[key] !== undefined)
+      .filter(
+        key =>
+          !NEVER.has(key) && (complete || !PRIVATE_OR_LOCAL.has(key)) && key in settings && settings[key] !== undefined,
+      )
       .sort()
       .map(key => [key, settings[key]]),
   ),
@@ -110,8 +121,10 @@ export const parsePreferencesFile = (
   const settings: Record<string, unknown> = {};
   const skipped: PreferencesImport['skipped'] = [];
   for (const [key, value] of Object.entries(file.settings)) {
-    if (LEFT_OUT.has(key) || !(key in defaults)) {
+    if (NEVER.has(key) || !(key in defaults)) {
       skipped.push({ key, reason: 'not a preference restless knows' });
+    } else if (PRIVATE_OR_LOCAL.has(key) && file.complete !== true) {
+      skipped.push({ key, reason: 'private, and this file is not a complete export' });
     } else if (key === 'hotKeyRegistry') {
       const known = defaults.hotKeyRegistry as Record<string, unknown>;
       const registry: Record<string, unknown> = {};

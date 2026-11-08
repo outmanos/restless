@@ -198,6 +198,8 @@ export interface Settings {
   updateAutomatically: boolean;
   updateChannel: UpdateChannel;
   newRequestCollection: NewRequestCollection;
+  /** How many backups to keep. Older ones are deleted when a new one is made. */
+  maxBackups: number;
   /** With automatic updates on, also look for a new version each time the app starts. */
   updateCheckOnStartup: boolean;
   updateCheckInterval: UpdateCheckInterval;

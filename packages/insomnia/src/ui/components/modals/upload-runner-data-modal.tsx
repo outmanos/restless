@@ -196,8 +196,8 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
               </div>
               <div className="flex w-full shrink-0 grow basis-12 flex-col gap-6 overflow-hidden overflow-y-auto rounded-sm select-none">
                 <FileTrigger allowsMultiple={false} onSelect={handleFileSelect} acceptedFileTypes={['.csv', '.json']}>
-                  <Button className="flex flex-1 shrink-0 items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)">
-                    <Icon icon="upload" />
+                  <Button className="group flex flex-1 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:border-(--color-surprise) hover:bg-(--hl-xs) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)">
+                    <Icon icon="upload" className="transition-colors group-hover:text-(--color-surprise)" />
                     <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
                   </Button>
                 </FileTrigger>

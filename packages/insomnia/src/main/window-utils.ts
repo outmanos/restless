@@ -33,6 +33,14 @@ export function getMainWindow(): ElectronBrowserWindow | null {
 let hiddenWindowIsBusy = false;
 
 // Every open window has its own copy of the menu, so keep them all in sync with the Debug Mode setting.
+// shell.openPath reports a failure as text instead of throwing
+const openFolder = async (directory: string) => {
+  const failure = await shell.openPath(directory);
+  if (failure) {
+    await dialog.showMessageBox({ type: 'error', message: 'Could not open the folder', detail: `${directory}\n${failure}` });
+  }
+};
+
 // DevTools open docked at the bottom the first time. After that they open wherever the user left them.
 const toggleDevTools = (window: ElectronBrowserWindow | null) => {
   if (!window) {
@@ -596,17 +604,17 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Data Folder`,
+        label: `Open App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
           const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
-          shell.showItemInFolder(directory);
+          openFolder(directory);
         },
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        label: `Open App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
           const directory = getLogDirectory();
-          shell.showItemInFolder(directory);
+          openFolder(directory);
         },
       },
       {
