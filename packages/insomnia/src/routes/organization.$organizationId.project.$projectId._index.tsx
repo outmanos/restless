@@ -35,6 +35,11 @@ import { Icon } from '~/ui/components/icon';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import {
+  pickCollection,
+  readCollectionChoice,
+  rememberCollectionChoice,
+} from '~/ui/components/new-request-collection';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
 import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
@@ -116,14 +121,21 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   });
 
   useEffect(() => {
-    setSelectedCollectionId(currentSelection => {
-      if (currentSelection && collectionItems.some(collection => collection.id === currentSelection)) {
-        return currentSelection;
-      }
+    setSelectedCollectionId(currentSelection =>
+      pickCollection(collectionItems, currentSelection, readCollectionChoice(projectId), settings.newRequestCollection),
+    );
+  }, [collectionItems, projectId, settings.newRequestCollection]);
 
-      return collectionItems[0]?.id ?? null;
-    });
-  }, [collectionItems]);
+  // A choice made in the New request box is remembered for next time
+  const chooseCollection = useCallback(
+    (collectionId: string | null) => {
+      setSelectedCollectionId(collectionId);
+      if (collectionId) {
+        rememberCollectionChoice(projectId, collectionId);
+      }
+    },
+    [projectId],
+  );
 
   const tabNavigate = useTabNavigate();
 
@@ -269,7 +281,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             <FirstRequestCreation
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}
-              onSelectedCollectionChange={setSelectedCollectionId}
+              onSelectedCollectionChange={chooseCollection}
               onCreateCollection={() => {
                 setNewWorkspaceModalState({
                   scope: 'collection',
@@ -584,7 +596,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 newWorkspaceModalState.scope === 'collection' &&
                 newWorkspaceModalState.source === 'first-request-pane'
               ) {
-                setSelectedCollectionId(workspaceId);
+                chooseCollection(workspaceId);
               }
             }}
             redirectAfterCreate={newWorkspaceModalState.redirect}
