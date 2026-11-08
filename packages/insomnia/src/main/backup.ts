@@ -170,3 +170,19 @@ export async function backupPreferences(json: string, keep: number, now = new Da
   await pruneBackups(keep);
   return file;
 }
+
+// The name of the backup a person picked in the folder window, or an error if what they picked is not a backup
+export async function resolveChosenBackup(chosen: string, platform: NodeJS.Platform = process.platform): Promise<string> {
+  // Windows and macOS file systems ignore case, and the dialog can spell the path differently
+  const normal = (target: string) => {
+    const resolved = path.resolve(target);
+    return platform === 'win32' || platform === 'darwin' ? resolved.toLowerCase() : resolved;
+  };
+  if (normal(path.dirname(chosen)) !== normal(getBackupsFolder())) {
+    throw new Error('Pick one of the folders inside the backups folder.');
+  }
+  if (!(await dbFiles(chosen)).length) {
+    throw new Error('That folder does not hold a backup of your data.');
+  }
+  return path.basename(chosen);
+}

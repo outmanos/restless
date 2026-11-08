@@ -75,6 +75,7 @@ import {
   getDataPath,
   listBackups,
   pruneBackups,
+  resolveChosenBackup,
   restoreBackup,
 } from '../backup';
 import { createPlugin } from '../create-plugin';
@@ -475,19 +476,7 @@ export function registerMainHandlers() {
     if (canceled || !chosen) {
       return null;
     }
-    // Windows and macOS file systems ignore case, and the dialog can spell the path differently
-    const normal = (target: string) => {
-      const resolved = path.resolve(target);
-      return process.platform === 'win32' || process.platform === 'darwin' ? resolved.toLowerCase() : resolved;
-    };
-    if (normal(path.dirname(chosen)) !== normal(backupsDir)) {
-      throw new Error('Pick one of the folders inside the backups folder.');
-    }
-    const holdsData = (await fs.promises.readdir(chosen)).some(file => file.endsWith('.db'));
-    if (!holdsData) {
-      throw new Error('That folder does not hold a backup of your data.');
-    }
-    return path.basename(chosen);
+    return resolveChosenBackup(chosen);
   });
   ipcMainHandle('openAppFolder', async (_, kind: 'data' | 'logs' | 'backups') => {
     const folder = kind === 'logs' ? getLogDirectory() : kind === 'backups' ? getBackupsFolder() : getDataPath();
