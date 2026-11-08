@@ -27,6 +27,7 @@ import { Link } from '../base/link';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { CreatePluginModal } from './create-plugin-modal';
+import { Note } from './note';
 
 // Baseline grant for every template-tag plugin regardless of its manifest; kept as a local literal
 // in sync with module-registry.ts's TEMPLATE_TAG_BASELINE_MODULES and host-bridge.ts's
@@ -141,11 +142,11 @@ export const Plugins: FC = () => {
 
   return (
     <div>
-      <p className="notice info no-margin-top">
+      <Note testId="plugins-note">
         Plugins are built and maintained by third-party developers. Thank you! Restless does not review, endorse, or
         support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
         <Link href={docsPlugins}>Documentation</Link> for more info.
-      </p>
+      </Note>
 
       <div className="flex flex-col gap-6">
         {(error || installPluginErrMsg) && (
@@ -280,7 +281,7 @@ export const Plugins: FC = () => {
               <div className="flex w-full items-center justify-center">
                 <label
                   htmlFor="dropzone-file"
-                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-(--hl-md) bg-(--hl-xxs) hover:bg-transparent focus:border-(--hl-lg)"
+                  className="group flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-(--hl-md) bg-(--hl-xxs) transition-colors hover:border-(--color-surprise) hover:bg-(--hl-sm) focus:border-(--hl-lg)"
                 >
                   <FileTrigger
                     allowsMultiple={false}
@@ -298,7 +299,7 @@ export const Plugins: FC = () => {
                   >
                     <Button>
                       <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-(--hl-xl)">
-                        <Icon icon="upload" className="mb-2 h-5 w-5" />
+                        <Icon icon="upload" className="mb-2 h-5 w-5 transition-colors group-hover:text-(--color-surprise)" />
                         <p className="text pointer-events-none mb-2 text-sm">
                           <span className="font-bold">Click to upload</span> or drag and drop
                         </p>

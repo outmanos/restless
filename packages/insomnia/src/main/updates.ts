@@ -11,7 +11,7 @@ import { UpdateCheckInterval } from 'insomnia-data/common';
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';
 import { isDevelopment, type UpdateStatus, type UpdateSupport } from '../common/constants';
-import { backup } from './backup';
+import { backup, pruneBackups } from './backup';
 import { ipcMainOn } from './ipc/electron';
 
 const showUpdateStatusToast = (title: string, description?: string) => {
@@ -134,6 +134,7 @@ const createListeners = () => {
   });
   autoUpdater.on('update-downloaded', async ({ version }) => {
     await backup();
+    await pruneBackups((await services.settings.get()).maxBackups);
     sendUpdateStatus('readyToRestart');
     showUpdateStatusToast(`Downloaded ${version}`, 'Restart to apply the update.');
     const { response } = await dialog.showMessageBox({

@@ -9,6 +9,7 @@ import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { ACCENT_PRESETS } from './accent-presets';
+import { SettingsHeading } from './settings-section';
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   <svg
@@ -94,8 +95,7 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span>Accent color</span>
+    <div className="flex flex-col gap-3">
       <Label className="flex items-center gap-2 text-sm">
         <Checkbox
           slot={null}
@@ -113,25 +113,34 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
         </Checkbox>
         Use theme color
       </Label>
-      {ACCENT_PRESETS.map(({ name, color }) => (
-        <Button
-          key={color}
-          aria-label={name}
-          aria-pressed={draft === color}
-          onPress={() => setDraft(color)}
-          style={{ backgroundColor: color }}
-          className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
-        />
-      ))}
-      <Label className="flex items-center gap-1 p-0! text-sm">
-        <input
-          type="color"
-          value={draft || themeAccent}
-          onChange={event => setDraft(event.target.value)}
-          className="h-5! w-5! cursor-pointer rounded-full bg-transparent"
-        />
-        Custom
-      </Label>
+      {/* Padding, so the ring around the chosen color has room and is not cut off */}
+      <div className="flex flex-wrap items-center gap-3 p-1.5">
+        {ACCENT_PRESETS.map(({ name, color }) => (
+          <Button
+            key={color}
+            aria-label={name}
+            aria-pressed={draft === color}
+            onPress={() => setDraft(color)}
+            style={{ backgroundColor: color }}
+            className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
+          />
+        ))}
+        <div
+          className="flex items-center gap-3 border-l border-solid border-(--hl-md) pl-4"
+          role="group"
+          aria-label="Custom color"
+        >
+          <Label className="flex items-center gap-2 p-0! text-sm">
+            <input
+              type="color"
+              value={draft || themeAccent}
+              onChange={event => setDraft(event.target.value)}
+              className="h-5! w-5! cursor-pointer rounded-full bg-transparent"
+            />
+            Custom
+          </Label>
+        </div>
+      </div>
     </div>
   );
 };
@@ -173,8 +182,6 @@ export const ThemePanel: FC = () => {
           hover over a theme and select either light (sun) or dark (moon).
         </HelpTooltip>
       </Label>
-
-      <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />
 
       <ul className="grid grid-flow-row grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
         {themes.map(theme => (
@@ -227,6 +234,10 @@ export const ThemePanel: FC = () => {
           </div>
         ))}
       </ul>
+
+      {/* Its own section below the themes, so the accent controls do not crowd the theme list */}
+      <SettingsHeading>Accent color</SettingsHeading>
+      <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />
     </div>
   );
 };
