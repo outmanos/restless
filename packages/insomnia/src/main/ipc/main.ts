@@ -72,7 +72,7 @@ import {
   backupPreferences,
   createBackup,
   getBackupsFolder,
-  getDataFolder,
+  getDataPath,
   listBackups,
   pruneBackups,
   restoreBackup,
@@ -475,13 +475,22 @@ export function registerMainHandlers() {
     if (canceled || !chosen) {
       return null;
     }
-    if (path.dirname(path.resolve(chosen)) !== path.resolve(backupsDir)) {
+    // Windows and macOS file systems ignore case, and the dialog can spell the path differently
+    const normal = (target: string) => {
+      const resolved = path.resolve(target);
+      return process.platform === 'win32' || process.platform === 'darwin' ? resolved.toLowerCase() : resolved;
+    };
+    if (normal(path.dirname(chosen)) !== normal(backupsDir)) {
       throw new Error('Pick one of the folders inside the backups folder.');
+    }
+    const holdsData = (await fs.promises.readdir(chosen)).some(file => file.endsWith('.db'));
+    if (!holdsData) {
+      throw new Error('That folder does not hold a backup of your data.');
     }
     return path.basename(chosen);
   });
   ipcMainHandle('openAppFolder', async (_, kind: 'data' | 'logs' | 'backups') => {
-    const folder = kind === 'logs' ? getLogDirectory() : kind === 'backups' ? getBackupsFolder() : getDataFolder();
+    const folder = kind === 'logs' ? getLogDirectory() : kind === 'backups' ? getBackupsFolder() : getDataPath();
     if (kind === 'backups') {
       await fs.promises.mkdir(folder, { recursive: true });
     }

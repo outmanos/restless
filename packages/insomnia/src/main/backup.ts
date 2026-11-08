@@ -8,8 +8,8 @@ import { assertPathWithinDir } from './safe-fs-write';
 
 export async function backup() {
   try {
-    const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const versionPath = path.join(dataPath, 'backups', version);
+    const dataPath = getDataPath();
+    const versionPath = path.join(getBackupsFolder(), version);
     await mkdir(versionPath, { recursive: true });
     // skip if backup already exists at version path
     const backupFiles = await readdir(versionPath);
@@ -31,42 +31,31 @@ export async function backup() {
 }
 
 export async function restoreBackup(version: string, keep?: number) {
-  try {
-    const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const backupsDir = path.join(dataPath, 'backups');
-    const versionPath = path.join(backupsDir, version);
+  const dataPath = getDataPath();
+  const backupsDir = getBackupsFolder();
+  const versionPath = path.join(backupsDir, version);
 
-    // `version` is renderer-supplied over IPC — a traversal sequence here
-    // (e.g. `../../../../some/dir`) must never let this read/copy `.db`
-    // files from outside the app's own backups directory.
-    await assertPathWithinDir(backupsDir, versionPath);
+  // `version` is renderer-supplied over IPC — a traversal sequence here
+  // (e.g. `../../../../some/dir`) must never let this read/copy `.db`
+  // files from outside the app's own backups directory.
+  await assertPathWithinDir(backupsDir, versionPath);
 
-    const files = await readdir(versionPath);
-    if (!files.length) {
-      console.log('[main] No backup found at:', versionPath);
-      return;
-    }
-    // Keep what is there now, so a restore can be undone
-    await createBackup(new Date(), 'before-restore');
-    if (keep) {
-      await pruneBackups(keep, version);
-    }
-    await Promise.all(
-      files
-        .filter(file => file.endsWith('.db'))
-        .map(file => copyFile(path.join(versionPath, file), path.join(dataPath, file))),
-    );
-    console.log('[main] Restored backup from:', versionPath);
-  } catch (err) {
-    console.log('[main] Error restoring backup:', err);
+  const files = (await readdir(versionPath)).filter(file => file.endsWith('.db'));
+  if (!files.length) {
+    throw new Error('That folder does not hold a backup of your data.');
   }
+  // Keep what is there now, so a restore can be undone. If this fails nothing is replaced.
+  const safetyCopy = await createBackup(new Date(), 'before-restore');
+  if (keep) {
+    await pruneBackups(keep, version, safetyCopy.name);
+  }
+  await Promise.all(files.map(file => copyFile(path.join(versionPath, file), path.join(dataPath, file))));
+  console.log('[main] Restored backup from:', versionPath);
   electron.app.relaunch();
   electron.app.exit();
 }
 
-const getDataPath = () => process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-
-export const getDataFolder = getDataPath;
+export const getDataPath = () => process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
 export const getBackupsFolder = () => path.join(getDataPath(), 'backups');
 
 export interface BackupInfo {
@@ -115,13 +104,24 @@ export async function listBackups(): Promise<BackupInfo[]> {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
+const exists = (target: string) =>
+  stat(target).then(
+    () => true,
+    () => false,
+  );
+
 const timestamp = (date: Date) => date.toISOString().replace(/[:T]/g, '-').slice(0, 19);
 
 // A backup the person asked for. Unlike the one made on each update, there can be many.
 export async function createBackup(now = new Date(), prefix: string = version): Promise<BackupInfo> {
   const dataPath = getDataPath();
-  const name = `${prefix}-${timestamp(now)}`;
-  const folder = path.join(dataPath, 'backups', name);
+  const base = `${prefix}-${timestamp(now)}`;
+  // Two backups in the same second must not share a folder
+  let name = base;
+  for (let attempt = 2; await exists(path.join(getBackupsFolder(), name)); attempt += 1) {
+    name = `${base}-${attempt}`;
+  }
+  const folder = path.join(getBackupsFolder(), name);
   await mkdir(folder, { recursive: true });
   const files = await dbFiles(dataPath);
   for (const file of files) {
@@ -132,13 +132,16 @@ export async function createBackup(now = new Date(), prefix: string = version): 
 
 const PREFERENCES_BACKUP_FOLDER = 'preferences';
 
-// Deletes the oldest backups beyond the newest `keep`. `protect` is one that must stay, such as the one being restored.
-export async function pruneBackups(keep: number, protect?: string): Promise<string[]> {
+// Deletes the oldest backups beyond the newest `keep`. The `protect`ed ones always stay, such as the one being restored
+// and the copy made just before it, and count toward the limit.
+export async function pruneBackups(keep: number, ...protect: string[]): Promise<string[]> {
   const limit = Math.max(1, Math.floor(keep));
   const backupsDir = getBackupsFolder();
   const removed: string[] = [];
-  const kept = (await listBackups()).filter(backup => backup.name !== protect);
-  for (const backup of kept.slice(Math.max(0, limit - (protect ? 1 : 0)))) {
+  const all = await listBackups();
+  const protectedCount = all.filter(backup => protect.includes(backup.name)).length;
+  const rest = all.filter(backup => !protect.includes(backup.name));
+  for (const backup of rest.slice(Math.max(0, limit - protectedCount))) {
     await rm(path.join(backupsDir, backup.name), { recursive: true, force: true });
     removed.push(backup.name);
   }

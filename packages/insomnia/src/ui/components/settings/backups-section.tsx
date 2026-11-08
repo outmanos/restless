@@ -60,8 +60,13 @@ export const BackupsSection: FC = () => {
       noText: 'Cancel',
       color: 'danger',
       onDone: async isYes => {
-        if (isYes) {
+        if (!isYes) {
+          return;
+        }
+        try {
           await window.main.restoreBackup(name);
+        } catch (error) {
+          showModal(AlertModal, { title: 'Could not restore', message: String(error?.message ?? error) });
         }
       },
     });
@@ -76,7 +81,9 @@ export const BackupsSection: FC = () => {
             {' '}
             {backups.length === 0
               ? 'There are none yet.'
-              : `${backups.length} saved, keeping the last ${settings.maxBackups}.`}
+              : backups.length > settings.maxBackups
+                ? `${backups.length} saved. The oldest are deleted when the next one is made, to keep ${settings.maxBackups}.`
+                : `${backups.length} saved, keeping the last ${settings.maxBackups}.`}
           </span>
         )}
       </p>

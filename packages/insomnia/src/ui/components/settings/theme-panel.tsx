@@ -9,6 +9,7 @@ import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { ACCENT_PRESETS } from './accent-presets';
+import { SettingsHeading } from './settings-section';
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   <svg
@@ -154,7 +155,10 @@ export const ThemePanel: FC = () => {
     isActiveLight,
     autoDetectColorScheme,
     accentColor,
+    changeAccentColor,
   } = useThemes();
+  const activeTheme = themes.find(theme => isActive(theme));
+  const themeAccent = Color(activeTheme?.theme.background?.surprise ?? '#7c6cf0').hex();
 
   return (
     <div className="flex flex-col gap-2">
@@ -230,14 +234,10 @@ export const ThemePanel: FC = () => {
           </div>
         ))}
       </ul>
+
+      {/* Its own section below the themes, so the accent controls do not crowd the theme list */}
+      <SettingsHeading>Accent color</SettingsHeading>
+      <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />
     </div>
   );
-};
-
-// Its own section below the themes, so the accent controls do not crowd the theme list
-export const AccentSection: FC = () => {
-  const { themes, isActive, accentColor, changeAccentColor } = useThemes();
-  const activeTheme = themes.find(theme => isActive(theme));
-  const themeAccent = Color(activeTheme?.theme.background?.surprise ?? '#7c6cf0').hex();
-  return <AccentColorPicker accentColor={accentColor} themeAccent={themeAccent} onChange={changeAccentColor} />;
 };

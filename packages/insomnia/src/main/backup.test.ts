@@ -1,12 +1,13 @@
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('electron', () => ({ default: { app: { getPath: () => os.tmpdir() } } }));
+const electronApp = vi.hoisted(() => ({ getPath: () => '', relaunch: vi.fn(), exit: vi.fn() }));
+vi.mock('electron', () => ({ default: { app: electronApp } }));
 
-import { backupPreferences, createBackup, listBackups, pruneBackups } from './backup';
+import { backupPreferences, createBackup, listBackups, pruneBackups, restoreBackup } from './backup';
 
 let dataPath: string;
 
@@ -96,5 +97,56 @@ describe('backupPreferences', () => {
   it('does not show up as a data backup', async () => {
     await backupPreferences('{}', 5);
     expect(await listBackups()).toEqual([]);
+  });
+});
+
+describe('restoreBackup', () => {
+  beforeEach(() => {
+    electronApp.relaunch.mockClear();
+    electronApp.exit.mockClear();
+  });
+
+  it('saves what is there first, copies the data files back, and restarts', async () => {
+    const original = await createBackup(new Date('2026-11-07T01:00:00Z'));
+    writeFileSync(path.join(dataPath, 'insomnia.Request.db'), 'changed since');
+    await restoreBackup(original.name);
+    expect(readFileSync(path.join(dataPath, 'insomnia.Request.db'), 'utf8')).toBe('abc');
+    const names = (await listBackups()).map(backup => backup.name);
+    expect(names.some(name => name.startsWith('before-restore-'))).toBe(true);
+    const safety = names.find(name => name.startsWith('before-restore-'))!;
+    expect(readFileSync(path.join(dataPath, 'backups', safety, 'insomnia.Request.db'), 'utf8')).toBe('changed since');
+    expect(electronApp.relaunch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps both the restored backup and the safety copy even when the limit is 1', async () => {
+    const original = await createBackup(new Date('2026-11-07T01:00:00Z'));
+    await createBackup(new Date('2026-11-07T02:00:00Z'));
+    await restoreBackup(original.name, 1);
+    const names = (await listBackups()).map(backup => backup.name);
+    expect(names).toContain(original.name);
+    expect(names.some(name => name.startsWith('before-restore-'))).toBe(true);
+    expect(names).toHaveLength(2);
+  });
+
+  it('refuses a folder with no data files, and changes nothing', async () => {
+    mkdirSync(path.join(dataPath, 'backups', 'empty'), { recursive: true });
+    await expect(restoreBackup('empty')).rejects.toThrow('does not hold a backup');
+    expect(electronApp.relaunch).not.toHaveBeenCalled();
+    expect(readFileSync(path.join(dataPath, 'insomnia.Request.db'), 'utf8')).toBe('abc');
+  });
+
+  it('refuses a name that leaves the backups folder', async () => {
+    await expect(restoreBackup('../..')).rejects.toThrow();
+    expect(electronApp.relaunch).not.toHaveBeenCalled();
+  });
+});
+
+describe('createBackup in the same second', () => {
+  it('gives each backup its own folder', async () => {
+    const when = new Date('2026-11-07T10:00:00Z');
+    const first = await createBackup(when);
+    const second = await createBackup(when);
+    expect(second.name).not.toBe(first.name);
+    expect(await listBackups()).toHaveLength(2);
   });
 });
