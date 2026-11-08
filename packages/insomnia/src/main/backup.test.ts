@@ -7,7 +7,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const electronApp = vi.hoisted(() => ({ getPath: () => '', relaunch: vi.fn(), exit: vi.fn() }));
 vi.mock('electron', () => ({ default: { app: electronApp } }));
 
-import { backupPreferences, createBackup, listBackups, pruneBackups, restoreBackup } from './backup';
+import {
+  backupPreferences,
+  createBackup,
+  listBackups,
+  pruneBackups,
+  resolveChosenBackup,
+  restoreBackup,
+} from './backup';
 
 let dataPath: string;
 
@@ -148,5 +155,30 @@ describe('createBackup in the same second', () => {
     const second = await createBackup(when);
     expect(second.name).not.toBe(first.name);
     expect(await listBackups()).toHaveLength(2);
+  });
+});
+
+describe('resolveChosenBackup', () => {
+  it('returns the name of a backup folder', async () => {
+    const made = await createBackup();
+    expect(await resolveChosenBackup(path.join(dataPath, 'backups', made.name))).toBe(made.name);
+  });
+
+  it('refuses folders outside the backups folder, and the folder itself', async () => {
+    await expect(resolveChosenBackup(dataPath)).rejects.toThrow('inside the backups folder');
+    await expect(resolveChosenBackup(path.join(dataPath, 'backups'))).rejects.toThrow('inside the backups folder');
+  });
+
+  it('refuses a folder with no data files, such as the saved preferences', async () => {
+    await backupPreferences('{}', 5);
+    await expect(resolveChosenBackup(path.join(dataPath, 'backups', 'preferences'))).rejects.toThrow('does not hold');
+  });
+
+  it('ignores letter case where the file system does', async () => {
+    const made = await createBackup();
+    const shouted = path.join(dataPath, 'backups', made.name).replace('backups', 'BACKUPS');
+    await expect(resolveChosenBackup(shouted, 'linux')).rejects.toThrow('inside the backups folder');
+    // On Windows the folder would be found. The name check is what is under test here.
+    await expect(resolveChosenBackup(shouted, 'win32')).rejects.toThrow(/ENOENT|no such file/);
   });
 });
