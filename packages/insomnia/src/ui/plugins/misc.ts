@@ -3,8 +3,9 @@ import type { ThemeSettings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { getAppDefaultTheme } from 'insomnia-data/common';
 
-import type { PluginTheme, ThemeBlock, ThemeColor } from '~/common/plugins/bridge-types';
+import type { PluginTheme, SerializableTheme, ThemeBlock, ThemeColor } from '~/common/plugins/bridge-types';
 import type { ColorScheme } from '~/common/plugins/types';
+import builtInThemes from '~/plugins/themes';
 
 import { plugins } from './renderer-bridge';
 
@@ -326,6 +327,40 @@ export function applyColorScheme(settings: ThemeSettings) {
 const themeStyleSheets = new Map<string, CSSStyleSheet>();
 let latestThemeRequest = 0;
 
+// The built-in themes are plain data, so they can be used even when loading plugins fails or is slow, as it can be on
+// the very first start. Without any theme the colors are never set, and the text stays black on a dark window.
+export const builtInThemeEntries = (): SerializableTheme[] =>
+  (builtInThemes as PluginTheme[]).map(theme => ({
+    plugin: {
+      name: theme.name,
+      description: 'Built-in themes',
+      version: '0.0.0',
+      directory: '',
+      config: { disabled: false },
+    },
+    theme,
+  })) as unknown as SerializableTheme[];
+
+export const loadThemes = async (): Promise<SerializableTheme[]> => {
+  try {
+    return await plugins.getThemes();
+  } catch (error) {
+    console.warn('[theme] Could not load the themes from plugins, using the built-in ones', error);
+    return builtInThemeEntries();
+  }
+};
+
+// The theme asked for, else the default one, looking in the built-in themes if the loaded list has neither
+export const pickTheme = (themes: SerializableTheme[], themeName: string): SerializableTheme | undefined => {
+  const named = themes.find(t => t.theme.name === themeName);
+  if (named) {
+    return named;
+  }
+  console.log(`[theme] Theme not found ${themeName}`);
+  const defaultName = getAppDefaultTheme();
+  return themes.find(t => t.theme.name === defaultName) ?? builtInThemeEntries().find(t => t.theme.name === defaultName);
+};
+
 export async function setTheme(themeName: string, accentColor?: string) {
   if (!document || !('adoptedStyleSheets' in document)) {
     return;
@@ -333,16 +368,11 @@ export async function setTheme(themeName: string, accentColor?: string) {
 
   latestThemeRequest += 1;
   const themeRequest = latestThemeRequest;
-  const themes = await plugins.getThemes();
-  let selectedTheme = themes.find(t => t.theme.name === themeName);
-
+  const selectedTheme = pickTheme(await loadThemes(), themeName);
   if (!selectedTheme) {
-    console.log(`[theme] Theme not found ${themeName}`);
-    themeName = getAppDefaultTheme();
-    const fallbackTheme = themes.find(t => t.theme.name === themeName);
-    if (!fallbackTheme) return;
-    selectedTheme = fallbackTheme;
+    return;
   }
+  themeName = selectedTheme.theme.name;
 
   // Only inject the selected theme
   let themeCSS = generateThemeCSS(applyAccentColor(selectedTheme.theme, accentColor));
