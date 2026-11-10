@@ -96,6 +96,21 @@ const sendUpdateStatus = (status: UpdateStatus) => {
   }
 };
 
+// The updater's error can carry a whole web page, such as GitHub's HTML error page. Keep the message as it is, but do
+// not print the page: cut it off where the markup starts, and name rate limiting when that is clearly what it is.
+export const describeUpdateError = (error: unknown): string => {
+  const raw = error instanceof Error ? error.message : String(error);
+  const markup = raw.search(/<\s*(!doctype|html|head|body|\w+[^>]*>)/i);
+  if (markup === -1) {
+    return raw;
+  }
+  if (/\b(403|429)\b|rate limit/i.test(raw)) {
+    return 'GitHub is limiting requests right now. Try again later.';
+  }
+  const before = raw.slice(0, markup).trim();
+  return before ? `${before} (the rest was a web page, see the log)` : 'The server answered with a web page, see the log.';
+};
+
 // Only a check the user asked for reports "up to date" or a failure. Automatic checks stay quiet,
 // since the app may be offline on purpose.
 let currentCheckIsManual = false;
@@ -109,7 +124,7 @@ const checkForUpdates = async (settings: Settings, { manual }: { manual: boolean
     console.warn('[updater] Failed to check for updates:', err.message);
     sendUpdateStatus('idle');
     if (manual) {
-      showUpdateStatusToast('Update Error', err.message);
+      showUpdateStatusToast('Update Error', describeUpdateError(err));
     }
   }
 };
@@ -119,7 +134,7 @@ const createListeners = () => {
     console.warn(`[updater] Error: ${error.message}`);
     sendUpdateStatus('idle');
     if (currentCheckIsManual) {
-      showUpdateStatusToast('Update Error', error.message);
+      showUpdateStatusToast('Update Error', describeUpdateError(error));
     }
   });
   autoUpdater.on('update-not-available', () => {

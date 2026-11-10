@@ -1,7 +1,13 @@
 import { UpdateCheckInterval } from 'insomnia-data/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { allowsAutomaticUpdates, getCheckIntervalMs, getUpdateSupport, isCheckDue } from './updates';
+import {
+  allowsAutomaticUpdates,
+  describeUpdateError,
+  getCheckIntervalMs,
+  getUpdateSupport,
+  isCheckDue,
+} from './updates';
 
 const electronApp = vi.hoisted(() => ({ isPackaged: true }));
 
@@ -84,5 +90,33 @@ describe('getUpdateSupport', () => {
   it('honors the opt-out variable', () => {
     vi.stubEnv('INSOMNIA_DISABLE_AUTOMATIC_UPDATES', '1');
     expect(getUpdateSupport()).toEqual({ supported: false, reason: 'disabled' });
+  });
+});
+
+describe('describeUpdateError', () => {
+  const page = '<!DOCTYPE html><html><head><title>Unicorn!</title></head><body>' + 'x'.repeat(5000) + '</body></html>';
+
+  it('keeps an ordinary error exactly as it is', () => {
+    const message = 'Cannot find latest-linux.yml in the latest release artifacts (https://x): HttpError: 404';
+    expect(describeUpdateError(new Error(message))).toBe(message);
+    expect(describeUpdateError(new Error('net::ERR_INTERNET_DISCONNECTED'))).toBe('net::ERR_INTERNET_DISCONNECTED');
+  });
+
+  it('cuts off a web page but keeps what came before it', () => {
+    const message = describeUpdateError(new Error(`HttpError: 500 Internal Server Error\n${page}`));
+    expect(message).toBe('HttpError: 500 Internal Server Error (the rest was a web page, see the log)');
+    expect(message).not.toContain('<');
+  });
+
+  it('says something short when the message is nothing but a page', () => {
+    const message = describeUpdateError(new Error(page));
+    expect(message.length).toBeLessThan(100);
+    expect(message).not.toContain('<');
+  });
+
+  it('names rate limiting only when the error says so', () => {
+    expect(describeUpdateError(new Error(`HttpError: 403 rate limit exceeded\n${page}`))).toContain('limiting requests');
+    expect(describeUpdateError(new Error(`HttpError: 429\n${page}`))).toContain('limiting requests');
+    expect(describeUpdateError(new Error(`HttpError: 502\n${page}`))).not.toContain('limiting');
   });
 });
