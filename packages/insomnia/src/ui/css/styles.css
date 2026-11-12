@@ -21,6 +21,24 @@
 @import 'monaco-editor/min/vs/editor/editor.main.css' layer(base);
 @import './main.css' layer(base);
 
+/* Until the theme stylesheet is injected nothing defines these, which left black text on the dark window.
+   Layered rules lose to the unlayered theme sheet, so this only covers the first paint. */
+@layer base {
+  :root {
+    --color-bg: #18181b;
+    --color-font: #e4e4e7;
+    background-color: var(--color-bg);
+    color: var(--color-font);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --color-bg: #fff;
+      --color-font: #27272a;
+    }
+  }
+}
+
 @plugin '@tailwindcss/typography';
 
 @theme {
