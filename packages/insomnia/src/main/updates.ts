@@ -152,6 +152,12 @@ const createListeners = () => {
     await pruneBackups((await services.settings.get()).maxBackups);
     sendUpdateStatus('readyToRestart');
     showUpdateStatusToast(`Downloaded ${version}`, 'Restart to apply the update.');
+    // A modal over the desktop is only welcome while the app is in use. Otherwise the update status
+    // in About and the install on quit are enough.
+    const inUse = BrowserWindow.getAllWindows().some(win => win.isVisible() && !win.isMinimized() && win.isFocused());
+    if (!inUse) {
+      return;
+    }
     const { response } = await dialog.showMessageBox({
       type: 'info',
       buttons: ['Restart', 'Later'],

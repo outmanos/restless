@@ -106,6 +106,85 @@ export const TitleBarMenu: FC = () => {
     };
   }, [openMenu]);
 
+  // Tapping Alt on its own moves focus into the bar, like a native menu bar. Alt used with another
+  // key or a click is left alone.
+  const previousFocus = useRef<HTMLElement | null>(null);
+  const menusRef = useRef<{ shown: AppMenuItem[]; hidden: AppMenuItem[] }>({ shown: [], hidden: [] });
+  useEffect(() => {
+    if (isMac) {
+      return;
+    }
+    let altAlone = false;
+    const cancel = () => {
+      altAlone = false;
+    };
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      altAlone = event.key === 'Alt' && !event.repeat && !event.ctrlKey && !event.shiftKey && !event.metaKey;
+      // Alt+letter opens the menu marked with that letter, like File in a native menu bar
+      if (event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey && event.key.length === 1) {
+        const letter = event.key.toLowerCase();
+        const { shown, hidden } = menusRef.current;
+        const target =
+          shown.find(menu => menu.mnemonic === letter) ??
+          (hidden.some(menu => menu.mnemonic === letter) ? shown.at(-1) : undefined);
+        if (target) {
+          event.preventDefault();
+          if (!barRef.current?.contains(document.activeElement)) {
+            previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          }
+          setOpenMenu(target.label);
+        }
+      }
+    };
+    const onKeyUp = (event: globalThis.KeyboardEvent) => {
+      const tapped = event.key === 'Alt' && altAlone;
+      altAlone = false;
+      const bar = barRef.current;
+      if (!tapped || !bar) {
+        return;
+      }
+      if (bar.contains(document.activeElement)) {
+        setOpenMenu(null);
+        previousFocus.current?.focus();
+        return;
+      }
+      previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setOpenMenu(null);
+      bar.querySelector('button')?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('pointerdown', cancel, true);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('pointerdown', cancel, true);
+    };
+  }, []);
+
+  const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
+    const bar = barRef.current;
+    // Popovers render in a portal but still bubble here, so only handle keys pressed on the bar itself
+    if (!bar || openMenu !== null || !(event.target instanceof Node) || !bar.contains(event.target)) {
+      return;
+    }
+    if (event.key === 'Escape') {
+      previousFocus.current?.focus();
+      return;
+    }
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+      return;
+    }
+    const buttons = [...bar.querySelectorAll('button')];
+    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (index === -1) {
+      return;
+    }
+    event.preventDefault();
+    const offset = event.key === 'ArrowRight' ? 1 : -1;
+    buttons[(index + offset + buttons.length) % buttons.length].focus();
+  };
+
   const hiddenMenus = menus.slice(visibleCount);
   const shownMenus: AppMenuItem[] = hiddenMenus.length
     ? [
@@ -113,6 +192,7 @@ export const TitleBarMenu: FC = () => {
         { type: 'normal', label: OVERFLOW_LABEL, enabled: true, checked: false, path: [], submenu: hiddenMenus },
       ]
     : menus;
+  menusRef.current = { shown: shownMenus, hidden: hiddenMenus };
 
   const moveMenu = (event: KeyboardEvent, label: string) => {
     if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || event.defaultPrevented) {
@@ -127,7 +207,13 @@ export const TitleBarMenu: FC = () => {
   };
 
   return (
-    <div ref={barRef} role="menubar" aria-label="Application menu" className="flex h-full min-w-0 flex-1 items-center">
+    <div
+      ref={barRef}
+      role="menubar"
+      aria-label="Application menu"
+      className="flex h-full min-w-0 flex-1 items-center"
+      onKeyDown={moveFocus}
+    >
       {shownMenus.map(menu => (
         <MenuTrigger
           key={menu.label}
