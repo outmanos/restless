@@ -109,6 +109,7 @@ export const TitleBarMenu: FC = () => {
   // Tapping Alt on its own moves focus into the bar, like a native menu bar. Alt used with another
   // key or a click is left alone.
   const previousFocus = useRef<HTMLElement | null>(null);
+  const menusRef = useRef<{ shown: AppMenuItem[]; hidden: AppMenuItem[] }>({ shown: [], hidden: [] });
   useEffect(() => {
     if (isMac) {
       return;
@@ -119,6 +120,21 @@ export const TitleBarMenu: FC = () => {
     };
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       altAlone = event.key === 'Alt' && !event.repeat && !event.ctrlKey && !event.shiftKey && !event.metaKey;
+      // Alt+letter opens the menu marked with that letter, like File in a native menu bar
+      if (event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey && event.key.length === 1) {
+        const letter = event.key.toLowerCase();
+        const { shown, hidden } = menusRef.current;
+        const target =
+          shown.find(menu => menu.mnemonic === letter) ??
+          (hidden.some(menu => menu.mnemonic === letter) ? shown.at(-1) : undefined);
+        if (target) {
+          event.preventDefault();
+          if (!barRef.current?.contains(document.activeElement)) {
+            previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          }
+          setOpenMenu(target.label);
+        }
+      }
     };
     const onKeyUp = (event: globalThis.KeyboardEvent) => {
       const tapped = event.key === 'Alt' && altAlone;
@@ -176,6 +192,7 @@ export const TitleBarMenu: FC = () => {
         { type: 'normal', label: OVERFLOW_LABEL, enabled: true, checked: false, path: [], submenu: hiddenMenus },
       ]
     : menus;
+  menusRef.current = { shown: shownMenus, hidden: hiddenMenus };
 
   const moveMenu = (event: KeyboardEvent, label: string) => {
     if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || event.defaultPrevented) {
