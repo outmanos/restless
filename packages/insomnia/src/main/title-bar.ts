@@ -3,6 +3,7 @@ import { app, type Menu, type MenuItem } from 'electron';
 export interface AppMenuItem {
   type: 'normal' | 'separator' | 'checkbox' | 'radio';
   label: string;
+  mnemonic?: string;
   accelerator?: string;
   enabled: boolean;
   checked: boolean;
@@ -31,6 +32,7 @@ export const serializeAppMenu = (menu: Menu, parentPath: number[] = []): AppMenu
     return {
       type: item.type === 'submenu' ? 'normal' : (item.type as AppMenuItem['type']),
       label: item.label.replace(/&/g, ''),
+      mnemonic: /&(.)/.exec(item.label)?.[1].toLowerCase(),
       accelerator: getAccelerator(item),
       enabled: item.enabled,
       checked: item.checked,
