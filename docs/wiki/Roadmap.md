@@ -101,6 +101,10 @@ The largest change. Later features build on this storage model, so it goes early
 | [ ] | P0 | M | Restore open tabs and sidebar state per collection |
 | [ ] | P0 | M | Large response protection |
 | [ ] | P0 | L | Every core action reachable with the keyboard alone, with visible focus and a logical tab order |
+| [x] | P1 | S | Menu bar keyboard access: Alt focuses the menu bar, Alt plus a letter opens that menu |
+| [ ] | P1 | S | Menu bar: F10 and Shift+F10 focus it, Home and End jump to the first and last menu, and Tab treats it as one stop with the arrow keys moving inside it |
+| [ ] | P1 | S | Menu bar: a letter in an open menu runs the item marked with it, and mnemonic letters are underlined while Alt is held |
+| [ ] | P1 | S | Menu bar: Escape from an open menu returns focus to where it was, and Left closes an open submenu instead of switching menus |
 | [ ] | P1 | M | Transient requests, savable later |
 | [ ] | P1 | M | Preview tabs and pinned tabs |
 | [ ] | P1 | M | Drag a request from the sidebar into the tab bar to open it, and drag tabs to reorder them, as in a browser |
